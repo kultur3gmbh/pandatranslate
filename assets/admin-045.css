@@ -1,0 +1,21 @@
+.pandatranslate-admin [hidden],[data-glossary-modal][hidden],[data-glossary-modal] [hidden]{display:none!important}
+.pandatranslate-languages .pandatranslate-row-flag{min-height:30px;line-height:1;vertical-align:middle;transform:translateY(2px)}
+.pandatranslate-languages-scroll{container-type:inline-size}
+.pandatranslate-api-choice{display:grid;gap:6px;margin:18px 0;max-width:100%}
+.pandatranslate-api-choice select{width:100%;max-width:600px}
+[data-google-fields]>label{display:grid;grid-template-columns:minmax(160px,240px) minmax(0,1fr);gap:12px;align-items:center;margin:16px 0}
+[data-google-fields]>.pandatranslate-check{display:flex}
+.pandatranslate-preview{padding:20px;min-height:84px;font-size:14px;overflow:visible}
+.pandatranslate-preview .pandatranslate-switcher{display:inline-block;max-width:100%}
+.pandatranslate-preview .pandatranslate-switcher.is-dropdown ul{position:static}
+.pandatranslate-modal-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+.pandatranslate-modal-header h2{margin:0}
+.pandatranslate-glossary-fields{display:grid;gap:14px}
+.pandatranslate-glossary-fields>label:not(.pandatranslate-check){display:grid;gap:6px;font-weight:600}
+.pandatranslate-glossary-fields input[type=text]{box-sizing:border-box;width:100%;min-height:40px}
+.pandatranslate-list-actions{white-space:nowrap;text-align:right}
+.pandatranslate-glossary-list th:last-child{width:132px}
+[data-glossary-error]{color:#b4232c}
+.pandatranslate-languages .pandatranslate-flag-actions .contactpanda-action-labelled{font-size:12px}
+@container (max-width:1300px){.pandatranslate-languages-scroll table.pandatranslate-languages{min-width:1080px}.pandatranslate-languages th,.pandatranslate-languages td{padding:8px 5px;font-size:12px}.pandatranslate-languages col:nth-child(1){width:34px!important}.pandatranslate-languages col:nth-child(2){width:40px!important}.pandatranslate-languages col:nth-child(3){width:78px!important}.pandatranslate-languages col:nth-child(6){width:130px!important}.pandatranslate-languages col:nth-child(7){width:108px!important}.pandatranslate-languages col:nth-child(8){width:65px!important}.pandatranslate-languages col:nth-child(9){width:140px!important}.pandatranslate-languages col:nth-child(10){width:54px!important}.pandatranslate-languages col:nth-child(11){width:44px!important}.pandatranslate-languages input:not([type=checkbox]),.pandatranslate-languages select{min-height:34px;padding:5px 6px}.pandatranslate-switcher-panel{padding:14px}.pandatranslate-switcher-columns{gap:14px}}
+@media(max-width:782px){[data-google-fields]>label{grid-template-columns:1fr}.pandatranslate-switcher-panel{padding:12px}.pandatranslate-paired-fields{gap:10px}.pandatranslate-color-grid{gap:12px}}

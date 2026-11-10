@@ -1,0 +1,4 @@
+.pandatranslate-admin-header .pandatranslate-mascot{width:92px;height:92px;object-fit:contain;flex:0 0 auto}
+.pandatranslate-upgrade{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 18px;margin:16px 0;border:1px solid #dcdcde;border-radius:8px;background:#f7f8f9;color:#30363b}
+.pandatranslate-upgrade p{margin:0;flex:1 1 300px}.pandatranslate-upgrade>strong{flex:0 1 auto}.pandatranslate-upgrade .contactpanda-large-action{flex:0 0 auto}
+@media(max-width:700px){.pandatranslate-admin-header .pandatranslate-mascot{width:60px;height:60px}.pandatranslate-upgrade{gap:10px}}

@@ -1,0 +1,62 @@
+msgid ""
+msgstr "Project-Id-Version: pandatranslate 0.5.0\nPO-Revision-Date: 2026-11-10 23:00+0100\nLast-Translator: Panda\nLanguage-Team: de_DE\nLanguage: de_DE\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:38
+msgid "The update source is invalid."
+msgstr "Die Updatequelle ist ungültig."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:52
+msgid "The update service could not be reached."
+msgstr "Der Updatedienst ist nicht erreichbar."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:60
+msgid "The update download is invalid."
+msgstr "Der Update-Download ist ungültig."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:65
+msgid "No valid published update was found."
+msgstr "Kein gültiges veröffentlichtes Update gefunden."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:67
+msgid "The update download could not be followed safely."
+msgstr "Der Update-Download konnte nicht sicher abgerufen werden."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:90
+msgid "The published update metadata is invalid."
+msgstr "Die veröffentlichten Update-Metadaten sind ungültig."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:99
+msgid "The update package is incomplete."
+msgstr "Das Updatepaket ist unvollständig."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:105
+msgid "The update manifest is invalid."
+msgstr "Das Update-Manifest ist ungültig."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:151
+msgid "You are not allowed to install updates."
+msgstr "Die Installation von Updates ist nicht erlaubt."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:153
+msgid "The update package could not be verified."
+msgstr "Das Updatepaket konnte nicht überprüft werden."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:155
+msgid "The update package could not be stored temporarily."
+msgstr "Das Updatepaket konnte nicht zwischengespeichert werden."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:159
+msgid "The update package failed its integrity check."
+msgstr "Die Integritätsprüfung des Updatepakets ist fehlgeschlagen."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:169
+msgid "The update archive has an invalid folder."
+msgstr "Das Updatearchiv enthält einen ungültigen Ordner."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:171
+msgid "The update archive has an invalid structure."
+msgstr "Die Struktur des Updatearchivs ist ungültig."
+
+#: work/pandatranslate/includes/class-panda-public-updater.php:173
+msgid "The update archive version is invalid."
+msgstr "Die Version des Updatearchivs ist ungültig."
