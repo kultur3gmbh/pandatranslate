@@ -11,8 +11,8 @@ $home = 'https://example.com'; $query_language = 'de'; $meta = array( '_pandatra
 $permalinks = array( 11=>'/checkout/' );
 $_SERVER['REQUEST_URI'] = '/de/current/';
 check( 'de', PandaTranslate_Frontend::current_language() );
-check( 'class="site" lang="de-DE" dir="ltr"', PandaTranslate_Frontend::language_attributes( 'lang="en-US" dir="rtl" class="site"' ) );
-check( 'lang="de-DE" dir="ltr" xml:lang="de-DE"', PandaTranslate_Frontend::language_attributes( 'xml:lang="en-US" lang="en-US"', 'xhtml' ) );
+check( 'class="site" lang="de" dir="ltr"', PandaTranslate_Frontend::language_attributes( 'lang="en-US" dir="rtl" class="site"' ) );
+check( 'lang="de" dir="ltr" xml:lang="de"', PandaTranslate_Frontend::language_attributes( 'xml:lang="en-US" lang="en-US"', 'xhtml' ) );
 check( 'https://example.com/de/', PandaTranslate_Frontend::localize_url( '/', 'de' ) );
 check( 'https://example.com/de/', PandaTranslate_Frontend::localize_url( 'https://example.com', 'de' ) );
 check( 'https://example.com/de/features/', PandaTranslate_Frontend::localize_url( '/features/', 'de' ) );
@@ -32,7 +32,7 @@ foreach ( array( 'wp-block-group','elementor','fusion-row','et_pb_text','vc_row'
 $html .= '<a id="download" download href="/report/">Download</a><a id="hreflang" hreflang="fr" href="/">French</a><div class="pandatranslate-switcher"><a id="switch" href="/">English</a></div><a id="outside" href="https://other.test/">Other</a><div><span id="currency">&amp;euro; EUR &amp;amp;pound; GBP</span><span id="check">&amp;#10003;</span></div><p id="escaped">&amp;lt;script&amp;gt;</p><pre>&amp;euro;</pre><code>&amp;#10003;</code><img id="image" src="/same.webp" alt="&amp;euro;"><form action="/submit/"><button>Send</button></form></body></html>';
 $result = PandaTranslate_Frontend::transform( $html, 'de' );
 $doc = new DOMDocument(); @$doc->loadHTML( '<?xml encoding="utf-8" ?>' . $result ); $xpath = new DOMXPath( $doc );
-check( 'de-DE', $doc->documentElement->getAttribute( 'lang' ) );
+check( 'de', $doc->documentElement->getAttribute( 'lang' ) );
 check( 'ltr', $doc->documentElement->getAttribute( 'dir' ) );
 check( 'https://example.com/de/', $doc->getElementById('logo')->getAttribute('href') );
 check( 'https://example.com/de/features/', $doc->getElementById('nav')->getAttribute('href') );
@@ -52,6 +52,7 @@ check( '/submit/', $doc->getElementsByTagName('form')->item(0)->getAttribute('ac
 check( 'const cp="/features/ &amp;euro;";', $doc->getElementsByTagName('script')->item(0)->textContent );
 check( false, strpos( PandaTranslate_Frontend::transform( $result, 'de' ), '/de/de/' ) !== false );
 $query_language='ar'; check( 'lang="ar" dir="rtl"', PandaTranslate_Frontend::language_attributes('lang="en-US"') );
+$query_language=''; check( 'lang="en" dir="ltr"', PandaTranslate_Frontend::language_attributes('lang="en-US"') );
 $admin=true; check( 'lang="en-US"', PandaTranslate_Frontend::language_attributes('lang="en-US"') ); $admin=false;
 $home='https://example.com/site'; $_SERVER['REQUEST_URI']='/site/de/current/';
 check( 'https://example.com/site/de/features/?x=1', PandaTranslate_Frontend::localize_url('/site/features/?x=1','de') );

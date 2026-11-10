@@ -18,10 +18,15 @@ final class PandaTranslate_Frontend {
 		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] === $language ) return $row;
 		return null;
 	}
-	private static function locale( $row ) { return str_replace( '_', '-', preg_replace( '/_formal$/i', '', $row['locale'] ) ); }
+	private static function locale( $row ) {
+		$locale = str_replace( '_', '-', preg_replace( '/_formal$/i', '', $row['locale'] ?? ( get_option( 'WPLANG', 'en_US' ) ?: 'en_US' ) ) );
+		$base = strtolower( explode( '-', $locale )[0] );
+		return in_array( $base, array( 'de', 'en' ), true ) ? $base : $locale;
+	}
 	private static function direction( $locale ) { return in_array( strtolower( explode( '-', $locale )[0] ), array( 'ar', 'he', 'fa', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb' ), true ) ? 'rtl' : 'ltr'; }
 	public static function language_attributes( $attributes, $doctype = 'html' ) {
-		$row = self::row( self::current_language() ); if ( ! $row ) return $attributes;
+		if ( is_admin() ) return $attributes;
+		$row = self::row( self::current_language() );
 		$locale = self::locale( $row );
 		$attributes = preg_replace( '/(?:^|\s)(?:xml:lang|lang|dir)\s*=\s*(?:"[^"]*"|\x27[^\x27]*\x27|[^\s>]+)/i', '', $attributes );
 		return trim( $attributes . ' lang="' . esc_attr( $locale ) . '" dir="' . self::direction( $locale ) . '"' . ( 'xhtml' === $doctype ? ' xml:lang="' . esc_attr( $locale ) . '"' : '' ) );
@@ -93,7 +98,8 @@ final class PandaTranslate_Frontend {
 		}, $text );
 	}
 	public static function transform( $html, $language ) {
-		$row = self::row( $language ); if ( ! $row || ! class_exists( 'DOMDocument' ) || false === stripos( $html, '<html' ) ) return $html;
+		if ( is_admin() || ! class_exists( 'DOMDocument' ) || false === stripos( $html, '<html' ) ) return $html;
+		$row = self::row( $language );
 		$previous = libxml_use_internal_errors( true ); $doc = new DOMDocument( '1.0', 'UTF-8' );
 		$loaded = $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NODEFDTD ); libxml_clear_errors(); libxml_use_internal_errors( $previous ); if ( ! $loaded ) return $html;
 		$root = $doc->documentElement; $locale = self::locale( $row ); $root->setAttribute( 'lang', $locale ); $root->setAttribute( 'dir', self::direction( $locale ) ); if ( $root->hasAttribute( 'xml:lang' ) ) $root->setAttribute( 'xml:lang', $locale );

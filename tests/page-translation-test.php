@@ -26,7 +26,7 @@ $result = $plugin->transform_page( $html );
 check( true, false !== strpos( $result, 'Hello world' ) );
 check( true, false !== strpos( $result, 'class="builder-home"' ) );
 check( 0, count( $repository->writes ) );
-check( true, false !== strpos( $result, 'lang="en-US"' ) );
+check( true, false !== strpos( $result, 'lang="en"' ) );
 check( true, false !== strpos( $result, 'href="https://example.com/en/"' ) );
 $repository->row = array( 'status'=>'published', 'translated_html'=>'Manual translation' );
 check( true, false !== strpos( $plugin->transform_page( $html ), 'Manual translation' ) );

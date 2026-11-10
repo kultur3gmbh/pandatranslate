@@ -551,7 +551,7 @@ final class PandaTranslate_Plugin {
 		$language = $this->target_language();
 		if ( ! apply_filters( 'pandatranslate_capture_allowed', true ) ) return class_exists( 'PandaTranslate_Frontend' ) ? PandaTranslate_Frontend::transform( $html, $language ) : $html;
 		$editing  = $this->is_editing();
-		if ( ! $editing && ! $this->scan_mode && '' === $language ) return $html;
+		if ( ! $editing && ! $this->scan_mode && '' === $language ) return class_exists( 'PandaTranslate_Frontend' ) ? PandaTranslate_Frontend::transform( $html, '' ) : $html;
 		$request_path = is_singular() ? wp_parse_url( get_permalink( get_queried_object_id() ), PHP_URL_PATH ) : wp_parse_url( home_url( '/' . PandaTranslate_Routing::original_path( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ) ), PHP_URL_PATH );
 		$context = (string) get_queried_object_id() . '|' . (string) $request_path;
 		$memory = new PandaTranslate_Translation_Memory( $html, $language, $this->repository );

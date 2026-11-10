@@ -1,5 +1,5 @@
 msgid ""
-msgstr "Project-Id-Version: pandatranslate 0.5.1\nPO-Revision-Date: 2026-11-10 23:00+0100\nLast-Translator: Panda\nLanguage-Team: de_DE\nLanguage: de_DE\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+msgstr "Project-Id-Version: pandatranslate 0.5.2\nPO-Revision-Date: 2026-11-10 23:00+0100\nLast-Translator: Panda\nLanguage-Team: de_DE\nLanguage: de_DE\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
 
 #: work/pandatranslate/includes/class-panda-public-updater.php:38
 msgid "The update source is invalid."
