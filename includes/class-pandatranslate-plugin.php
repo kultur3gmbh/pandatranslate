@@ -548,8 +548,8 @@ final class PandaTranslate_Plugin {
 	}
 
 	public function transform_page( $html ) {
-		if ( ! apply_filters( 'pandatranslate_capture_allowed', true ) ) return $html;
 		$language = $this->target_language();
+		if ( ! apply_filters( 'pandatranslate_capture_allowed', true ) ) return class_exists( 'PandaTranslate_Frontend' ) ? PandaTranslate_Frontend::transform( $html, $language ) : $html;
 		$editing  = $this->is_editing();
 		if ( ! $editing && ! $this->scan_mode && '' === $language ) return $html;
 		$request_path = is_singular() ? wp_parse_url( get_permalink( get_queried_object_id() ), PHP_URL_PATH ) : wp_parse_url( home_url( '/' . PandaTranslate_Routing::original_path( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ) ), PHP_URL_PATH );
@@ -574,7 +574,8 @@ final class PandaTranslate_Plugin {
 			if ( $row && 'untranslated' !== $row['status'] ) return $unit['source_html'];
 			return null;
 		}, $context );
-		return $memory->transform( $result );
+		$result = $memory->transform( $result );
+		return class_exists( 'PandaTranslate_Frontend' ) ? PandaTranslate_Frontend::transform( $result, $language ) : $result;
 	}
 
 	public function assets() {

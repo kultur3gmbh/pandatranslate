@@ -4,7 +4,6 @@ defined( 'ABSPATH' ) || exit;
 /** Shared edition boundary; saved configuration and translations are never removed. */
 final class PandaTranslate_Edition {
 	public static function boot() {
-		add_filter( 'contactpanda_license_products', function ( $products ) { $products['pandatranslate'] = array( 'label' => 'PandaTranslate', 'entitlement' => '', 'version' => PANDATRANSLATE_VERSION, 'free' => true, 'modules' => array() ); return $products; } );
 		add_action( 'admin_init', function () { if ( current_user_can( 'manage_options' ) && 2 !== (int) get_option( 'pandatranslate_schema' ) ) PandaTranslate_Repository::install(); } );
 		add_filter( 'pandatranslate_capture_allowed', function ( $allowed ) { foreach ( array( 'is_cart', 'is_checkout', 'is_account_page' ) as $predicate ) if ( function_exists( $predicate ) && $predicate() ) return false; return $allowed; } );
 	}

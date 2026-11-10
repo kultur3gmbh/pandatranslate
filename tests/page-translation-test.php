@@ -2,6 +2,9 @@
 require __DIR__ . '/routing-test.php';
 require dirname( __DIR__ ) . '/includes/class-pandatranslate-unit-extractor.php';
 require dirname( __DIR__ ) . '/includes/class-pandatranslate-translation-memory.php';
+require dirname( __DIR__ ) . '/includes/class-pandatranslate-frontend.php';
+function is_admin() { return false; }
+function esc_attr( $value ) { return htmlspecialchars( $value, ENT_QUOTES, 'UTF-8' ); }
 function __( $text ) { return $text; }
 function wp_strip_all_tags( $text ) { return strip_tags( $text ); }
 function wp_kses_post( $text ) { return $text; }
@@ -17,11 +20,14 @@ final class Page_Repository {
 $repository = new Page_Repository();
 ( new ReflectionProperty( 'PandaTranslate_Plugin', 'repository' ) )->setValue( $plugin, $repository );
 ( new ReflectionProperty( 'PandaTranslate_Plugin', 'extractor' ) )->setValue( $plugin, new PandaTranslate_Unit_Extractor() );
-$html = '<!doctype html><html><head><title>Same page</title></head><body class="builder-home"><p>Hallo Welt</p></body></html>';
+$home = 'https://example.com';
+$html = '<!doctype html><html lang="de-DE"><head><title>Same page</title></head><body class="builder-home"><a id="logo" href="/">Logo</a><p>Hallo Welt</p></body></html>';
 $result = $plugin->transform_page( $html );
 check( true, false !== strpos( $result, 'Hello world' ) );
 check( true, false !== strpos( $result, 'class="builder-home"' ) );
 check( 0, count( $repository->writes ) );
+check( true, false !== strpos( $result, 'lang="en-US"' ) );
+check( true, false !== strpos( $result, 'href="https://example.com/en/"' ) );
 $repository->row = array( 'status'=>'published', 'translated_html'=>'Manual translation' );
 check( true, false !== strpos( $plugin->transform_page( $html ), 'Manual translation' ) );
 $repository->row = array( 'status'=>'reviewed', 'translated_html'=>'Unpublished manual draft' );

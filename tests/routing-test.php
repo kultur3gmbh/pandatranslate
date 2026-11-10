@@ -10,9 +10,9 @@ function sanitize_key( $text ) { return strtolower( $text ); }
 function sanitize_title( $text ) { return strtolower( $text ); }
 function is_singular() { global $singular; return $singular; }
 function get_queried_object_id() { global $post_id; return $post_id; }
-function get_permalink( $id ) { return home_url( '/parent/haus/' ); }
+function get_permalink( $id ) { global $permalinks; return home_url( $permalinks[$id] ?? '/parent/haus/' ); }
 function get_post_meta( $id, $key, $single ) { global $meta; return $meta[$key] ?? ''; }
-function wp_parse_url( $url, $component ) { return parse_url( $url, $component ); }
+function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
 function wp_unslash( $text ) { return $text; }
 function home_url( $path = '' ) { global $home; return $home . $path; }
 function user_trailingslashit( $path ) { return rtrim( $path, '/' ) . '/'; }
