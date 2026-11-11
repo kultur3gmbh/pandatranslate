@@ -1,35 +1,35 @@
 msgid ""
-msgstr "Project-Id-Version: pandatranslate 0.6.0\nPO-Revision-Date: 2026-11-11 01:00+0100\nLast-Translator: Panda\nLanguage-Team: fr_FR\nLanguage: fr_FR\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+msgstr "Project-Id-Version: pandatranslate 0.6.2\nPO-Revision-Date: 2026-11-11 01:00+0100\nLast-Translator: Panda\nLanguage-Team: fr_FR\nLanguage: fr_FR\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
 
-#: includes/class-pandatranslate-plugin.php:472
-#: includes/class-pandatranslate-plugin.php:519
+#: includes/class-pandatranslate-plugin.php:478
+#: includes/class-pandatranslate-plugin.php:525
 #, php-format
 msgid "%1$d of %2$d units translated"
 msgstr "%1$d des unités %2$d traduites"
 
-#: includes/class-pandatranslate-translation-jobs.php:63
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-translation-jobs.php:105
 #, php-format
 msgid "%1$d translated · %2$d failed"
 msgstr "%1$d traduits · %2$d en échec"
 
-#: includes/class-pandatranslate-plugin.php:330
+#: includes/class-pandatranslate-plugin.php:334
 #, php-format
 msgid "%1$d translations imported; %2$d existing or invalid entries skipped."
 msgstr "Traductions %1$d importées ; %2$d entrées existantes ou invalides ignorées."
 
-#: includes/class-pandatranslate-plugin.php:325
+#: includes/class-pandatranslate-plugin.php:329
 #, php-format
 msgid "%d content items were queued."
 msgstr "Les éléments de contenu %d ont été mis en file d'attente."
 
-#: includes/class-pandatranslate-site-progress.php:38
+#: includes/class-pandatranslate-site-progress.php:54
 #, php-format
 msgid "%d failed"
 msgstr "%d échecs"
 
-#: includes/class-pandatranslate-plugin.php:524
-#: includes/class-pandatranslate-plugin.php:526
+#: includes/class-pandatranslate-plugin.php:530
+#: includes/class-pandatranslate-plugin.php:532
 #, php-format
 msgid "%s source characters"
 msgstr "%s caractères source"
@@ -42,15 +42,16 @@ msgstr "Un espace réservé de formatage n’est pas fermé."
 msgid "A glossary placeholder was changed by the provider."
 msgstr "Un espace réservé au glossaire a été modifié par le fournisseur."
 
-#: includes/class-pandatranslate-plugin.php:378
+#: includes/class-pandatranslate-plugin.php:382
 msgid "API location"
 msgstr "Emplacement de l'API"
 
-#: includes/class-pandatranslate-plugin.php:367
+#: includes/class-pandatranslate-plugin.php:371
 msgid "API settings"
 msgstr "Réglages de l’API"
 
-#: includes/class-pandatranslate-plugin.php:540
+#: includes/class-pandatranslate-plugin.php:547
+#: includes/class-pandatranslate-plugin.php:556
 msgid "Access denied."
 msgstr "Accès refusé."
 
@@ -58,15 +59,15 @@ msgstr "Accès refusé."
 msgid "Actions"
 msgstr "Actions"
 
-#: includes/class-pandatranslate-plugin.php:244
-#: includes/class-pandatranslate-plugin.php:437
-#: includes/class-pandatranslate-plugin.php:462
 #: includes/class-pandatranslate-glossary-admin.php:29
 #: includes/class-pandatranslate-glossary-admin.php:33
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-plugin.php:443
+#: includes/class-pandatranslate-plugin.php:468
 msgid "Active"
 msgstr "Actif"
 
-#: includes/class-pandatranslate-plugin.php:444
+#: includes/class-pandatranslate-plugin.php:450
 msgid "Add language"
 msgstr "Ajouter une langue"
 
@@ -74,20 +75,20 @@ msgstr "Ajouter une langue"
 msgid "Add to menu"
 msgstr "Ajouter au menu"
 
-#: includes/class-pandatranslate-plugin.php:437
-#: includes/class-pandatranslate-plugin.php:459
+#: includes/class-pandatranslate-plugin.php:443
+#: includes/class-pandatranslate-plugin.php:465
 msgid "Address style"
 msgstr "Forme d’adresse"
 
-#: includes/class-pandatranslate-plugin.php:495
+#: includes/class-pandatranslate-plugin.php:501
 msgid "After language"
 msgstr "Après la langue"
 
-#: includes/class-pandatranslate-plugin.php:536
+#: includes/class-pandatranslate-plugin.php:543
 msgid "All active target languages."
 msgstr "Toutes les langues cibles actives."
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "All content types"
 msgstr "Tous les types de contenu"
 
@@ -99,7 +100,7 @@ msgstr "Tous les espaces réservés de formatage doivent apparaître exactement 
 msgid "All statuses"
 msgstr "Tous les états"
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:625
 msgid "Alternative text"
 msgstr "Texte alternatif"
 
@@ -107,96 +108,110 @@ msgstr "Texte alternatif"
 msgid "An empty translation cannot be published."
 msgstr "Une traduction vide ne peut pas être publiée."
 
-#: includes/class-pandatranslate-plugin.php:379
+#: includes/class-pandatranslate-plugin.php:383
 msgid "Authentication"
 msgstr "Authentification"
 
-#: includes/class-pandatranslate-plugin.php:513
+#: includes/class-pandatranslate-plugin.php:519
 msgid "Automatic"
 msgstr "Automatique"
 
-#: includes/class-pandatranslate-plugin.php:314
+#: includes/class-pandatranslate-plugin.php:318
 msgid "Automatic translation"
 msgstr "Traduction automatique"
 
-#: includes/class-pandatranslate-plugin.php:314
-msgid "Automatically collect and translate newly published or updated content with the configured translation API."
+#: includes/class-pandatranslate-plugin.php:318
+msgid ""
+"Automatically collect and translate newly published or updated content with "
+"the configured translation API."
 msgstr "Collectez et traduisez automatiquement le contenu nouvellement publié ou mis à jour avec l'API de traduction configurée."
 
-#: includes/class-pandatranslate-plugin.php:526
+#: includes/class-pandatranslate-plugin.php:532
 msgid "Automatically translate everything again"
 msgstr "Tout retraduire automatiquement"
 
-#: includes/class-pandatranslate-plugin.php:315
+#: includes/class-pandatranslate-plugin.php:319
 msgid "Automatically translate new and updated content"
 msgstr "Traduire automatiquement le contenu nouveau et mis à jour"
 
-#: includes/class-pandatranslate-plugin.php:526
+#: includes/class-pandatranslate-plugin.php:532
 msgid "Automatically translate untranslated content"
 msgstr "Traduire automatiquement les contenus non traduits"
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Automatically translated"
 msgstr "Traduit automatiquement"
 
-#: includes/class-pandatranslate-plugin.php:349
-#: includes/class-pandatranslate-plugin.php:419
-#: includes/class-pandatranslate-plugin.php:420
-#: includes/class-pandatranslate-plugin.php:421
-#: includes/class-pandatranslate-plugin.php:423
-#: includes/class-pandatranslate-plugin.php:424
+#: includes/class-pandatranslate-plugin.php:353
+#: includes/class-pandatranslate-plugin.php:425
+#: includes/class-pandatranslate-plugin.php:426
+#: includes/class-pandatranslate-plugin.php:427
+#: includes/class-pandatranslate-plugin.php:429
+#: includes/class-pandatranslate-plugin.php:430
 msgid "Available"
 msgstr "Disponible"
 
-#: includes/class-pandatranslate-plugin.php:356
+#: includes/class-pandatranslate-plugin.php:360
 msgid "Available tools"
 msgstr "Outils disponibles"
 
-#: includes/class-pandatranslate-plugin.php:332
-msgid "Available with PandaTranslate Multilingual. Free requires no paid license."
+#: includes/class-pandatranslate-plugin.php:336
+msgid ""
+"Available with PandaTranslate Multilingual. Free requires no paid license."
 msgstr "Disponible avec PandaTranslate Multilingual. Free ne nécessite aucune licence payante."
 
-#: includes/class-pandatranslate-plugin.php:504
+#: includes/class-pandatranslate-plugin.php:510
 msgid "Background color"
 msgstr "Couleur de fond"
 
-#: includes/class-pandatranslate-site-progress.php:35
+#: includes/class-pandatranslate-site-progress.php:48
 msgid "Background translation progress"
 msgstr "Progression de la traduction en arrière-plan"
 
-#: includes/class-pandatranslate-plugin.php:495
+#: includes/class-pandatranslate-plugin.php:501
 msgid "Before language"
 msgstr "Avant la langue"
 
-#: includes/class-pandatranslate-plugin.php:504
+#: includes/class-pandatranslate-plugin.php:510
 msgid "Border color"
 msgstr "Couleur de la bordure"
 
-#: includes/class-pandatranslate-plugin.php:504
+#: includes/class-pandatranslate-plugin.php:510
 msgid "Border color (hover)"
 msgstr "Couleur de bordure (survol)"
 
-#: includes/class-pandatranslate-plugin.php:500
+#: includes/class-pandatranslate-plugin.php:506
 msgid "Border radius (CSS unit)"
 msgstr "Rayon de la bordure (unité CSS)"
 
-#: includes/class-pandatranslate-plugin.php:500
+#: includes/class-pandatranslate-plugin.php:506
 msgid "Border width (CSS unit)"
 msgstr "Largeur de la bordure (unité CSS)"
 
-#: includes/class-pandatranslate-plugin.php:502
+#: includes/class-pandatranslate-plugin.php:508
 msgid "Bottom"
 msgstr "En bas"
 
-#: includes/class-pandatranslate-plugin.php:307
+#: includes/class-pandatranslate-plugin.php:311
 msgid "Bottom left"
 msgstr "En bas à gauche"
 
-#: includes/class-pandatranslate-plugin.php:307
+#: includes/class-pandatranslate-plugin.php:311
 msgid "Bottom right"
 msgstr "En bas à droite"
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-plugin.php:636
+#: includes/class-pandatranslate-site-progress.php:50
+msgid "Cancel translation"
+msgstr "Annuler la traduction"
+
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-plugin.php:550
+msgid "Cancellation could not be confirmed."
+msgstr "L’annulation n’a pas pu être confirmée."
+
+#: includes/class-pandatranslate-plugin.php:625
 msgid "Caption"
 msgstr "Légende"
 
@@ -204,7 +219,7 @@ msgstr "Légende"
 msgid "Case-sensitive"
 msgstr "Sensible à la casse"
 
-#: includes/class-pandatranslate-plugin.php:461
+#: includes/class-pandatranslate-plugin.php:467
 msgid "Change flag"
 msgstr "Changer de drapeau"
 
@@ -212,7 +227,7 @@ msgstr "Changer de drapeau"
 msgid "Change image"
 msgstr "Changer l’image"
 
-#: includes/class-pandatranslate-plugin.php:392
+#: includes/class-pandatranslate-plugin.php:398
 msgid "Characters sent to translation APIs"
 msgstr "Caractères envoyés aux API de traduction"
 
@@ -220,8 +235,8 @@ msgstr "Caractères envoyés aux API de traduction"
 msgid "Click or drop an image here"
 msgstr "Cliquer ou déposer une image ici"
 
-#: includes/class-pandatranslate-plugin.php:620
 #: includes/class-pandatranslate-glossary-admin.php:31
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Close"
 msgstr "Fermer"
 
@@ -229,8 +244,8 @@ msgstr "Fermer"
 msgid "Collect plugin and theme texts"
 msgstr "Recenser les textes des extensions et du thème"
 
-#: includes/class-pandatranslate-translation-jobs.php:44
-#: includes/class-pandatranslate-site-progress.php:38
+#: includes/class-pandatranslate-site-progress.php:54
+#: includes/class-pandatranslate-translation-jobs.php:72
 msgid "Collecting source content…"
 msgstr "Collecte des contenus sources…"
 
@@ -238,48 +253,51 @@ msgstr "Collecte des contenus sources…"
 msgid "Color value"
 msgstr "Valeur de couleur"
 
-#: includes/class-pandatranslate-plugin.php:422
+#: includes/class-pandatranslate-plugin.php:428
 msgid "Configuration incomplete"
 msgstr "Configuration incomplète"
 
-#: includes/class-pandatranslate-plugin.php:384
+#: includes/class-pandatranslate-plugin.php:388
 msgid "Configuration status"
 msgstr "État de la configuration"
 
-#: includes/class-pandatranslate-plugin.php:278
+#: includes/class-pandatranslate-plugin.php:282
 msgid "Configure languages and open the visual translation editor."
 msgstr "Configurez les langues et ouvrez l'éditeur de traduction visuelle."
 
-#: includes/class-pandatranslate-plugin.php:434
-msgid "Confirm adoption of the WordPress website language as the translation source."
+#: includes/class-pandatranslate-plugin.php:440
+msgid ""
+"Confirm adoption of the WordPress website language as the translation source."
 msgstr "Confirmer l’adoption de la langue du site WordPress comme langue source."
 
-#: includes/class-pandatranslate-plugin.php:665
+#: includes/class-pandatranslate-plugin.php:681
 msgid "Confirm the paid Google request."
 msgstr "Confirmez la demande Google payante."
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Connection successful"
 msgstr "Connexion réussie"
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Connection test failed."
 msgstr "Échec du test de connexion."
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Content type"
 msgstr "Type de contenu"
 
-#: includes/class-pandatranslate-plugin.php:316
+#: includes/class-pandatranslate-plugin.php:320
 msgid "Content types"
 msgstr "Types de contenu"
 
-#: includes/class-pandatranslate-plugin.php:530
-msgid "Counts cover recorded translation units. Source characters are an estimate; API billing may differ."
+#: includes/class-pandatranslate-plugin.php:537
+msgid ""
+"Counts cover recorded translation units. Source characters are an estimate; "
+"API billing may differ."
 msgstr "Les chiffres couvrent les unités enregistrées. Les caractères source sont une estimation ; la facturation API peut différer."
 
-#: includes/class-pandatranslate-plugin.php:244
 #: includes/class-pandatranslate-glossary-admin.php:28
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Create glossary entry"
 msgstr "Créer une entrée de glossaire"
 
@@ -289,7 +307,7 @@ msgid "Current language"
 msgstr "Langue actuelle"
 
 #: includes/class-pandatranslate-migration.php:76
-#: includes/class-pandatranslate-plugin.php:224
+#: includes/class-pandatranslate-plugin.php:228
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
@@ -297,44 +315,46 @@ msgstr "Tableau de bord"
 msgid "Database backup created; start the import."
 msgstr "Sauvegarde de la base de données effectuée ; lancer l’importation."
 
-#: includes/class-pandatranslate-plugin.php:387
+#: includes/class-pandatranslate-plugin.php:391
 msgid "DeepL API plan"
 msgstr "Offre API DeepL"
 
-#: includes/class-pandatranslate-deepl-provider.php:23
+#: includes/class-pandatranslate-deepl-provider.php:26
 msgid "DeepL is temporarily limiting requests. Retry later."
 msgstr "DeepL limite temporairement les requêtes. Réessayer plus tard."
 
-#: includes/class-pandatranslate-plugin.php:437
-#: includes/class-pandatranslate-plugin.php:454
+#: includes/class-pandatranslate-plugin.php:443
+#: includes/class-pandatranslate-plugin.php:460
 msgid "Default language"
 msgstr "Langue par défaut"
 
-#: includes/class-pandatranslate-google-provider.php:70
-msgid "Define PANDATRANSLATE_GOOGLE_CREDENTIALS_FILE in wp-config.php with a readable service-account JSON path."
+#: includes/class-pandatranslate-google-provider.php:74
+msgid ""
+"Define PANDATRANSLATE_GOOGLE_CREDENTIALS_FILE in wp-config.php with a "
+"readable service-account JSON path."
 msgstr "Définissez PANDATRANSLATE_GOOGLE_CREDENTIALS_FILE dans wp-config.php avec un chemin JSON de compte de service lisible."
 
-#: includes/class-pandatranslate-plugin.php:437
+#: includes/class-pandatranslate-plugin.php:443
 msgid "Delete"
 msgstr "Supprimer"
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Delete entry"
 msgstr "Supprimer l’entrée"
 
-#: includes/class-pandatranslate-plugin.php:376
+#: includes/class-pandatranslate-plugin.php:380
 msgid "Delete stored API key"
 msgstr "Supprimer la clé API stockée"
 
-#: includes/class-pandatranslate-plugin.php:389
+#: includes/class-pandatranslate-plugin.php:393
 msgid "Delete stored DeepL API key"
 msgstr "Supprimer la clé API DeepL enregistrée"
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Delete this glossary entry?"
 msgstr "Supprimer cette entrée du glossaire ?"
 
-#: includes/class-pandatranslate-plugin.php:423
+#: includes/class-pandatranslate-plugin.php:429
 msgid "Disabled or externally controlled"
 msgstr "Désactivé ou contrôlé en externe"
 
@@ -342,16 +362,16 @@ msgstr "Désactivé ou contrôlé en externe"
 msgid "Do not translate"
 msgstr "Ne pas traduire"
 
-#: includes/class-pandatranslate-plugin.php:493
+#: includes/class-pandatranslate-plugin.php:499
 msgid "Dropdown"
 msgstr "Liste déroulante"
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Dynamic content"
 msgstr "Contenu dynamique"
 
-#: includes/class-pandatranslate-plugin.php:244
 #: includes/class-pandatranslate-glossary-admin.php:34
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Edit entry"
 msgstr "Modifier l’entrée"
 
@@ -363,20 +383,20 @@ msgstr "Modifier l’image"
 msgid "Edit translation"
 msgstr "Modifier la traduction"
 
-#: includes/class-pandatranslate-plugin.php:293
+#: includes/class-pandatranslate-plugin.php:297
 msgid "Editor"
 msgstr "Éditeur"
 
-#: includes/class-pandatranslate-plugin.php:366
+#: includes/class-pandatranslate-plugin.php:370
 #, php-format
 msgid "Enable %s"
 msgstr "Activer %s"
 
-#: includes/class-pandatranslate-plugin.php:387
+#: includes/class-pandatranslate-plugin.php:391
 msgid "Enable DeepL"
 msgstr "Activer DeepL"
 
-#: includes/class-pandatranslate-plugin.php:506
+#: includes/class-pandatranslate-plugin.php:512
 msgid "Enable animations"
 msgstr "Activer les animations"
 
@@ -392,19 +412,19 @@ msgstr "Saisir un terme source."
 msgid "Enter a valid HEX, RGB, or RGBA color."
 msgstr "Saisir une couleur HEX, RGB ou RGBA valide."
 
-#: includes/class-pandatranslate-plugin.php:375
+#: includes/class-pandatranslate-plugin.php:379
 msgid "Enter or replace API key"
 msgstr "Saisir ou remplacer la clé API"
 
-#: includes/class-pandatranslate-plugin.php:389
+#: includes/class-pandatranslate-plugin.php:393
 msgid "Enter or replace DeepL API key"
 msgstr "Saisir ou remplacer la clé API DeepL"
 
-#: includes/class-pandatranslate-google-provider.php:20
+#: includes/class-pandatranslate-google-provider.php:21
 msgid "Enter the Google Cloud project ID."
 msgstr "Saisissez l'ID du projet Google Cloud."
 
-#: includes/class-pandatranslate-google-provider.php:19
+#: includes/class-pandatranslate-google-provider.php:20
 msgid "Enter the Google v2 API key."
 msgstr "Saisir la clé API Google v2."
 
@@ -417,17 +437,21 @@ msgstr "Saisir l’URL de l’image externe :"
 msgid "Errors"
 msgstr "Erreurs"
 
-#: includes/class-pandatranslate-plugin.php:488
-msgid "Existing navigation menus use the theme menu styling. These design settings apply to the standalone language menu and builder elements."
+#: includes/class-pandatranslate-plugin.php:494
+msgid ""
+"Existing navigation menus use the theme menu styling. These design settings "
+"apply to the standalone language menu and builder elements."
 msgstr "Les menus de navigation existants utilisent le style du thème. Ces réglages s’appliquent au menu de langues autonome et aux éléments des constructeurs."
 
 #: includes/class-pandatranslate-edition.php:23
 msgid "Explore extended features"
 msgstr "Découvrir les fonctions avancées"
 
-#: includes/class-pandatranslate-site-progress.php:38
-#: includes/class-pandatranslate-plugin.php:358
-#: includes/class-pandatranslate-plugin.php:382
+#: includes/class-pandatranslate-plugin.php:362
+#: includes/class-pandatranslate-plugin.php:386
+#: includes/class-pandatranslate-plugin.php:395
+#: includes/class-pandatranslate-site-progress.php:54
+#: includes/class-pandatranslate-text-admin.php:57
 msgid "Failed"
 msgstr "Échec"
 
@@ -436,34 +460,40 @@ msgstr "Échec"
 msgid "Files: %1$d / %2$d · New texts: %3$d · Errors: %4$d"
 msgstr "Fichiers : %1$d / %2$d · Nouveaux textes : %3$d · Erreurs : %4$d"
 
-#: includes/class-pandatranslate-plugin.php:437
-#: includes/class-pandatranslate-plugin.php:481
+#: includes/class-pandatranslate-plugin.php:443
+#: includes/class-pandatranslate-plugin.php:487
 msgid "Flag"
 msgstr "Drapeau"
 
-#: includes/class-pandatranslate-plugin.php:481
+#: includes/class-pandatranslate-plugin.php:487
 msgid "Flag + language code"
 msgstr "Drapeau + code de langue"
 
-#: includes/class-pandatranslate-plugin.php:481
+#: includes/class-pandatranslate-plugin.php:487
 msgid "Flag + language name"
 msgstr "Drapeau + nom de langue"
 
-#: includes/class-pandatranslate-plugin.php:437
+#: includes/class-pandatranslate-plugin.php:443
 msgid "Flag actions"
 msgstr "Actions du drapeau"
 
-#: includes/class-pandatranslate-plugin.php:495
+#: includes/class-pandatranslate-plugin.php:501
 msgid "Flag position"
 msgstr "Position du drapeau"
 
-#: includes/class-pandatranslate-plugin.php:496
+#: includes/class-pandatranslate-plugin.php:502
 msgid "Flag shape"
 msgstr "Forme du drapeau"
 
-#: includes/class-pandatranslate-plugin.php:305
+#: includes/class-pandatranslate-plugin.php:309
 msgid "Floating menu"
 msgstr "Menu flottant"
+
+#: includes/class-pandatranslate-provider-markup.php:19
+msgid ""
+"Formatting or glossary placeholders were not preserved by the translation "
+"API."
+msgstr "Les espaces réservés de mise en forme ou du glossaire ont été modifiés par l’API de traduction."
 
 #: includes/class-pandatranslate-inline-protector.php:49
 msgid "Formatting placeholders are not validly nested."
@@ -473,8 +503,8 @@ msgstr "Les espaces réservés de formatage ne sont pas correctement imbriqués.
 msgid "Formatting placeholders may not be changed."
 msgstr "Les espaces réservés de formatage ne peuvent pas être modifiés."
 
+#: includes/class-pandatranslate-plugin.php:736
 #: includes/class-pandatranslate-text-admin.php:32
-#: includes/class-pandatranslate-plugin.php:702
 msgid "Formatting variables must remain unchanged."
 msgstr "Les variables de mise en forme doivent rester inchangées."
 
@@ -483,12 +513,14 @@ msgid "Found translations"
 msgstr "Traductions trouvées"
 
 #: includes/class-pandatranslate-edition.php:23
-#: includes/class-pandatranslate-plugin.php:431
-msgid "Free includes the source language and one translation language. Existing additional language data remains stored."
+#: includes/class-pandatranslate-plugin.php:437
+msgid ""
+"Free includes the source language and one translation language. Existing "
+"additional language data remains stored."
 msgstr "Free comprend la langue source et une langue de traduction. Les données existantes des autres langues sont conservées."
 
-#: includes/class-pandatranslate-plugin.php:224
 #: includes/class-pandatranslate-glossary-admin.php:27
+#: includes/class-pandatranslate-plugin.php:228
 msgid "Glossary"
 msgstr "Glossaire"
 
@@ -497,7 +529,7 @@ msgstr "Glossaire"
 msgid "Glossary entry not found."
 msgstr "Entrée du glossaire introuvable."
 
-#: includes/class-pandatranslate-plugin.php:378
+#: includes/class-pandatranslate-plugin.php:382
 msgid "Google Cloud project ID"
 msgstr "ID du projet Google Cloud"
 
@@ -509,44 +541,47 @@ msgstr "Google Translate v2"
 msgid "Google Translate v3"
 msgstr "Google Translate v3"
 
-#: includes/class-pandatranslate-plugin.php:422
+#: includes/class-pandatranslate-plugin.php:428
 msgid "Google Translation API"
 msgstr "API Google Translation"
 
-#: includes/class-pandatranslate-google-provider.php:92
+#: includes/class-pandatranslate-google-provider.php:96
 msgid "Google authentication failed."
 msgstr "L'authentification Google a échoué."
 
-#: includes/class-pandatranslate-google-provider.php:41
+#: includes/class-pandatranslate-google-provider.php:44
 msgid "Google did not return a translation."
 msgstr "Google n'a pas renvoyé de traduction."
 
-#: includes/class-pandatranslate-plugin.php:374
-#: includes/class-pandatranslate-plugin.php:375
+#: includes/class-pandatranslate-plugin.php:378
+#: includes/class-pandatranslate-plugin.php:379
 msgid "Google v2 API key"
 msgstr "Clé API Google v2"
 
-#: includes/class-pandatranslate-google-provider.php:55
+#: includes/class-pandatranslate-google-provider.php:59
 msgid "Google v2 did not return a translation."
 msgstr "Google v2 n'a pas renvoyé de traduction."
 
-#: includes/class-pandatranslate-plugin.php:504
+#: includes/class-pandatranslate-plugin.php:510
 msgid "Hover background"
 msgstr "Survoler l'arrière-plan"
 
-#: includes/class-pandatranslate-plugin.php:504
+#: includes/class-pandatranslate-plugin.php:510
 msgid "Hover text"
 msgstr "Texte survolé"
 
-#: includes/class-pandatranslate-plugin.php:337
-msgid "If the editor opens but no content can be selected, check the PHP DOM extension first. URL rules can be refreshed by saving WordPress permalinks once."
+#: includes/class-pandatranslate-plugin.php:341
+msgid ""
+"If the editor opens but no content can be selected, check the PHP DOM "
+"extension first. URL rules can be refreshed by saving WordPress permalinks "
+"once."
 msgstr "Si l’éditeur s’ouvre mais qu’aucun contenu ne peut être sélectionné, vérifiez d’abord l’extension PHP DOM. Les règles d’URL peuvent être actualisées en enregistrant une fois les permaliens WordPress."
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:625
 msgid "Image title"
 msgstr "Titre de l’image"
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:625
 msgid "Image translation"
 msgstr "Traduction d’image"
 
@@ -559,35 +594,37 @@ msgstr "Importer des traductions"
 msgid "Imported"
 msgstr "Importés"
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Importing TranslatePress translations…"
 msgstr "Importation des traductions TranslatePress…"
 
 #: includes/class-pandatranslate-migration.php:77
-msgid "Imports existing TranslatePress dictionary entries and preserves their publication status. Existing PandaTranslate entries are preserved."
+msgid ""
+"Imports existing TranslatePress dictionary entries and preserves their "
+"publication status. Existing PandaTranslate entries are preserved."
 msgstr "Importe les entrées existantes du dictionnaire TranslatePress en conservant leur statut de publication. Les entrées PandaTranslate existantes sont conservées."
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Inactive"
 msgstr "Inactif"
 
-#: includes/class-pandatranslate-plugin.php:460
+#: includes/class-pandatranslate-plugin.php:466
 msgid "Informal"
 msgstr "Informel"
 
-#: includes/class-pandatranslate-translation-jobs.php:28
 #: includes/class-pandatranslate-migration.php:122
-#: includes/class-pandatranslate-plugin.php:650
+#: includes/class-pandatranslate-plugin.php:667
+#: includes/class-pandatranslate-translation-jobs.php:51
 msgid "Invalid target language."
 msgstr "Langue cible non valide."
 
-#: includes/class-pandatranslate-translation-jobs.php:54
+#: includes/class-pandatranslate-translation-jobs.php:82
 msgid "Invalid translation phase."
 msgstr "Phase de traduction non valide."
 
+#: includes/class-pandatranslate-repository.php:104
+#: includes/class-pandatranslate-repository.php:132
 #: includes/class-pandatranslate-text-admin.php:28
-#: includes/class-pandatranslate-repository.php:101
-#: includes/class-pandatranslate-repository.php:129
 msgid "Invalid translation status."
 msgstr "Statut de traduction invalide."
 
@@ -595,62 +632,62 @@ msgstr "Statut de traduction invalide."
 msgid "JPG, PNG, WebP or SVG"
 msgstr "JPG, PNG, WebP ou SVG"
 
+#: includes/class-pandatranslate-plugin.php:443
 #: includes/class-pandatranslate-text-admin.php:54
-#: includes/class-pandatranslate-plugin.php:437
 msgid "Language"
 msgstr "Langue"
 
-#: includes/class-pandatranslate-plugin.php:296
+#: includes/class-pandatranslate-plugin.php:300
 msgid "Language URL format"
 msgstr "Format des URL des langues"
 
-#: includes/class-pandatranslate-plugin.php:424
+#: includes/class-pandatranslate-plugin.php:430
 msgid "Language URL rules"
 msgstr "Règles d’URL des langues"
 
-#: includes/class-pandatranslate-plugin.php:481
+#: includes/class-pandatranslate-plugin.php:487
 msgid "Language code only"
 msgstr "Code de langue uniquement"
 
-#: includes/class-pandatranslate-plugin.php:480
+#: includes/class-pandatranslate-plugin.php:486
 msgid "Language display"
 msgstr "Affichage des langues"
 
-#: includes/class-pandatranslate-plugin.php:482
+#: includes/class-pandatranslate-plugin.php:488
 msgid "Language name in its own language"
 msgstr "Nom dans la langue correspondante"
 
-#: includes/class-pandatranslate-plugin.php:437
+#: includes/class-pandatranslate-plugin.php:443
 msgid "Language name in website language"
 msgstr "Nom dans la langue du site"
 
-#: includes/class-pandatranslate-plugin.php:481
+#: includes/class-pandatranslate-plugin.php:487
 msgid "Language name only"
 msgstr "Nom de langue uniquement"
 
-#: includes/class-pandatranslate-plugin.php:296
+#: includes/class-pandatranslate-plugin.php:300
 msgid "Language paths (/en/…, /fr/…)"
 msgstr "Chemins de langue (/en/…, /fr/…)"
 
-#: includes/class-pandatranslate-plugin.php:754
-#: includes/class-pandatranslate-plugin.php:760
-#: includes/class-pandatranslate-plugin.php:761
-#: includes/class-pandatranslate-plugin.php:765
+#: includes/class-pandatranslate-plugin.php:788
+#: includes/class-pandatranslate-plugin.php:794
+#: includes/class-pandatranslate-plugin.php:795
+#: includes/class-pandatranslate-plugin.php:799
 msgid "Language selection"
 msgstr "Sélection de la langue"
 
-#: includes/class-pandatranslate-plugin.php:291
+#: includes/class-pandatranslate-plugin.php:295
 msgid "Language settings"
 msgstr "Paramètres de langue"
 
 #: includes/class-pandatranslate-features.php:114
 #: includes/class-pandatranslate-features.php:131
-#: includes/class-pandatranslate-plugin.php:282
-#: includes/class-pandatranslate-plugin.php:298
+#: includes/class-pandatranslate-plugin.php:286
+#: includes/class-pandatranslate-plugin.php:302
 msgid "Language switcher"
 msgstr "Sélecteur de langue"
 
-#: includes/class-pandatranslate-plugin.php:382
+#: includes/class-pandatranslate-plugin.php:386
 msgid "Last API test"
 msgstr "Dernier test de l’API"
 
@@ -659,12 +696,20 @@ msgstr "Dernier test de l’API"
 msgid "Last completed migration: %s"
 msgstr "Dernière migration terminée : %s"
 
-#: includes/class-pandatranslate-plugin.php:502
+#: includes/class-pandatranslate-plugin.php:395
+msgid "Last key test"
+msgstr "Dernier test de clé"
+
+#: includes/class-pandatranslate-text-admin.php:53
+msgid "Last translation error"
+msgstr "Dernière erreur de traduction"
+
+#: includes/class-pandatranslate-plugin.php:508
 msgid "Left"
 msgstr "Gauche"
 
-#: includes/class-pandatranslate-plugin.php:282
-#: includes/class-pandatranslate-plugin.php:332
+#: includes/class-pandatranslate-plugin.php:286
+#: includes/class-pandatranslate-plugin.php:336
 msgid "License"
 msgstr "Licence"
 
@@ -672,31 +717,31 @@ msgstr "Licence"
 msgid "Link external image"
 msgstr "Lier une image externe"
 
-#: includes/class-pandatranslate-plugin.php:348
+#: includes/class-pandatranslate-plugin.php:352
 msgid "MCP access"
 msgstr "Accès MCP"
 
-#: includes/class-pandatranslate-plugin.php:513
+#: includes/class-pandatranslate-plugin.php:519
 msgid "Manual"
 msgstr "Manuel"
 
-#: includes/class-pandatranslate-plugin.php:488
+#: includes/class-pandatranslate-plugin.php:494
 msgid "Menu container background"
 msgstr "Arrière-plan du menu"
 
-#: includes/class-pandatranslate-plugin.php:513
+#: includes/class-pandatranslate-plugin.php:519
 msgid "Migrated"
 msgstr "Migré"
 
-#: includes/class-pandatranslate-plugin.php:282
+#: includes/class-pandatranslate-plugin.php:286
 msgid "Migration"
 msgstr "Migrations"
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Migration completed."
 msgstr "Migration terminée."
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Migration interrupted. Restarting is safe."
 msgstr "Migration interrompue. Un redémarrage est possible sans perte de données."
 
@@ -708,31 +753,35 @@ msgstr "Progression de la migration"
 msgid "Migration status by language"
 msgstr "État de la migration par langue"
 
-#: includes/class-pandatranslate-plugin.php:349
-#: includes/class-pandatranslate-plugin.php:351
-#: includes/class-pandatranslate-plugin.php:419
-#: includes/class-pandatranslate-plugin.php:420
-#: includes/class-pandatranslate-plugin.php:421
+#: includes/class-pandatranslate-plugin.php:353
+#: includes/class-pandatranslate-plugin.php:355
+#: includes/class-pandatranslate-plugin.php:425
+#: includes/class-pandatranslate-plugin.php:426
+#: includes/class-pandatranslate-plugin.php:427
 msgid "Missing"
 msgstr "Manquant"
 
 #: includes/class-pandatranslate-edition.php:23
-msgid "More than two languages, multilingual SEO and WooCommerce integrations. Included in the All-in bundle."
+msgid ""
+"More than two languages, multilingual SEO and WooCommerce integrations. "
+"Included in the All-in bundle."
 msgstr "Plus de deux langues, SEO multilingue et intégrations WooCommerce. Inclus dans le pack All-in."
 
-#: includes/class-pandatranslate-plugin.php:365
-msgid "Multiple APIs can be enabled simultaneously. The API is selected for each translation run."
+#: includes/class-pandatranslate-plugin.php:369
+msgid ""
+"Multiple APIs can be enabled simultaneously. The API is selected for each "
+"translation run."
 msgstr "Plusieurs API peuvent être activées simultanément. L’API est choisie pour chaque traduction."
 
-#: includes/class-pandatranslate-plugin.php:300
+#: includes/class-pandatranslate-plugin.php:304
 msgid "Navigation menus"
 msgstr "Menus de navigation"
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Next"
 msgstr "Suivant"
 
-#: includes/class-pandatranslate-plugin.php:358
+#: includes/class-pandatranslate-plugin.php:362
 msgid "No MCP activity has been recorded yet."
 msgstr "Aucune activité MCP n’a encore été enregistrée."
 
@@ -740,22 +789,24 @@ msgstr "Aucune activité MCP n’a encore été enregistrée."
 msgid "No TranslatePress dictionary tables were found."
 msgstr "Aucune table de dictionnaire TranslatePress n’a été trouvée."
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "No glossary entries."
 msgstr "Aucune entrée dans le glossaire."
 
-#: includes/class-pandatranslate-plugin.php:444
+#: includes/class-pandatranslate-plugin.php:450
 msgid "No matching language found."
 msgstr "Aucune langue correspondante trouvée."
 
-#: includes/class-pandatranslate-translation-jobs.php:59
-#: includes/class-pandatranslate-plugin.php:789
-msgid "No source content was collected. Check published content types and source-page collection."
+#: includes/class-pandatranslate-plugin.php:823
+#: includes/class-pandatranslate-translation-jobs.php:87
+msgid ""
+"No source content was collected. Check published content types and source-"
+"page collection."
 msgstr "Aucun contenu source collecté. Vérifier les types de contenus publiés et la collecte des pages."
 
-#: includes/class-pandatranslate-plugin.php:244
-#: includes/class-pandatranslate-plugin.php:399
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-plugin.php:405
+#: includes/class-pandatranslate-plugin.php:636
 msgid "No translation API configured"
 msgstr "Aucune API de traduction configurée"
 
@@ -763,73 +814,74 @@ msgstr "Aucune API de traduction configurée"
 msgid "No valid published update was found."
 msgstr "Aucune mise à jour publiée valide trouvée."
 
-#: includes/class-pandatranslate-plugin.php:422
+#: includes/class-pandatranslate-plugin.php:428
 msgid "Not enabled"
 msgstr "Non activé"
 
-#: includes/class-pandatranslate-plugin.php:382
+#: includes/class-pandatranslate-plugin.php:386
+#: includes/class-pandatranslate-plugin.php:395
 msgid "Not tested"
 msgstr "Non testé"
 
-#: includes/class-pandatranslate-plugin.php:469
-#: includes/class-pandatranslate-plugin.php:513
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:475
+#: includes/class-pandatranslate-plugin.php:519
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Not translated"
 msgstr "Non traduit"
 
-#: includes/class-pandatranslate-plugin.php:280
+#: includes/class-pandatranslate-plugin.php:284
 msgid "Open system status"
 msgstr "Ouvrir l’état du système"
 
-#: includes/class-pandatranslate-plugin.php:690
+#: includes/class-pandatranslate-plugin.php:724
 msgid "Open the page in the visual editor before translating this unit."
 msgstr "Ouvrez la page dans l'éditeur visuel avant de traduire cette unité."
 
-#: includes/class-pandatranslate-plugin.php:278
+#: includes/class-pandatranslate-plugin.php:282
 msgid "Open translation editor"
 msgstr "Ouvrir l'éditeur de traduction"
 
-#: includes/class-pandatranslate-plugin.php:215
+#: includes/class-pandatranslate-plugin.php:219
 msgid "OpenSSL is required to read the stored API key."
 msgstr "OpenSSL est requis pour lire la clé API stockée."
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:625
 msgid "Original image"
 msgstr "Image d’origine"
 
-#: includes/class-pandatranslate-plugin.php:419
+#: includes/class-pandatranslate-plugin.php:425
 msgid "PHP DOM extension"
 msgstr "Extension PHP-DOM"
 
-#: includes/class-pandatranslate-plugin.php:502
+#: includes/class-pandatranslate-plugin.php:508
 msgid "Padding (CSS units)"
 msgstr "Remplissage (unités CSS)"
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Page"
 msgstr "Page"
 
 #: includes/class-pandatranslate-features.php:109
-#: includes/class-pandatranslate-plugin.php:278
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:282
+#: includes/class-pandatranslate-plugin.php:636
 msgid "PandaTranslate"
 msgstr "PandaTraduire"
 
 #: includes/class-pandatranslate-beaver-menu-module.php:5
+#: includes/class-pandatranslate-bricks-menu-element.php:6
 #: includes/class-pandatranslate-features.php:180
 #: includes/class-pandatranslate-features.php:186
 #: includes/class-pandatranslate-features.php:192
 #: includes/class-pandatranslate-features.php:193
 #: includes/class-pandatranslate-features.php:194
-#: includes/class-pandatranslate-bricks-menu-element.php:6
 msgid "PandaTranslate language menu"
 msgstr "Menu de langues PandaTranslate"
 
-#: includes/class-pandatranslate-plugin.php:280
+#: includes/class-pandatranslate-plugin.php:284
 msgid "PandaTranslate needs attention."
 msgstr "PandaTranslate nécessite une intervention."
 
-#: includes/class-pandatranslate-plugin.php:282
+#: includes/class-pandatranslate-plugin.php:286
 msgid "PandaTranslate settings"
 msgstr "Paramètres de PandaTranslate"
 
@@ -842,23 +894,25 @@ msgstr "Suspendre la collecte des textes"
 msgid "Permission required to run this import."
 msgstr "Autorisation requise pour cette importation."
 
-#: includes/class-pandatranslate-plugin.php:781
+#: includes/class-pandatranslate-plugin.php:815
 msgid "Permission required to start this translation run."
 msgstr "Autorisation requise pour démarrer cette traduction."
 
-#: includes/class-pandatranslate-plugin.php:379
-msgid "Place this in wp-config.php. The JSON file should be outside the public web root and readable only by the web server."
+#: includes/class-pandatranslate-plugin.php:383
+msgid ""
+"Place this in wp-config.php. The JSON file should be outside the public web "
+"root and readable only by the web server."
 msgstr "Placez-le dans wp-config.php. Le fichier JSON doit se trouver en dehors de la racine Web publique et être lisible uniquement par le serveur Web."
 
-#: includes/class-pandatranslate-plugin.php:426
+#: includes/class-pandatranslate-plugin.php:432
 msgid "Plugin version"
 msgstr "Version de l’extension"
 
-#: includes/class-pandatranslate-plugin.php:460
+#: includes/class-pandatranslate-plugin.php:466
 msgid "Polite"
 msgstr "Formelle"
 
-#: includes/class-pandatranslate-plugin.php:307
+#: includes/class-pandatranslate-plugin.php:311
 msgid "Position"
 msgstr "Poste"
 
@@ -866,11 +920,11 @@ msgstr "Poste"
 msgid "Preparing migration…"
 msgstr "Préparation de la migration…"
 
-#: includes/class-pandatranslate-translation-jobs.php:52
+#: includes/class-pandatranslate-translation-jobs.php:80
 msgid "Preparing untranslated content…"
 msgstr "Préparation des contenus non traduits…"
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Previous"
 msgstr "Précédent"
 
@@ -879,7 +933,7 @@ msgstr "Précédent"
 msgid "Processed"
 msgstr "Traités"
 
-#: includes/class-pandatranslate-plugin.php:514
+#: includes/class-pandatranslate-plugin.php:520
 msgid "Progress by language"
 msgstr "Progrès par langue"
 
@@ -887,57 +941,65 @@ msgstr "Progrès par langue"
 msgid "Protect product terms or define an exact replacement for each language."
 msgstr "Protégez les termes du produit ou définissez un remplacement exact pour chaque langue."
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Publish"
 msgstr "Publier"
 
-#: includes/class-pandatranslate-plugin.php:317
+#: includes/class-pandatranslate-plugin.php:321
 msgid "Publish automatic translations immediately"
 msgstr "Publiez immédiatement des traductions automatiques"
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Publish selected translations"
 msgstr "Publier les traductions sélectionnées"
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Published"
 msgstr "Publié"
 
+#: includes/class-pandatranslate-plugin.php:666
 #: includes/class-pandatranslate-text-admin.php:30
-#: includes/class-pandatranslate-plugin.php:649
 msgid "Publishing permission is required."
 msgstr "L’autorisation de publication est requise."
 
-#: includes/class-pandatranslate-plugin.php:319
-msgid "Queues all published content of the selected types for the selected translation API."
+#: includes/class-pandatranslate-plugin.php:323
+msgid ""
+"Queues all published content of the selected types for the selected "
+"translation API."
 msgstr "Place tous les contenus publiés des types sélectionnés dans la file de l’API de traduction choisie."
 
-#: includes/class-pandatranslate-plugin.php:420
+#: includes/class-pandatranslate-plugin.php:426
 msgid "REST API"
 msgstr "API REST"
 
-#: includes/class-pandatranslate-plugin.php:355
-msgid "Read a translation before editing. Saving requires its current revision and returns the verified saved translation."
+#: includes/class-pandatranslate-plugin.php:359
+msgid ""
+"Read a translation before editing. Saving requires its current revision and "
+"returns the verified saved translation."
 msgstr "Lire la traduction avant toute modification. L’enregistrement nécessite sa révision actuelle et renvoie la traduction enregistrée et vérifiée."
 
 #: includes/class-pandatranslate-mcp.php:55
-msgid "Read tools are safe. Translation writes and paid Google requests require confirm=true."
+msgid ""
+"Read tools are safe. Translation writes and paid Google requests require "
+"confirm=true."
 msgstr "Les outils de lecture sont sûrs. Les écritures de traduction et les demandes Google payantes nécessitent confirm=true."
 
-#: includes/class-pandatranslate-plugin.php:384
-#: includes/class-pandatranslate-plugin.php:422
+#: includes/class-pandatranslate-plugin.php:388
+#: includes/class-pandatranslate-plugin.php:428
 msgid "Ready"
 msgstr "Prêt"
 
-#: includes/class-pandatranslate-plugin.php:358
+#: includes/class-pandatranslate-plugin.php:362
 msgid "Recent MCP activity"
 msgstr "Activité MCP récente"
 
-#: includes/class-pandatranslate-plugin.php:317
-msgid "Recommended: leave disabled so translations remain automatic drafts until reviewed."
+#: includes/class-pandatranslate-plugin.php:321
+msgid ""
+"Recommended: leave disabled so translations remain automatic drafts until "
+"reviewed."
 msgstr "Recommandé : laissez-le désactivé afin que les traductions restent des brouillons automatiques jusqu'à leur révision."
 
-#: includes/class-pandatranslate-plugin.php:424
+#: includes/class-pandatranslate-plugin.php:430
 msgid "Refresh recommended"
 msgstr "Actualisation recommandée"
 
@@ -945,27 +1007,27 @@ msgstr "Actualisation recommandée"
 msgid "Remove image"
 msgstr "Retirer l’image"
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:625
 msgid "Remove image mapping"
 msgstr "Supprimer l’association d’image"
 
-#: includes/class-pandatranslate-plugin.php:463
+#: includes/class-pandatranslate-plugin.php:469
 msgid "Remove language"
 msgstr "Supprimer la langue"
 
-#: includes/class-pandatranslate-plugin.php:455
+#: includes/class-pandatranslate-plugin.php:461
 msgid "Reorder language"
 msgstr "Réorganiser la langue"
 
-#: includes/class-pandatranslate-plugin.php:526
-msgid "Replace all translations, including migrated and manual texts? Google charges may apply."
-msgstr "Remplacer toutes les traductions, y compris les textes migrés et manuels ? Des frais Google peuvent s’appliquer."
+#: includes/class-pandatranslate-plugin.php:532
+msgid "Replace all translations, including migrated and manual texts?"
+msgstr "Remplacer toutes les traductions, y compris les textes migrés et manuels ?"
 
-#: includes/class-pandatranslate-plugin.php:461
+#: includes/class-pandatranslate-plugin.php:467
 msgid "Reset flag"
 msgstr "Réinitialiser le drapeau"
 
-#: includes/class-pandatranslate-plugin.php:358
+#: includes/class-pandatranslate-plugin.php:362
 msgid "Result"
 msgstr "Résultat"
 
@@ -973,31 +1035,42 @@ msgstr "Résultat"
 msgid "Resume text collection"
 msgstr "Reprendre la collecte des textes"
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:533
+msgid "Retry failed translations"
+msgstr "Relancer les traductions échouées"
+
+#: includes/class-pandatranslate-plugin.php:533
+msgid "Retry failed translations? Existing translations will be replaced."
+msgstr "Relancer les traductions échouées ? Les traductions existantes seront remplacées."
+
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Reviewed"
 msgstr "Vérifié"
 
-#: includes/class-pandatranslate-plugin.php:502
+#: includes/class-pandatranslate-plugin.php:508
 msgid "Right"
 msgstr "À droite"
 
-#: includes/class-pandatranslate-plugin.php:354
+#: includes/class-pandatranslate-plugin.php:358
 msgid "Royal MCP endpoint"
 msgstr "Point de terminaison Royal MCP"
 
-#: includes/class-pandatranslate-plugin.php:350
-msgid "Royal MCP, WordPress Abilities transports such as miniOrange, and the standalone MCP endpoint can be used simultaneously. Each connection retains its own access policy."
+#: includes/class-pandatranslate-plugin.php:354
+msgid ""
+"Royal MCP, WordPress Abilities transports such as miniOrange, and the "
+"standalone MCP endpoint can be used simultaneously. Each connection retains "
+"its own access policy."
 msgstr "Royal MCP, les connexions WordPress Abilities comme miniOrange et le point d’accès MCP autonome peuvent être utilisés simultanément. Chaque connexion conserve sa propre politique d’accès."
 
-#: includes/class-pandatranslate-plugin.php:385
+#: includes/class-pandatranslate-plugin.php:389
 msgid "Run connection test"
 msgstr "Exécuter un test de connexion"
 
-#: includes/class-pandatranslate-plugin.php:425
+#: includes/class-pandatranslate-plugin.php:431
 msgid "SEO integration"
 msgstr "Intégration SEO"
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Save draft"
 msgstr "Enregistrer le brouillon"
 
@@ -1005,11 +1078,11 @@ msgstr "Enregistrer le brouillon"
 msgid "Save entry"
 msgstr "Enregistrer l’entrée"
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:625
 msgid "Save image translation"
 msgstr "Enregistrer la traduction d’image"
 
-#: includes/class-pandatranslate-plugin.php:340
+#: includes/class-pandatranslate-plugin.php:344
 msgid "Save settings"
 msgstr "Enregistrer les paramètres"
 
@@ -1017,21 +1090,21 @@ msgstr "Enregistrer les paramètres"
 msgid "Save translation"
 msgstr "Enregistrer la traduction"
 
+#: includes/class-pandatranslate-plugin.php:625
 #: includes/class-pandatranslate-text-admin.php:53
-#: includes/class-pandatranslate-plugin.php:609
 msgid "Saved."
 msgstr "Enregistré."
 
-#: includes/class-pandatranslate-plugin.php:437
-#: includes/class-pandatranslate-plugin.php:457
+#: includes/class-pandatranslate-plugin.php:443
+#: includes/class-pandatranslate-plugin.php:463
 msgid "Schema"
 msgstr "Schéma"
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Search"
 msgstr "Rechercher"
 
-#: includes/class-pandatranslate-plugin.php:442
+#: includes/class-pandatranslate-plugin.php:448
 msgid "Search by code or language…"
 msgstr "Recherche par code ou langue…"
 
@@ -1039,8 +1112,8 @@ msgstr "Recherche par code ou langue…"
 msgid "Search translations"
 msgstr "Rechercher des traductions"
 
-#: includes/class-pandatranslate-text-admin.php:58
 #: includes/class-pandatranslate-features.php:116
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Select all"
 msgstr "Tout sélectionner"
 
@@ -1050,9 +1123,9 @@ msgstr "Sélectionner une image accessible dans la médiathèque."
 
 #: includes/class-pandatranslate-media.php:32
 #: includes/class-pandatranslate-media.php:37
-#: includes/class-pandatranslate-plugin.php:647
-#: includes/class-pandatranslate-plugin.php:687
-#: includes/class-pandatranslate-plugin.php:788
+#: includes/class-pandatranslate-plugin.php:664
+#: includes/class-pandatranslate-plugin.php:721
+#: includes/class-pandatranslate-plugin.php:822
 msgid "Select an active target language."
 msgstr "Sélectionner une langue cible active."
 
@@ -1064,8 +1137,8 @@ msgstr "Sélectionner une couleur"
 msgid "Select image"
 msgstr "Sélectionner une image"
 
-#: includes/class-pandatranslate-plugin.php:244
-#: includes/class-pandatranslate-plugin.php:442
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-plugin.php:448
 msgid "Select language"
 msgstr "Sélectionnez la langue"
 
@@ -1073,7 +1146,7 @@ msgstr "Sélectionnez la langue"
 msgid "Select up to 50 translations."
 msgstr "Sélectionner jusqu’à 50 traductions."
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Select visible content to translate it."
 msgstr "Sélectionnez le contenu visible pour le traduire."
 
@@ -1089,25 +1162,25 @@ msgstr "Définissez confirm sur true pour enregistrer la traduction."
 msgid "Set confirm to true to start the paid Google request."
 msgstr "Définissez confirm sur true pour démarrer la demande Google payante."
 
-#: includes/class-pandatranslate-plugin.php:224
-#: includes/class-pandatranslate-plugin.php:248
-#: includes/class-pandatranslate-plugin.php:259
+#: includes/class-pandatranslate-plugin.php:228
+#: includes/class-pandatranslate-plugin.php:252
+#: includes/class-pandatranslate-plugin.php:263
 msgid "Settings"
 msgstr "Paramètres"
 
-#: includes/class-pandatranslate-plugin.php:304
+#: includes/class-pandatranslate-plugin.php:308
 msgid "Shortcode"
 msgstr "Code court"
 
-#: includes/class-pandatranslate-plugin.php:306
+#: includes/class-pandatranslate-plugin.php:310
 msgid "Show the floating language menu"
 msgstr "Afficher le menu de langue flottant"
 
-#: includes/class-pandatranslate-plugin.php:294
+#: includes/class-pandatranslate-plugin.php:298
 msgid "Show “Translate page” in the upper admin bar"
 msgstr "Afficher « Page de traduction » dans la barre d'administration supérieure"
 
-#: includes/class-pandatranslate-plugin.php:493
+#: includes/class-pandatranslate-plugin.php:499
 msgid "Side by side"
 msgstr "Côte à côte"
 
@@ -1116,21 +1189,23 @@ msgstr "Côte à côte"
 msgid "Skipped"
 msgstr "Ignorés"
 
+#: includes/class-pandatranslate-plugin.php:636
 #: includes/class-pandatranslate-text-admin.php:53
-#: includes/class-pandatranslate-text-admin.php:58
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Source"
 msgstr "Source"
 
-#: includes/class-pandatranslate-translation-jobs.php:21
-msgid "Source content could not be collected. Check loopback requests and page caching."
+#: includes/class-pandatranslate-translation-jobs.php:43
+msgid ""
+"Source content could not be collected. Check loopback requests and page "
+"caching."
 msgstr "Impossible de collecter les contenus sources. Vérifier les requêtes de bouclage et le cache des pages."
 
 #: includes/class-pandatranslate-repository.php:64
 msgid "Source content could not be prepared."
 msgstr "Impossible de préparer les contenus sources."
 
-#: includes/class-pandatranslate-plugin.php:467
+#: includes/class-pandatranslate-plugin.php:473
 msgid "Source language"
 msgstr "Langue source"
 
@@ -1139,53 +1214,65 @@ msgstr "Langue source"
 msgid "Source term"
 msgstr "Terme source"
 
-#: includes/class-pandatranslate-plugin.php:348
-msgid "Standalone access uses a dedicated WordPress administrator application password. Royal MCP and WordPress Abilities transports use their own authenticated connections."
+#: includes/class-pandatranslate-plugin.php:352
+msgid ""
+"Standalone access uses a dedicated WordPress administrator application "
+"password. Royal MCP and WordPress Abilities transports use their own "
+"authenticated connections."
 msgstr "L’accès autonome utilise un mot de passe d’application WordPress dédié avec des droits d’administration. Royal MCP et les connexions WordPress Abilities utilisent leurs propres connexions authentifiées."
 
-#: includes/class-pandatranslate-plugin.php:352
+#: includes/class-pandatranslate-plugin.php:356
 msgid "Standalone endpoint"
 msgstr "Point de terminaison autonome"
 
-#: includes/class-pandatranslate-plugin.php:460
+#: includes/class-pandatranslate-plugin.php:466
 msgid "Standard"
 msgstr "Norme"
 
-#: includes/class-pandatranslate-plugin.php:620
-msgid "Start translation requests with the selected API? Charges may apply."
-msgstr "Lancer la traduction avec l’API choisie ? Des frais peuvent s’appliquer."
-
 #: includes/class-pandatranslate-text-admin.php:56
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Status"
 msgstr "État"
 
-#: includes/class-pandatranslate-plugin.php:375
+#: includes/class-pandatranslate-plugin.php:636
+#: includes/class-pandatranslate-translation-jobs.php:109
+msgid "Stopped after repeated errors."
+msgstr "Arrêt après des erreurs répétées."
+
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-plugin.php:636
+msgid "Stopping after the current request…"
+msgstr "Arrêt après la requête en cours…"
+
+#: includes/class-pandatranslate-plugin.php:379
 msgid "Stored encrypted. Only the last four characters are shown."
 msgstr "Stocké crypté. Seuls les quatre derniers caractères sont affichés."
 
-#: includes/class-pandatranslate-plugin.php:358
+#: includes/class-pandatranslate-plugin.php:362
 msgid "Successful"
 msgstr "Réussi"
 
-#: includes/class-pandatranslate-plugin.php:487
+#: includes/class-pandatranslate-plugin.php:493
 msgid "Switcher layout and design"
 msgstr "Disposition et conception du commutateur"
 
-#: includes/class-pandatranslate-plugin.php:282
-#: includes/class-pandatranslate-plugin.php:334
+#: includes/class-pandatranslate-plugin.php:286
+#: includes/class-pandatranslate-plugin.php:338
 msgid "System status"
 msgstr "État du système"
 
-#: includes/class-pandatranslate-plugin.php:335
-msgid "Technical checks for translation, background processing, URLs and SEO integrations."
+#: includes/class-pandatranslate-plugin.php:339
+msgid ""
+"Technical checks for translation, background processing, URLs and SEO "
+"integrations."
 msgstr "Contrôles techniques pour la traduction, le traitement en arrière-plan, les URL et les intégrations SEO."
 
-#: includes/class-pandatranslate-plugin.php:385
+#: includes/class-pandatranslate-plugin.php:389
+#: includes/class-pandatranslate-plugin.php:395
 msgid "Test API key"
 msgstr "Clé API de test"
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "Testing…"
 msgstr "Test en cours…"
 
@@ -1193,47 +1280,47 @@ msgstr "Test en cours…"
 msgid "Text collection completed."
 msgstr "Collecte des textes terminée."
 
-#: includes/class-pandatranslate-plugin.php:504
+#: includes/class-pandatranslate-plugin.php:510
 msgid "Text color"
 msgstr "Couleur du texte"
 
-#: includes/class-pandatranslate-text-admin.php:58
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Text domain"
 msgstr "Domaine de traduction"
 
-#: includes/class-pandatranslate-plugin.php:210
+#: includes/class-pandatranslate-plugin.php:214
 msgid "The API key could not be encrypted."
 msgstr "La clé API n'a pas pu être chiffrée."
 
-#: includes/class-pandatranslate-deepl-provider.php:20
+#: includes/class-pandatranslate-deepl-provider.php:23
 msgid "The DeepL API could not be reached."
 msgstr "L’API DeepL est inaccessible."
 
-#: includes/class-pandatranslate-deepl-provider.php:23
+#: includes/class-pandatranslate-deepl-provider.php:26
 msgid "The DeepL API rejected the request. Check API key, plan and language."
 msgstr "L’API DeepL a rejeté la requête. Vérifier la clé API, l’offre et la langue."
 
-#: includes/class-pandatranslate-deepl-provider.php:23
+#: includes/class-pandatranslate-deepl-provider.php:26
 msgid "The DeepL character quota has been reached."
 msgstr "Le quota de caractères DeepL est atteint."
 
-#: includes/class-pandatranslate-plugin.php:422
+#: includes/class-pandatranslate-plugin.php:428
 msgid "The Google Translation API configuration is incomplete."
 msgstr "La configuration de l’API Google Translation est incomplète."
 
-#: includes/class-pandatranslate-google-provider.php:72
+#: includes/class-pandatranslate-google-provider.php:76
 msgid "The Google service-account file is incomplete."
 msgstr "Le fichier du compte de service Google est incomplet."
 
-#: includes/class-pandatranslate-plugin.php:419
+#: includes/class-pandatranslate-plugin.php:425
 msgid "The PHP DOM extension is missing."
 msgstr "L’extension PHP DOM est manquante."
 
-#: includes/class-pandatranslate-plugin.php:420
+#: includes/class-pandatranslate-plugin.php:426
 msgid "The WordPress REST API is unavailable."
 msgstr "L’API REST de WordPress n’est pas disponible."
 
-#: includes/class-pandatranslate-plugin.php:302
+#: includes/class-pandatranslate-plugin.php:306
 msgid "The active theme has not registered a menu location."
 msgstr "Le thème actif n’a pas enregistré d’emplacement de menu."
 
@@ -1241,7 +1328,7 @@ msgstr "Le thème actif n’a pas enregistré d’emplacement de menu."
 msgid "The content cannot be collected."
 msgstr "Le contenu ne peut pas être collecté."
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "The entry could not be saved."
 msgstr "Impossible d’enregistrer l’entrée."
 
@@ -1255,7 +1342,7 @@ msgstr "L’image n’a pas pu être envoyée."
 msgid "The image mapping changed. Reload before saving."
 msgstr "L’association d’image a changé. Recharger avant d’enregistrer."
 
-#: includes/class-pandatranslate-plugin.php:609
+#: includes/class-pandatranslate-plugin.php:625
 msgid "The image mapping could not be saved."
 msgstr "L’association d’image n’a pas pu être enregistrée."
 
@@ -1267,44 +1354,52 @@ msgstr "Les métadonnées de mise à jour publiées sont invalides."
 msgid "The selected translation API is not enabled."
 msgstr "L’API de traduction choisie n’est pas activée."
 
-#: includes/class-pandatranslate-google-provider.php:88
+#: includes/class-pandatranslate-google-provider.php:92
 msgid "The server could not sign the Google authentication request."
 msgstr "Le serveur n'a pas pu signer la demande d'authentification Google."
 
-#: includes/class-pandatranslate-google-provider.php:73
+#: includes/class-pandatranslate-google-provider.php:77
 msgid "The service-account token endpoint is not allowed."
 msgstr "Le point de terminaison du jeton de compte de service n’est pas autorisé."
 
-#: includes/class-pandatranslate-plugin.php:652
+#: includes/class-pandatranslate-plugin.php:669
 msgid "The source content changed. Reload the preview before saving."
 msgstr "Le contenu source a changé. Rechargez l'aperçu avant de sauvegarder."
 
-#: includes/class-pandatranslate-translation-jobs.php:15
+#: includes/class-pandatranslate-translation-jobs.php:37
 msgid "The source page could not be found."
 msgstr "La page source est introuvable."
 
-#: includes/class-pandatranslate-plugin.php:219
+#: includes/class-pandatranslate-plugin.php:223
 msgid "The stored API key could not be decrypted."
 msgstr "La clé API stockée n'a pas pu être déchiffrée."
 
-#: includes/class-pandatranslate-plugin.php:217
+#: includes/class-pandatranslate-plugin.php:221
 msgid "The stored API key is invalid."
 msgstr "La clé API stockée n'est pas valide."
 
 #: includes/class-pandatranslate-migration.php:17
-msgid "The stored translation source differs from WordPress. Confirm the WordPress source language on the Dashboard before importing. Existing imports are retained."
+msgid ""
+"The stored translation source differs from WordPress. Confirm the WordPress "
+"source language on the Dashboard before importing. Existing imports are "
+"retained."
 msgstr "La langue source enregistrée diffère de WordPress. Confirmer la langue source WordPress dans le tableau de bord avant l’importation. Les importations existantes sont conservées."
 
-#: includes/class-pandatranslate-plugin.php:434
-msgid "The stored translation source differs from the WordPress website language. Changing it affects language assignments and URLs. Existing translations are retained and are not reversed automatically."
+#: includes/class-pandatranslate-plugin.php:440
+msgid ""
+"The stored translation source differs from the WordPress website language. "
+"Changing it affects language assignments and URLs. Existing translations are "
+"retained and are not reversed automatically."
 msgstr "La langue source enregistrée diffère de la langue du site WordPress. La modification affecte les langues et les URL. Les traductions existantes sont conservées sans inversion automatique."
 
 #: includes/class-pandatranslate-static-inventory.php:46
-msgid "The text collection session expired. Restarting preserves existing translations."
+msgid ""
+"The text collection session expired. Restarting preserves existing "
+"translations."
 msgstr "La session de collecte des textes a expiré. Un redémarrage conserve les traductions existantes."
 
+#: includes/class-pandatranslate-plugin.php:671
 #: includes/class-pandatranslate-text-admin.php:26
-#: includes/class-pandatranslate-plugin.php:654
 msgid "The translation changed. Reload before saving."
 msgstr "La traduction a changé. Recharger avant d’enregistrer."
 
@@ -1312,15 +1407,15 @@ msgstr "La traduction a changé. Recharger avant d’enregistrer."
 msgid "The translation could not be saved."
 msgstr "La traduction n’a pas pu être enregistrée."
 
-#: includes/class-pandatranslate-repository.php:139
+#: includes/class-pandatranslate-repository.php:142
 msgid "The translation could not be stored."
 msgstr "La traduction n'a pas pu être stockée."
 
-#: includes/class-pandatranslate-plugin.php:421
+#: includes/class-pandatranslate-plugin.php:427
 msgid "The translation database table is missing."
 msgstr "La table de base de données des traductions est manquante."
 
-#: includes/class-pandatranslate-plugin.php:713
+#: includes/class-pandatranslate-plugin.php:747
 msgid "The translation unit does not exist."
 msgstr "L'unité de traduction n'existe pas."
 
@@ -1380,23 +1475,23 @@ msgstr "Couleurs du thème et du modèle"
 msgid "This source term already exists."
 msgstr "Ce terme source existe déjà."
 
-#: includes/class-pandatranslate-plugin.php:358
+#: includes/class-pandatranslate-plugin.php:362
 msgid "Time"
 msgstr "Temps"
 
-#: includes/class-pandatranslate-plugin.php:358
+#: includes/class-pandatranslate-plugin.php:362
 msgid "Tool"
 msgstr "Outil"
 
-#: includes/class-pandatranslate-plugin.php:502
+#: includes/class-pandatranslate-plugin.php:508
 msgid "Top"
 msgstr "Haut"
 
-#: includes/class-pandatranslate-plugin.php:307
+#: includes/class-pandatranslate-plugin.php:311
 msgid "Top left"
 msgstr "En haut à gauche"
 
-#: includes/class-pandatranslate-plugin.php:307
+#: includes/class-pandatranslate-plugin.php:311
 msgid "Top right"
 msgstr "En haut à droite"
 
@@ -1404,41 +1499,41 @@ msgstr "En haut à droite"
 msgid "Transactional content is excluded from collection."
 msgstr "Le contenu transactionnel est exclu de la collecte."
 
-#: includes/class-pandatranslate-plugin.php:536
+#: includes/class-pandatranslate-plugin.php:543
 msgid "Translate all untranslated content in all languages"
 msgstr "Traduire tous les contenus non traduits dans toutes les langues"
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 #, php-format
 msgid "Translate entire page with %s"
 msgstr "Traduire toute la page avec %s"
 
-#: includes/class-pandatranslate-plugin.php:322
+#: includes/class-pandatranslate-plugin.php:326
 msgid "Translate entire website"
 msgstr "Traduire tout le site"
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 #, php-format
 msgid "Translate entire website with %s"
 msgstr "Traduire tout le site avec %s"
 
-#: includes/class-pandatranslate-plugin.php:319
+#: includes/class-pandatranslate-plugin.php:323
 msgid "Translate existing website"
 msgstr "Traduire un site Web existant"
 
-#: includes/class-pandatranslate-plugin.php:536
+#: includes/class-pandatranslate-plugin.php:543
 msgid "Translate missing content"
 msgstr "Traduire les contenus manquants"
 
-#: includes/class-pandatranslate-plugin.php:258
+#: includes/class-pandatranslate-plugin.php:262
 msgid "Translate page"
 msgstr "Page de traduction"
 
-#: includes/class-pandatranslate-plugin.php:526
-msgid "Translate untranslated content with Google? Google charges may apply."
-msgstr "Traduire les contenus non traduits avec Google ? Des frais Google peuvent s’appliquer."
+#: includes/class-pandatranslate-plugin.php:532
+msgid "Translate untranslated content with the selected API?"
+msgstr "Traduire les contenus non traduits avec l’API sélectionnée ?"
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 #, php-format
 msgid "Translate with %s"
 msgstr "Traduire avec %s"
@@ -1449,45 +1544,58 @@ msgstr "Migration TranslatePress"
 
 #: includes/class-pandatranslate-migration.php:21
 #, php-format
-msgid "TranslatePress source %1$s differs from WordPress source %2$s. Import stopped to prevent incorrect language assignments."
+msgid ""
+"TranslatePress source %1$s differs from WordPress source %2$s. Import "
+"stopped to prevent incorrect language assignments."
 msgstr "La langue source TranslatePress %1$s diffère de la langue WordPress %2$s. Importation arrêtée pour éviter une attribution incorrecte des langues."
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Translating current page"
 msgstr "Traduire la page actuelle"
 
+#: includes/class-pandatranslate-plugin.php:228
+#: includes/class-pandatranslate-plugin.php:636
 #: includes/class-pandatranslate-text-admin.php:53
-#: includes/class-pandatranslate-text-admin.php:58
-#: includes/class-pandatranslate-plugin.php:224
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-text-admin.php:59
 msgid "Translation"
 msgstr "Traduction"
 
-#: includes/class-pandatranslate-plugin.php:320
-#: includes/class-pandatranslate-plugin.php:398
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:324
+#: includes/class-pandatranslate-plugin.php:404
+#: includes/class-pandatranslate-plugin.php:636
 msgid "Translation API"
 msgstr "API de traduction"
 
-#: includes/class-pandatranslate-plugin.php:664
+#: includes/class-pandatranslate-plugin.php:680
 msgid "Translation API permission is required."
 msgstr "L’autorisation d’utiliser les API de traduction est requise."
 
-#: includes/class-pandatranslate-plugin.php:282
-#: includes/class-pandatranslate-plugin.php:365
+#: includes/class-pandatranslate-plugin.php:286
+#: includes/class-pandatranslate-plugin.php:369
 msgid "Translation APIs"
 msgstr "API de traduction"
 
-#: includes/class-pandatranslate-plugin.php:527
-#: includes/class-pandatranslate-plugin.php:536
+#: includes/class-pandatranslate-deepl-provider.php:9
+#: includes/class-pandatranslate-google-provider.php:27
+#: includes/class-pandatranslate-plugin.php:248
+#: includes/class-pandatranslate-plugin.php:636
+#: includes/class-pandatranslate-site-progress.php:51
+#: includes/class-pandatranslate-site-progress.php:54
+#: includes/class-pandatranslate-translation-jobs.php:65
+#: includes/class-pandatranslate-translation-jobs.php:110
+msgid "Translation cancelled. Saved translations are retained."
+msgstr "Traduction annulée. Les traductions enregistrées sont conservées."
+
+#: includes/class-pandatranslate-plugin.php:534
+#: includes/class-pandatranslate-plugin.php:543
 msgid "Translation progress"
 msgstr "Progression de la traduction"
 
-#: includes/class-pandatranslate-plugin.php:437
+#: includes/class-pandatranslate-plugin.php:443
 msgid "Translation status"
 msgstr "État des traductions"
 
-#: includes/class-pandatranslate-plugin.php:421
+#: includes/class-pandatranslate-plugin.php:427
 msgid "Translation table"
 msgstr "Tableau de traduction"
 
@@ -1496,7 +1604,7 @@ msgstr "Tableau de traduction"
 msgid "Translation texts"
 msgstr "Textes à traduire"
 
-#: includes/class-pandatranslate-plugin.php:391
+#: includes/class-pandatranslate-plugin.php:397
 msgid "Translation usage"
 msgstr "Utilisation de la traduction"
 
@@ -1504,20 +1612,20 @@ msgstr "Utilisation de la traduction"
 msgid "Translations"
 msgstr "Traductions"
 
-#: includes/class-pandatranslate-plugin.php:337
+#: includes/class-pandatranslate-plugin.php:341
 msgid "Troubleshooting"
 msgstr "Dépannage"
 
-#: includes/class-pandatranslate-plugin.php:493
+#: includes/class-pandatranslate-plugin.php:499
 msgid "Type"
 msgstr "Tapez"
 
-#: includes/class-pandatranslate-plugin.php:437
-#: includes/class-pandatranslate-plugin.php:461
+#: includes/class-pandatranslate-plugin.php:443
+#: includes/class-pandatranslate-plugin.php:467
 msgid "URL code"
 msgstr "Code URL"
 
-#: includes/class-pandatranslate-plugin.php:296
+#: includes/class-pandatranslate-plugin.php:300
 msgid "URL parameters (?pt_lang=en)"
 msgstr "Paramètres URL (?pt_lang=en)"
 
@@ -1537,47 +1645,56 @@ msgstr "Utiliser l’image"
 msgid "Use reviewed or published status."
 msgstr "Utilisez le statut révisé ou publié."
 
-#: includes/class-pandatranslate-plugin.php:299
-msgid "Use the same switcher in navigation menus, as a shortcode, or as a floating control."
+#: includes/class-pandatranslate-plugin.php:303
+msgid ""
+"Use the same switcher in navigation menus, as a shortcode, or as a floating "
+"control."
 msgstr "Utilisez le même sélecteur dans les menus de navigation, comme shortcode ou comme contrôle flottant."
 
-#: includes/class-pandatranslate-plugin.php:244
+#: includes/class-pandatranslate-plugin.php:248
 msgid "View entry"
 msgstr "Afficher l’entrée"
 
-#: includes/class-pandatranslate-plugin.php:357
-msgid "When ContactPanda is active, the same tools are also registered on its central MCP endpoint."
+#: includes/class-pandatranslate-plugin.php:361
+msgid ""
+"When ContactPanda is active, the same tools are also registered on its "
+"central MCP endpoint."
 msgstr "Lorsque ContactPanda est actif, les mêmes outils sont également enregistrés sur son point de terminaison MCP central."
 
 #: includes/class-pandatranslate-glossary-admin.php:33
 msgid "Whole words only"
 msgstr "Des mots entiers seulement"
 
-#: includes/class-pandatranslate-plugin.php:498
+#: includes/class-pandatranslate-plugin.php:504
 msgid "Width (px, %, em, rem or auto)"
 msgstr "Largeur (px, %, em, rem ou auto)"
 
-#: includes/class-pandatranslate-plugin.php:353
-msgid "With Royal MCP 1.5.11 or later active, PandaTranslate tools appear on the existing Royal connection. Royal permissions and read-only restrictions also apply."
+#: includes/class-pandatranslate-plugin.php:357
+msgid ""
+"With Royal MCP 1.5.11 or later active, PandaTranslate tools appear on the "
+"existing Royal connection. Royal permissions and read-only restrictions also "
+"apply."
 msgstr "Avec Royal MCP 1.5.11 ou une version ultérieure active, les outils PandaTranslate apparaissent dans la connexion Royal existante. Les autorisations et restrictions de lecture seule de Royal s’appliquent également."
 
-#: includes/class-pandatranslate-plugin.php:423
+#: includes/class-pandatranslate-plugin.php:429
 msgid "WordPress Cron"
 msgstr "Cron WordPress"
 
-#: includes/class-pandatranslate-plugin.php:425
+#: includes/class-pandatranslate-plugin.php:431
 msgid "WordPress metadata"
 msgstr "Métadonnées WordPress"
 
-#: includes/class-pandatranslate-plugin.php:208
-msgid "WordPress security keys and OpenSSL are required to store the API key safely."
+#: includes/class-pandatranslate-plugin.php:212
+msgid ""
+"WordPress security keys and OpenSSL are required to store the API key safely."
 msgstr "Les clés de sécurité WordPress et OpenSSL sont nécessaires pour stocker la clé API en toute sécurité."
 
-#: includes/class-pandatranslate-plugin.php:393
+#: includes/class-pandatranslate-plugin.php:399
 msgid "Words (PandaTranslate count)"
 msgstr "Mots (compte PandaTranslate)"
 
-#: includes/class-pandatranslate-plugin.php:382
+#: includes/class-pandatranslate-plugin.php:386
+#: includes/class-pandatranslate-plugin.php:395
 msgid "Works"
 msgstr "Travaux"
 
@@ -1585,10 +1702,10 @@ msgstr "Travaux"
 msgid "You are not allowed to install updates."
 msgstr "L’installation de mises à jour n’est pas autorisée."
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "failed"
 msgstr "échoué"
 
-#: includes/class-pandatranslate-plugin.php:620
+#: includes/class-pandatranslate-plugin.php:636
 msgid "translated"
 msgstr "traduit"

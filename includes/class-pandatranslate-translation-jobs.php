@@ -2,6 +2,28 @@
 defined( 'ABSPATH' ) || exit;
 
 final class PandaTranslate_Translation_Jobs {
+	private static $active_run = '';
+	private static function cancel_key( $id ) { return 'pandatranslate_cancel_' . hash( 'sha256', (string) $id ); }
+	public static function set_run( $id ) { self::$active_run = (string) $id; }
+	public static function cancel( $id ) {
+		if ( ! is_string( $id ) || ! preg_match( '/^[a-zA-Z0-9_-]{8,80}$/', $id ) ) return false;
+		return set_transient( self::cancel_key( $id ), 1, 3600 ) || self::is_cancelled( $id );
+	}
+	public static function is_cancelled( $id = null ) {
+		$id = null === $id ? self::$active_run : $id; if ( ! $id ) return false;
+		$key = self::cancel_key( $id );
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) return (bool) wp_cache_get( $key, 'transient', true );
+		// Bypass the request-local options cache: cancellation is written by a concurrent request.
+		global $wpdb;
+		return (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT v.option_value FROM ' . $wpdb->options . ' v INNER JOIN ' . $wpdb->options . ' t ON t.option_name = %s WHERE v.option_name = %s AND CAST(t.option_value AS UNSIGNED) > %d LIMIT 1', '_transient_timeout_' . $key, '_transient_' . $key, time() ) );
+	}
+	public static function safe_error( $error ) {
+		$message = wp_strip_all_tags( $error->get_error_message() );
+		$message = preg_replace( '/AIza[A-Za-z0-9_-]{20,}|Bearer\s+[^\s]+/i', '[redacted]', $message );
+		$message = preg_replace( '/([?&](?:key|token|access_token)=)[^\s&]+/i', '$1[redacted]', $message );
+		return substr( $message, 0, 500 );
+	}
+
 	/** One loopback page per call. Tokens contain the job settings, never credentials. */
 	public static function collect_page( $language, $offset ) {
 		$s = PandaTranslate_Plugin::get_settings();
@@ -11,10 +33,10 @@ final class PandaTranslate_Translation_Jobs {
 		$result = self::scan( $ids[0], $language, '', true );
 		return is_wp_error( $result ) ? $result : true;
 	}
-	public static function scan( $post_id, $language, $api_id, $collect_only = false ) {
+	public static function scan( $post_id, $language, $api_id, $collect_only = false, $run_id = '' ) {
 		$url = get_permalink( $post_id ); if ( ! $url ) return new WP_Error( 'pandatranslate_page_missing', __( 'The source page could not be found.', 'pandatranslate' ) );
 		$token = wp_generate_password( 32, false, false );
-		set_transient( 'pandatranslate_scan_' . $token, array( 'language' => $language, 'api' => $api_id, 'collect_only' => $collect_only ), 5 * MINUTE_IN_SECONDS );
+		set_transient( 'pandatranslate_scan_' . $token, array( 'language' => $language, 'api' => $api_id, 'collect_only' => $collect_only, 'run_id' => $run_id ), 5 * MINUTE_IN_SECONDS );
 		$response = wp_safe_remote_get( add_query_arg( array( 'pandatranslate_scan' => $token, 'pt_lang' => $language ), $url ), array( 'timeout' => 90, 'redirection' => 2, 'user-agent' => 'PandaTranslate/' . PANDATRANSLATE_VERSION ) );
 		delete_transient( 'pandatranslate_scan_' . $token );
 		if ( is_wp_error( $response ) ) return $response;
@@ -22,6 +44,7 @@ final class PandaTranslate_Translation_Jobs {
 		return true;
 	}
 	public static function batch( $input ) {
+		self::set_run( substr( sanitize_key( $input['run_id'] ?? '' ), 0, 80 ) );
 		$language = sanitize_key( $input['language'] ?? '' ); $valid = false;
 		$s = PandaTranslate_Plugin::get_settings();
 		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( $row['code'] === $language && $row['active'] && $language !== $s['source_language'] ) $valid = true;
@@ -35,6 +58,11 @@ final class PandaTranslate_Translation_Jobs {
 		}
 		$result = array( 'phase' => $phase, 'cursor' => $cursor, 'limit_id' => $limit, 'api' => $api_id, 'done' => false, 'success' => absint( $input['success'] ?? 0 ), 'errors' => absint( $input['errors'] ?? 0 ) );
 		$result['total_pages'] = absint( $input['total_pages'] ?? 0 ); $result['total_units'] = absint( $input['total_units'] ?? 0 ); $result['prepared'] = absint( $input['prepared'] ?? 0 ); $result['stage'] = $phase;
+		$result['run_id'] = self::$active_run;
+		$result['consecutive_errors'] = absint( $input['consecutive_errors'] ?? 0 );
+		$result['last_error_code'] = sanitize_key( $input['last_error_code'] ?? '' );
+		$result['last_error_message'] = substr( wp_strip_all_tags( $input['last_error_message'] ?? '' ), 0, 500 );
+		if ( self::is_cancelled() ) { $result['done'] = true; $result['cancelled'] = true; $result['message'] = __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ); return $result; }
 		if ( 'collect' === $phase ) {
 			if ( ! $result['total_pages'] && function_exists( 'wp_count_posts' ) ) foreach ( $s['auto_post_types'] as $type ) $result['total_pages'] += (int) ( wp_count_posts( $type )->publish ?? 0 );
 			$collected = self::collect_page( $language, $cursor ); if ( is_wp_error( $collected ) ) return $collected;
@@ -54,15 +82,32 @@ final class PandaTranslate_Translation_Jobs {
 		if ( 'translate' !== $phase ) return new WP_Error( 'pandatranslate_phase', __( 'Invalid translation phase.', 'pandatranslate' ) );
 		global $wpdb; $table = PandaTranslate_Repository::table();
 		if ( ! $limit ) $limit = (int) $wpdb->get_var( $wpdb->prepare( "SELECT MAX(id) FROM {$table} WHERE target_language = %s", $language ) );
-		$condition = 'all' === ( $input['mode'] ?? '' ) ? '' : " AND (status = 'untranslated' OR TRIM(translated_html) = '')";
+		$condition = 'all' === ( $input['mode'] ?? '' ) ? '' : ( 'failed' === ( $input['mode'] ?? '' ) ? " AND last_error IS NOT NULL AND TRIM(last_error) <> ''" : " AND (status = 'untranslated' OR TRIM(translated_html) = '')" );
 		if ( ! $result['total_units'] ) $result['total_units'] = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE target_language = %s AND id <= %d {$condition}", $language, $limit ) );
 		if ( ! $limit ) return new WP_Error( 'pandatranslate_no_sources', __( 'No source content was collected. Check published content types and source-page collection.', 'pandatranslate' ) );
 		$units = $wpdb->get_results( $wpdb->prepare( "SELECT id,unit_key FROM {$table} WHERE target_language = %s AND id > %d AND id <= %d {$condition} ORDER BY id ASC LIMIT 5", $language, $cursor, $limit ), ARRAY_A );
-		foreach ( $units as $unit ) { $translated = PandaTranslate_Plugin::auto_translate_known( $unit['unit_key'], $language, $api_id ); if ( is_wp_error( $translated ) ) ++$result['errors']; else ++$result['success']; $result['cursor'] = (int) $unit['id']; }
-		$result['limit_id'] = $limit; $result['done'] = count( $units ) < 5;
+		foreach ( $units as $unit ) {
+			if ( self::is_cancelled() ) { $result['cancelled'] = true; break; }
+			$translated = PandaTranslate_Plugin::auto_translate_known( $unit['unit_key'], $language, $api_id );
+			if ( is_wp_error( $translated ) ) {
+				if ( 'pandatranslate_cancelled' === $translated->get_error_code() ) { $result['cancelled'] = true; break; }
+				++$result['errors']; $code = sanitize_key( $translated->get_error_code() );
+				$result['consecutive_errors'] = $code === $result['last_error_code'] ? $result['consecutive_errors'] + 1 : 1;
+				$result['last_error_code'] = $code; $result['last_error_message'] = self::safe_error( $translated );
+				if ( method_exists( $repository, 'record_error' ) ) $repository->record_error( $unit['unit_key'], $language, $code . ': ' . $result['last_error_message'] );
+				if ( $result['consecutive_errors'] >= 3 ) $result['failed'] = true;
+			} else { ++$result['success']; $result['consecutive_errors'] = 0; }
+			$result['cursor'] = (int) $unit['id'];
+			if ( ! empty( $result['failed'] ) ) break;
+		}
+		if ( self::is_cancelled() ) $result['cancelled'] = true;
+		$result['limit_id'] = $limit; $result['done'] = count( $units ) < 5 || ! empty( $result['failed'] ) || ! empty( $result['cancelled'] );
 		$result['message'] = sprintf( __( '%1$d translated · %2$d failed', 'pandatranslate' ), $result['success'], $result['errors'] ) . ' · ' . PandaTranslate_Providers::label( $api_id );
 		$result['processed'] = $result['success'] + $result['errors']; $result['total'] = $result['total_units'];
 		$result['message'] .= ' · ' . $result['processed'] . ' / ' . $result['total_units'];
+		if ( $result['last_error_message'] ) $result['message'] .= ' · ' . $result['last_error_message'] . ' [' . $result['last_error_code'] . ']';
+		if ( ! empty( $result['failed'] ) ) $result['message'] = __( 'Stopped after repeated errors.', 'pandatranslate' ) . ' ' . $result['message'];
+		if ( ! empty( $result['cancelled'] ) ) $result['message'] = __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ) . ' ' . $result['message'];
 		return $result;
 	}
 }

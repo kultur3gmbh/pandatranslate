@@ -73,3 +73,5 @@ $site_options['show_on_front'] = 'posts';
 $wp = (object) array( 'request' => 'en', 'query_vars' => array( 'pt_lang' => 'en' ) );
 PandaTranslate_Routing::resolve_translated_slug( $wp ); check( false, isset( $wp->query_vars['page_id'] ) );
 echo "static homepage remains the same for language paths and query URLs; search, direct posts and blog home preserved: ok\n";
+
+check('flag_code', PandaTranslate_Plugin::defaults()['switcher_label_mode']);

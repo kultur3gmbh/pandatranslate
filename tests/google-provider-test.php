@@ -16,7 +16,7 @@ function wp_remote_retrieve_body( $response ) { return $response['body']; }
 function wp_remote_post( $url, $args ) {
 	if ( false !== strpos( $url, 'oauth2.googleapis.com' ) ) return array( 'response' => array( 'code' => 200 ), 'body' => json_encode( array( 'access_token' => 'test-token', 'expires_in' => 3600 ) ) );
 	if ( false !== strpos( $url, '/language/translate/v2?key=test-api-key' ) ) {
-		$body = json_decode( $args['body'], true ); assert( 'text' === $body['format'] );
+		$body = json_decode( $args['body'], true ); assert( (false !== strpos($body['q'][0], 'data-pt-token') ? 'html' : 'text') === $body['format'] );
 		return array( 'response' => array( 'code' => 200 ), 'body' => json_encode( array( 'data' => array( 'translations' => array( array( 'translatedText' => 'Hallo v2 [[PT:0:OPEN]]Welt[[PT:1:CLOSE]]' ) ) ) ) ) );
 	}
 	assert( false !== strpos( $url, 'translation.googleapis.com/v3/projects/test-project/locations/global:translateText' ) );

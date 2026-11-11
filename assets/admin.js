@@ -13,28 +13,41 @@
 		button.disabled=true;button.setAttribute('aria-busy','true');output.textContent=config.testing;
 		fetch(config.testUrl,{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':config.nonce},body:JSON.stringify(payload)}).then(function(response){return response.json().then(function(data){if(!response.ok)throw data;return data;});}).then(function(data){output.textContent=config.connected+': '+data.translation;if(key&&button.dataset.googleTest==='v2')key.value='';window.setTimeout(function(){window.location.reload();},900);}).catch(function(error){output.textContent=error.message||config.testFailed;}).finally(function(){button.disabled=false;button.removeAttribute('aria-busy');});
 	});});
+    var deeplTest=document.querySelector('[data-deepl-test]');
+    if(deeplTest)deeplTest.addEventListener('click',function(){var key=document.querySelector('input[name$="[deepl_key]"]'),plan=document.querySelector('select[name$="[deepl_endpoint]"]'),output=document.querySelector('[data-deepl-result]');deeplTest.disabled=true;output.textContent=config.testing;
+        fetch(config.deeplTestUrl,{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':config.nonce},body:JSON.stringify({api_key:key.value,plan:plan.value})}).then(function(r){return r.json().then(function(data){if(!r.ok)throw data;return data;});}).then(function(data){output.textContent=config.connected+': '+data.translation;key.value='';}).catch(function(e){output.textContent=e.message||config.testFailed;}).finally(function(){deeplTest.disabled=false;});
+    });
 	var apiSelector=document.querySelector('#pandatranslate-run-api'),runLabel=document.querySelector('[data-api-run-label]');
 	function selectedApi(){return apiSelector?apiSelector.value:config.defaultApi;}
 	function updateRunLabel(){if(runLabel&&apiSelector&&apiSelector.selectedOptions.length)runLabel.textContent=apiSelector.value?apiSelector.selectedOptions[0].textContent:config.noApi;}
 	if(apiSelector){apiSelector.addEventListener('change',updateRunLabel);updateRunLabel();}
 	var picker = document.querySelector('[data-language-picker]'), rows = document.querySelector('[data-language-rows]');
 	if(rows)rows.addEventListener('change',function(e){if(rows.dataset.languageLimit!=='2'||!e.target.matches('input[type="checkbox"][name$="[active]"]')||!e.target.checked)return;rows.querySelectorAll('[data-language-row]:not(.is-source-language) input[type="checkbox"][name$="[active]"]').forEach(function(input){if(input!==e.target)input.checked=false;});});
-    function runTranslation(button, languages, mode) {
-        if(!selectedApi() || (mode==='all'&&!window.confirm(button.dataset.confirm)))return;
-        var host=button.closest('.pandatranslate-language-actions'),output=host.querySelector('[data-language-run-status]'),progress=host.querySelector('progress'),index=0,api=selectedApi(),succeeded=0,failed=0;
-        var controls=Array.from(document.querySelectorAll('[data-language-translate],[data-language-translate-all]')).concat(apiSelector?[apiSelector]:[]),previous=controls.map(function(c){return c.disabled;});
-        controls.forEach(function(c){c.disabled=true;});if(progress){progress.hidden=false;progress.removeAttribute('value');}
-        function unlock(){controls.forEach(function(c,i){c.disabled=previous[i];});}
+    function cancelRun(id,nonce){return fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_cancel_translation',nonce:nonce,run_id:id})}).then(function(r){return r.json().then(function(v){if(!r.ok||!v.success)throw new Error(config.cancelFailed);return v.data;});});}
+    function cancelButton(){var c=document.createElement('button');c.type='button';c.className='contactpanda-large-action';c.dataset.contactpandaAction='cancel';c.dataset.contactpandaActionMode='labelled';c.textContent=config.cancelLabel;return c;}
+    function runTranslation(button,languages,mode){
+        if(!selectedApi()||((mode==='all'||mode==='failed')&&!window.confirm(button.dataset.confirm)))return;
+        var host=button.closest('.pandatranslate-language-actions'),output=host.querySelector('[data-language-run-status]'),progress=host.querySelector('progress'),index=0,api=selectedApi(),succeeded=0,failed=0,stopping=false,finished=false;
+        var runId='run-'+Date.now().toString(36)+'-'+Array.from(crypto.getRandomValues(new Uint32Array(2))).map(function(n){return n.toString(36);}).join('-');
+        var controls=Array.from(document.querySelectorAll('[data-language-translate],[data-language-translate-all]')).concat(apiSelector?[apiSelector]:[]),previous=controls.map(function(c){return c.disabled;}),cancel=cancelButton();
+        controls.forEach(function(c){c.disabled=true;});host.appendChild(cancel);if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(host);
+        if(progress){progress.hidden=false;progress.removeAttribute('value');}
+        function finish(message){if(finished)return;finished=true;controls.forEach(function(c,i){c.disabled=previous[i];});cancel.remove();output.textContent=message;refreshOverview(button.dataset.nonce,message);}
+        cancel.addEventListener('click',function(){stopping=true;cancel.disabled=true;output.textContent=config.cancelling;cancelRun(runId,button.dataset.nonce).catch(function(e){if(!finished)output.textContent=e.message;});});
         function next(){
-            if(index>=languages.length){unlock();return;}
-            var language=languages[index],state={phase:'start',cursor:0,limit_id:0,success:0,errors:0,api:api,total_pages:0,total_units:0,prepared:0};
-            function batch(){var body=new URLSearchParams(Object.assign({action:'pandatranslate_language_batch',nonce:button.dataset.nonce,language:language,mode:mode},state));
-                fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:body}).then(function(response){return response.json().then(function(result){if(!response.ok||!result.success)throw new Error(result.data&&result.data.message||'Request failed');return result.data;});}).then(function(data){
+            if(stopping){finish(config.cancelled);return;}
+            if(index>=languages.length){finish((config.batchSummary||'%1$d translated · %2$d failed').replace('%1$d',succeeded).replace('%2$d',failed));return;}
+            var language=languages[index],state={phase:'start',cursor:0,limit_id:0,success:0,errors:0,api:api,total_pages:0,total_units:0,prepared:0,run_id:runId,consecutive_errors:0,last_error_code:'',last_error_message:''};
+            function batch(){
+                if(stopping){finish(config.cancelled);return;}
+                fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams(Object.assign({action:'pandatranslate_language_batch',nonce:button.dataset.nonce,language:language,mode:mode},state))}).then(function(r){return r.json().then(function(v){if(!r.ok||!v.success)throw new Error(v.data&&v.data.message||'Request failed');return v.data;});}).then(function(data){
                     Object.keys(state).forEach(function(key){if(data[key]!==undefined)state[key]=data[key];});
                     output.textContent=language.toUpperCase()+' ('+(index+1)+' / '+languages.length+') · '+data.message;
                     if(progress){if(data.total>0){progress.max=data.total;progress.value=Math.min(data.processed,data.total);}else progress.removeAttribute('value');}
-                    if(data.done){succeeded+=data.success||0;failed+=data.errors||0;index++;if(index<languages.length)next();else{unlock();output.textContent=index+' / '+languages.length+' · '+(config.batchSummary||'%1$d translated · %2$d failed').replace('%1$d',succeeded).replace('%2$d',failed);if(progress){progress.max=1;progress.value=1;}refreshOverview(button.dataset.nonce,output.textContent);}}else batch();
-                }).catch(function(error){output.textContent=language.toUpperCase()+' · '+error.message;if(progress)progress.hidden=true;unlock();});
+                    if(data.failed){finish(output.textContent);return;}
+                    if(stopping||data.cancelled){finish(data.cancelled?data.message:config.cancelled+' '+data.message);return;}
+                    if(data.done){succeeded+=data.success||0;failed+=data.errors||0;index++;next();}else batch();
+                }).catch(function(error){if(progress)progress.hidden=true;finish(language.toUpperCase()+' · '+error.message);});
             }batch();
         }next();
     }
@@ -44,7 +57,8 @@
     document.addEventListener('click',function(event){var button=event.target.closest('[data-language-translate],[data-language-translate-all]');if(!button)return;if(button.hasAttribute('data-language-translate-all'))runTranslation(button,JSON.parse(button.dataset.languages),'missing');else runTranslation(button,[button.dataset.languageTranslate],button.dataset.mode);});
 
 	var siteJob=document.querySelector('[data-site-job]');
-    if(siteJob&&siteJob.children.length){(function poll(){fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_site_progress',nonce:siteJob.dataset.nonce})}).then(function(response){return response.json();}).then(function(result){if(result.success){siteJob.innerHTML=result.data.html;if(result.data.running)window.setTimeout(poll,4000);}}).catch(function(){});})();}
+    if(siteJob&&siteJob.children.length){(function poll(){fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_site_progress',nonce:siteJob.dataset.nonce})}).then(function(response){return response.json();}).then(function(result){if(result.success){siteJob.innerHTML=result.data.html;if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(siteJob);if(result.data.running)window.setTimeout(poll,4000);}}).catch(function(){});})();}
+    document.addEventListener('click',function(e){var b=e.target.closest('[data-site-job-cancel]');if(!b)return;b.disabled=true;cancelRun(b.dataset.siteJobCancel,b.dataset.nonce).then(function(){b.textContent=config.cancelled;}).catch(function(err){b.disabled=false;b.textContent=err.message;});});
 	var combobox=document.querySelector('[data-language-combobox]'),languageSearch=document.querySelector('[data-language-search]'),trigger=document.querySelector('[data-language-trigger]'),popup=document.querySelector('[data-language-popup]'),selection=document.querySelector('[data-language-selection]'),empty=document.querySelector('[data-language-empty]'),options=document.querySelectorAll('[data-language-option]');
 	function closeLanguages(){if(!popup)return;popup.hidden=true;trigger.setAttribute('aria-expanded','false');}
 	function availableOptions(){var found=0,q=languageSearch?languageSearch.value.trim().toLowerCase():'';options.forEach(function(option){var used=rows&&rows.querySelector('input[type="hidden"][value="'+option.dataset.code+'"]'),match=!q||(option.dataset.code+' '+option.dataset.name+' '+option.dataset.localName).toLowerCase().indexOf(q)!==-1;option.hidden=!!used||!match;if(!option.hidden)found++;});if(empty)empty.hidden=found!==0;}

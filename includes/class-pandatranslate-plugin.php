@@ -38,6 +38,7 @@ final class PandaTranslate_Plugin {
 		add_action( 'save_post', array( $this, 'queue_new_content' ), 20, 3 );
 		add_action( 'pandatranslate_process_post', array( $this, 'process_post' ), 10, 4 );
 		add_action( 'admin_post_pandatranslate_translate_site', array( $this, 'queue_site' ) );
+		add_action( 'wp_ajax_pandatranslate_cancel_translation', array( $this, 'cancel_translation' ) );
 		add_action( 'wp_ajax_pandatranslate_language_batch', array( $this, 'language_translation_batch' ) );
 		add_action( 'wp_ajax_pandatranslate_site_progress', array( $this, 'site_progress' ) );
 		add_action( 'wp_ajax_pandatranslate_translation_overview', array( $this, 'translation_overview' ) );
@@ -125,9 +126,11 @@ final class PandaTranslate_Plugin {
 		$section = sanitize_key( $input['_section'] ?? 'general' );
 		if ( 'google' === $section ) {
 			$output['deepl_enabled'] = empty( $input['deepl_enabled'] ) ? 0 : 1;
+			$old_deepl_plan = $output['deepl_endpoint'];
 			$output['deepl_endpoint'] = 'pro' === ( $input['deepl_endpoint'] ?? '' ) ? 'pro' : 'free';
-			if ( ! empty( $input['deepl_key_remove'] ) ) { $output['deepl_key_encrypted'] = ''; $output['deepl_key_last4'] = ''; }
-			elseif ( ! empty( $input['deepl_key'] ) ) { $key = trim( (string) $input['deepl_key'] ); $encrypted = $this->encrypt_secret( $key ); if ( is_wp_error( $encrypted ) ) add_settings_error( self::OPTION, 'deepl_key', $encrypted->get_error_message(), 'error' ); else { $output['deepl_key_encrypted'] = $encrypted; $output['deepl_key_last4'] = substr( $key, -4 ); } }
+			if ( $old_deepl_plan !== $output['deepl_endpoint'] ) unset( $output['deepl_test'] );
+			if ( ! empty( $input['deepl_key_remove'] ) ) { unset( $output['deepl_test'] ); $output['deepl_key_encrypted'] = ''; $output['deepl_key_last4'] = ''; }
+			elseif ( ! empty( $input['deepl_key'] ) ) { $key = trim( (string) $input['deepl_key'] ); $encrypted = $this->encrypt_secret( $key ); if ( is_wp_error( $encrypted ) ) add_settings_error( self::OPTION, 'deepl_key', $encrypted->get_error_message(), 'error' ); else { unset( $output['deepl_test'] ); $output['deepl_key_encrypted'] = $encrypted; $output['deepl_key_last4'] = substr( $key, -4 ); } }
 			$output['provider'] = ! empty( $input['google_enabled'] ) ? 'google-cloud-translation' : 'manual';
 			foreach ( array( 'v2', 'v3' ) as $edition ) $output['google_' . $edition . '_enabled'] = empty( $input['google_' . $edition . '_enabled'] ) ? 0 : 1;
 			$output['provider'] = $output['google_v2_enabled'] || $output['google_v3_enabled'] ? 'google-cloud-translation' : 'manual';
@@ -152,7 +155,8 @@ final class PandaTranslate_Plugin {
 			$output['switcher_floating'] = empty( $input['switcher_floating'] ) ? 0 : 1;
 			$output['switcher_position'] = in_array( $input['switcher_position'] ?? '', array( 'bottom-right', 'bottom-left', 'top-right', 'top-left' ), true ) ? $input['switcher_position'] : 'bottom-right';
 			$output['switcher_display_schema'] = 2;
-			$output['switcher_label_mode'] = in_array( $input['switcher_label_mode'] ?? '', array( 'flag_name', 'flag_code', 'name', 'code', 'flags' ), true ) ? $input['switcher_label_mode'] : 'flag_name';
+			if ( 'native' === ( $input['switcher_label_mode'] ?? '' ) ) $input['switcher_label_mode'] = 'flag_name';
+			$output['switcher_label_mode'] = in_array( $input['switcher_label_mode'] ?? '', array( 'flag_name', 'flag_code', 'name', 'code', 'flags' ), true ) ? $input['switcher_label_mode'] : 'flag_code';
 			$output['switcher_native_names'] = empty( $input['switcher_native_names'] ) ? 0 : 1;
 			$output['menu_switcher_native_names'] = empty( $input['menu_switcher_native_names'] ) ? 0 : 1;
 			$output['switcher_show_names'] = in_array( $output['switcher_label_mode'], array( 'flag_name', 'name' ), true ) ? 1 : 0;
@@ -241,7 +245,7 @@ final class PandaTranslate_Plugin {
 		wp_enqueue_script( 'pandatranslate-admin', PANDATRANSLATE_URL . 'assets/admin.js', array( 'contactpanda-admin-ui' ), PANDATRANSLATE_VERSION, true );
 		$this->enqueue_switcher_assets();
 		wp_enqueue_script( 'pandatranslate-switcher-preview', PANDATRANSLATE_URL . 'assets/switcher-preview.js', array( 'pandatranslate-admin', 'pandatranslate-switcher' ), PANDATRANSLATE_VERSION, true );
-		wp_localize_script( 'pandatranslate-admin', 'PandaTranslateAdmin', array( 'glossaryUrl' => rest_url( 'pandatranslate/v1/glossary' ), 'defaultApi' => PandaTranslate_Providers::default_id(), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'testing' => __( 'Testing…', 'pandatranslate' ), 'connected' => __( 'Connection successful', 'pandatranslate' ), 'testFailed' => __( 'Connection test failed.', 'pandatranslate' ), 'batchSummary' => __( '%1$d translated · %2$d failed', 'pandatranslate' ), 'runLabel' => __( 'Translate entire website with %s', 'pandatranslate' ), 'glossary' => array( 'view' => __( 'View entry', 'pandatranslate' ), 'edit' => __( 'Edit entry', 'pandatranslate' ), 'remove' => __( 'Delete entry', 'pandatranslate' ), 'create' => __( 'Create glossary entry', 'pandatranslate' ), 'empty' => __( 'No glossary entries.', 'pandatranslate' ), 'active' => __( 'Active', 'pandatranslate' ), 'inactive' => __( 'Inactive', 'pandatranslate' ), 'failed' => __( 'The entry could not be saved.', 'pandatranslate' ), 'confirmDelete' => __( 'Delete this glossary entry?', 'pandatranslate' ) ), 'testUrl' => esc_url_raw( rest_url( 'pandatranslate/v1/google/test' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ), 'selectLanguage' => __( 'Select language', 'pandatranslate' ), 'option' => self::OPTION, 'catalog' => PandaTranslate_Features::catalog(), 'migration' => array( 'running' => __( 'Importing TranslatePress translations…', 'pandatranslate' ), 'complete' => __( 'Migration completed.', 'pandatranslate' ), 'failed' => __( 'Migration interrupted. Restarting is safe.', 'pandatranslate' ) ) ) );
+		wp_localize_script( 'pandatranslate-admin', 'PandaTranslateAdmin', array( 'glossaryUrl' => rest_url( 'pandatranslate/v1/glossary' ), 'defaultApi' => PandaTranslate_Providers::default_id(), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'testing' => __( 'Testing…', 'pandatranslate' ), 'connected' => __( 'Connection successful', 'pandatranslate' ), 'testFailed' => __( 'Connection test failed.', 'pandatranslate' ), 'batchSummary' => __( '%1$d translated · %2$d failed', 'pandatranslate' ), 'cancelLabel' => __( 'Cancel translation', 'pandatranslate' ), 'cancelling' => __( 'Stopping after the current request…', 'pandatranslate' ), 'cancelled' => __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ), 'cancelFailed' => __( 'Cancellation could not be confirmed.', 'pandatranslate' ), 'runLabel' => __( 'Translate entire website with %s', 'pandatranslate' ), 'glossary' => array( 'view' => __( 'View entry', 'pandatranslate' ), 'edit' => __( 'Edit entry', 'pandatranslate' ), 'remove' => __( 'Delete entry', 'pandatranslate' ), 'create' => __( 'Create glossary entry', 'pandatranslate' ), 'empty' => __( 'No glossary entries.', 'pandatranslate' ), 'active' => __( 'Active', 'pandatranslate' ), 'inactive' => __( 'Inactive', 'pandatranslate' ), 'failed' => __( 'The entry could not be saved.', 'pandatranslate' ), 'confirmDelete' => __( 'Delete this glossary entry?', 'pandatranslate' ) ), 'deeplTestUrl' => rest_url( 'pandatranslate/v1/deepl/test' ), 'testUrl' => esc_url_raw( rest_url( 'pandatranslate/v1/google/test' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ), 'selectLanguage' => __( 'Select language', 'pandatranslate' ), 'option' => self::OPTION, 'catalog' => PandaTranslate_Features::catalog(), 'migration' => array( 'running' => __( 'Importing TranslatePress translations…', 'pandatranslate' ), 'complete' => __( 'Migration completed.', 'pandatranslate' ), 'failed' => __( 'Migration interrupted. Restarting is safe.', 'pandatranslate' ) ) ) );
 	}
 
 	public function plugin_action_links( $links ) {
@@ -386,7 +390,9 @@ final class PandaTranslate_Plugin {
 		}
 		echo '<section><h3>DeepL</h3><label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[deepl_enabled]' ) . '" value="1" ' . checked( $s['deepl_enabled'], 1, false ) . '>' . esc_html__( 'Enable DeepL', 'pandatranslate' ) . '</label><label class="pandatranslate-api-row"><span>' . esc_html__( 'DeepL API plan', 'pandatranslate' ) . '</span><select name="' . esc_attr( self::OPTION . '[deepl_endpoint]' ) . '"><option value="free" ' . selected( $s['deepl_endpoint'], 'free', false ) . '>DeepL API Free</option><option value="pro" ' . selected( $s['deepl_endpoint'], 'pro', false ) . '>DeepL API Pro</option></select></label>';
 		if ( $s['deepl_key_encrypted'] ) echo '<div class="pandatranslate-key-mask">•••• •••• <code>' . esc_html( $s['deepl_key_last4'] ) . '</code></div>';
-		echo '<label class="pandatranslate-api-row"><span>' . esc_html__( 'Enter or replace DeepL API key', 'pandatranslate' ) . '</span><input type="password" autocomplete="new-password" name="' . esc_attr( self::OPTION . '[deepl_key]' ) . '"></label><label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[deepl_key_remove]' ) . '" value="1">' . esc_html__( 'Delete stored DeepL API key', 'pandatranslate' ) . '</label></section>';
+		echo '<label class="pandatranslate-api-row"><span>' . esc_html__( 'Enter or replace DeepL API key', 'pandatranslate' ) . '</span><input type="password" autocomplete="new-password" name="' . esc_attr( self::OPTION . '[deepl_key]' ) . '"></label><label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[deepl_key_remove]' ) . '" value="1">' . esc_html__( 'Delete stored DeepL API key', 'pandatranslate' ) . '</label>';
+		$test = $s['deepl_test'] ?? array();
+		echo '<p>' . esc_html__( 'Last key test', 'pandatranslate' ) . ': <strong>' . esc_html( empty( $test ) ? __( 'Not tested', 'pandatranslate' ) : ( 'valid' === $test['status'] ? __( 'Works', 'pandatranslate' ) : __( 'Failed', 'pandatranslate' ) ) . ' · ' . ( $test['time'] ?? '' ) ) . '</strong></p><button type="button" class="contactpanda-large-action" data-contactpanda-action="test" data-contactpanda-action-mode="labelled" data-deepl-test>' . esc_html__( 'Test API key', 'pandatranslate' ) . '</button><p data-deepl-result role="status">' . esc_html( $test['error'] ?? '' ) . '</p></section>';
 		$usage = $this->provider_usage();
 		echo '</div><h3>' . esc_html__( 'Translation usage', 'pandatranslate' ) . '</h3>';
 		$this->status_row( __( 'Characters sent to translation APIs', 'pandatranslate' ), number_format_i18n( $usage['characters'] ) );
@@ -523,7 +529,8 @@ final class PandaTranslate_Plugin {
 			echo '</ul><ul class="pandatranslate-progress-legend">';
 			foreach ( $categories as $key => $label ) echo '<li>' . esc_html( $label . ': ' . sprintf( __( '%s source characters', 'pandatranslate' ), number_format_i18n( $stat['characters'][ $key ] ?? 0 ) ) ) . '</li>';
 			echo '</ul><div class="pandatranslate-language-actions">';
-			foreach ( array( 'missing' => __( 'Automatically translate untranslated content', 'pandatranslate' ), 'all' => __( 'Automatically translate everything again', 'pandatranslate' ) ) as $mode => $label ) { $characters = 'missing' === $mode ? ( $stat['characters']['untranslated'] ?? 0 ) : array_sum( $stat['characters'] ?? array() ); echo '<button type="button" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="start" data-language-translate="' . esc_attr( $language['code'] ) . '" data-mode="' . esc_attr( $mode ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '" data-confirm="' . esc_attr( 'all' === $mode ? __( 'Replace all translations, including migrated and manual texts? Google charges may apply.', 'pandatranslate' ) : __( 'Translate untranslated content with Google? Google charges may apply.', 'pandatranslate' ) ) . '"' . ( ! PandaTranslate_Providers::choices() ? ' disabled' : '' ) . '>' . esc_html( $label ) . ' · ' . esc_html( sprintf( __( '%s source characters', 'pandatranslate' ), number_format_i18n( $characters ) ) ) . '</button>'; }
+			foreach ( array( 'missing' => __( 'Automatically translate untranslated content', 'pandatranslate' ), 'all' => __( 'Automatically translate everything again', 'pandatranslate' ) ) as $mode => $label ) { $characters = 'missing' === $mode ? ( $stat['characters']['untranslated'] ?? 0 ) : array_sum( $stat['characters'] ?? array() ); echo '<button type="button" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="start" data-language-translate="' . esc_attr( $language['code'] ) . '" data-mode="' . esc_attr( $mode ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '" data-confirm="' . esc_attr( 'all' === $mode ? __( 'Replace all translations, including migrated and manual texts?', 'pandatranslate' ) : __( 'Translate untranslated content with the selected API?', 'pandatranslate' ) ) . '"' . ( ! PandaTranslate_Providers::choices() ? ' disabled' : '' ) . '>' . esc_html( $label ) . ' · ' . esc_html( sprintf( __( '%s source characters', 'pandatranslate' ), number_format_i18n( $characters ) ) ) . '</button>'; }
+			echo '<button type="button" class="contactpanda-large-action" data-contactpanda-action="refresh" data-contactpanda-action-mode="labelled" data-language-translate="' . esc_attr( $language['code'] ) . '" data-mode="failed" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '" data-confirm="' . esc_attr__( 'Retry failed translations? Existing translations will be replaced.', 'pandatranslate' ) . '"' . ( ! PandaTranslate_Providers::choices() ? ' disabled' : '' ) . '>' . esc_html__( 'Retry failed translations', 'pandatranslate' ) . '</button>';
 			echo '<progress hidden aria-label="' . esc_attr__( 'Translation progress', 'pandatranslate' ) . '"></progress><p data-language-run-status role="status" aria-live="polite"></p></div></article>';
 		}
 
@@ -534,6 +541,15 @@ final class PandaTranslate_Plugin {
 	private function render_all_languages_action() {
         $targets = array(); foreach ( self::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] !== self::get_settings()['source_language'] ) $targets[] = $row['code'];
         echo '<div class="pandatranslate-language-actions pandatranslate-all-languages"><button type="button" class="contactpanda-large-action" data-contactpanda-action="start" data-contactpanda-action-mode="labelled" aria-label="' . esc_attr__( 'Translate all untranslated content in all languages', 'pandatranslate' ) . '" data-language-translate-all data-languages="' . esc_attr( wp_json_encode( $targets ) ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '"' . ( ! PandaTranslate_Providers::choices() || ! $targets ? ' disabled' : '' ) . '>' . esc_html__( 'Translate missing content', 'pandatranslate' ) . '</button><small>' . esc_html__( 'All active target languages.', 'pandatranslate' ) . '</small><progress hidden aria-label="' . esc_attr__( 'Translation progress', 'pandatranslate' ) . '"></progress><p data-language-run-status role="status" aria-live="polite"></p></div>';
+	}
+
+	public function cancel_translation() {
+		if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( array( 'message' => __( 'Access denied.', 'pandatranslate' ) ), 403 );
+		check_ajax_referer( 'pandatranslate_language_batch', 'nonce' );
+		$id = sanitize_key( wp_unslash( $_POST['run_id'] ?? '' ) );
+		if ( ! PandaTranslate_Translation_Jobs::cancel( $id ) ) wp_send_json_error( array( 'message' => __( 'Cancellation could not be confirmed.', 'pandatranslate' ) ), 409 );
+		if ( class_exists( 'PandaTranslate_Site_Progress' ) ) PandaTranslate_Site_Progress::cancel( $id );
+		wp_send_json_success( array( 'cancelled' => true ) );
 	}
 
 	public function language_translation_batch() {
@@ -558,7 +574,7 @@ final class PandaTranslate_Plugin {
 
 	public function start_buffer() {
 		if ( is_admin() || wp_doing_ajax() || is_feed() || is_robots() || is_trackback() ) return;
-		if ( isset( $_GET['pandatranslate_scan'] ) ) { $token = sanitize_text_field( wp_unslash( $_GET['pandatranslate_scan'] ) ); $job = get_transient( 'pandatranslate_scan_' . $token ); if ( $job && ( ! is_array( $job ) || ( $job['language'] ?? '' ) === $this->target_language() ) ) { $this->scan_mode = true; $this->scan_job = is_array( $job ) ? $job : array(); delete_transient( 'pandatranslate_scan_' . $token ); if ( ! defined( 'DONOTCACHEPAGE' ) ) define( 'DONOTCACHEPAGE', true ); nocache_headers(); header( 'X-PandaTranslate-Scan: 1' ); } }
+		if ( isset( $_GET['pandatranslate_scan'] ) ) { $token = sanitize_text_field( wp_unslash( $_GET['pandatranslate_scan'] ) ); $job = get_transient( 'pandatranslate_scan_' . $token ); if ( $job && ( ! is_array( $job ) || ( $job['language'] ?? '' ) === $this->target_language() ) ) { $this->scan_mode = true; $this->scan_job = is_array( $job ) ? $job : array(); PandaTranslate_Translation_Jobs::set_run( $this->scan_job['run_id'] ?? '' ); delete_transient( 'pandatranslate_scan_' . $token ); if ( ! defined( 'DONOTCACHEPAGE' ) ) define( 'DONOTCACHEPAGE', true ); nocache_headers(); header( 'X-PandaTranslate-Scan: 1' ); } }
 		ob_start( array( $this, 'transform_page' ) );
 	}
 
@@ -617,7 +633,7 @@ final class PandaTranslate_Plugin {
 			'nonce' => wp_create_nonce( 'wp_rest' ),
 			'language' => $this->target_language() ?: $s['default_target_language'],
 			'statuses' => array( 'untranslated', 'automatic', 'reviewed', 'published' ),
-			'i18n' => array( 'close' => __( 'Close', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => __( 'PandaTranslate', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => __( 'Translate with %s', 'pandatranslate' ), 'automaticPage' => __( 'Translate entire page with %s', 'pandatranslate' ), 'automaticConfirm' => __( 'Start translation requests with the selected API? Charges may apply.', 'pandatranslate' ), 'apiLabel' => __( 'Translation API', 'pandatranslate' ), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'select' => __( 'Select visible content to translate it.', 'pandatranslate' ), 'progressTitle' => __( 'Translating current page', 'pandatranslate' ), 'progressDone' => __( 'translated', 'pandatranslate' ), 'progressFailed' => __( 'failed', 'pandatranslate' ) ),
+			'i18n' => array( 'close' => __( 'Close', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => __( 'PandaTranslate', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => __( 'Translate with %s', 'pandatranslate' ), 'automaticPage' => __( 'Translate entire page with %s', 'pandatranslate' ), 'apiLabel' => __( 'Translation API', 'pandatranslate' ), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'select' => __( 'Select visible content to translate it.', 'pandatranslate' ), 'progressTitle' => __( 'Translating current page', 'pandatranslate' ), 'progressDone' => __( 'translated', 'pandatranslate' ), 'progressFailed' => __( 'failed', 'pandatranslate' ), 'cancelLabel' => __( 'Cancel translation', 'pandatranslate' ), 'cancelled' => __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ), 'cancelling' => __( 'Stopping after the current request…', 'pandatranslate' ), 'repeatedErrors' => __( 'Stopped after repeated errors.', 'pandatranslate' ) ),
 		) );
 	}
 
@@ -630,6 +646,7 @@ final class PandaTranslate_Plugin {
 		) );
 		register_rest_route( 'pandatranslate/v1', '/unit/auto', array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( $this, 'auto_translate_unit' ), 'permission_callback' => array( $this, 'can_edit' ) ) );
 		register_rest_route( 'pandatranslate/v1', '/google/test', array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( $this, 'google_test' ), 'permission_callback' => function () { return current_user_can( 'manage_options' ); } ) );
+		register_rest_route( 'pandatranslate/v1', '/deepl/test', array( 'methods' => WP_REST_Server::CREATABLE, 'callback' => array( $this, 'deepl_test' ), 'permission_callback' => function () { return current_user_can( 'manage_options' ); } ) );
 	}
 
 	public function can_edit() { return current_user_can( 'edit_posts' ) || current_user_can( 'pandatranslate_translate' ); }
@@ -666,6 +683,17 @@ final class PandaTranslate_Plugin {
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
+	public function deepl_test( WP_REST_Request $request ) {
+		$s = self::get_settings(); $key = trim( (string) $request->get_param( 'api_key' ) );
+		$s['deepl_endpoint'] = 'pro' === $request->get_param( 'plan' ) ? 'pro' : 'free';
+		if ( '' !== $key ) { $encrypted = $this->encrypt_secret( $key ); if ( is_wp_error( $encrypted ) ) return $encrypted; $s['deepl_key_encrypted'] = $encrypted; $s['deepl_key_last4'] = substr( $key, -4 ); }
+		update_option( self::OPTION, $s, false );
+		$result = ( new PandaTranslate_DeepL_Provider() )->translate( 'Connection test', 'en', 'de', array( 'test' => true ) );
+		$s['deepl_test'] = array( 'status' => is_wp_error( $result ) ? 'invalid' : 'valid', 'time' => current_time( 'mysql' ), 'error' => is_wp_error( $result ) ? PandaTranslate_Translation_Jobs::safe_error( $result ) : '' );
+		update_option( self::OPTION, $s, false );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( array( 'success' => true, 'translation' => $result ) );
+	}
+
 	public function google_test( WP_REST_Request $request ) {
 		$s = self::get_settings();
 		$edition = 'v2' === $request->get_param( 'edition' ) ? 'v2' : ( 'v3' === $request->get_param( 'edition' ) ? 'v3' : $s['google_api_version'] );
@@ -676,13 +704,20 @@ final class PandaTranslate_Plugin {
 		if ( 'v3' === $edition ) { $s['google_project_id'] = sanitize_text_field( $request->get_param( 'project_id' ) ?? $s['google_project_id'] ); $s['google_location'] = sanitize_key( $request->get_param( 'location' ) ?? $s['google_location'] ) ?: 'global'; update_option( self::OPTION, $s, false ); }
 		$new_key = trim( (string) $request->get_param( 'api_key' ) ); if ( '' !== $new_key ) { $encrypted = $this->encrypt_secret( $new_key ); if ( is_wp_error( $encrypted ) ) return $encrypted; $s['google_api_key_encrypted'] = $encrypted; $s['google_api_key_last4'] = substr( $new_key, -4 ); update_option( self::OPTION, $s, false ); }
 		$provider = new PandaTranslate_Google_Provider( $s['google_project_id'], $s['google_location'], $edition );
-		$result = $provider->translate( 'Connection test', self::provider_language( $s['source_language'] ), self::provider_language( $s['default_target_language'] ), array( 'test' => true ) );
+		$result = $provider->translate( 'Connection test', 'en', 'en' === self::provider_language( $s['default_target_language'] ) ? 'de' : self::provider_language( $s['default_target_language'] ), array( 'test' => true ) );
 		$s['google_key_status'] = is_wp_error( $result ) ? 'invalid' : 'valid'; $s['google_key_tested_at'] = current_time( 'mysql' ); $s['google_key_last_error'] = is_wp_error( $result ) ? $result->get_error_message() : ''; update_option( self::OPTION, $s, false );
 		$s['google_tests'][$edition] = array( 'status' => $s['google_key_status'], 'time' => $s['google_key_tested_at'], 'error' => $s['google_key_last_error'] ); update_option( self::OPTION, $s, false );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( array( 'success' => true, 'translation' => $result ) );
 	}
 
 	public static function auto_translate_known( $key, $language, $api_id = '' ) {
+		$result = self::translate_known( $key, $language, $api_id );
+		$repository = new PandaTranslate_Repository();
+		if ( method_exists( $repository, 'record_error' ) ) $repository->record_error( $key, $language, is_wp_error( $result ) ? $result->get_error_code() . ': ' . PandaTranslate_Translation_Jobs::safe_error( $result ) : '' );
+		return $result;
+	}
+
+	private static function translate_known( $key, $language, $api_id = '' ) {
 		if ( class_exists( 'PandaTranslate_Edition' ) && ! PandaTranslate_Edition::allows_language( $language ) ) return new WP_Error( 'pandatranslate_language', __( 'Select an active target language.', 'pandatranslate' ) );
 		$repository = new PandaTranslate_Repository();
 		$row = $repository->find( $key, $language );
@@ -792,11 +827,14 @@ final class PandaTranslate_Plugin {
 		wp_safe_redirect( add_query_arg( array( 'page' => 'pandatranslate-translation', 'queued' => count( $ids ) ), admin_url( 'admin.php' ) ) ); exit;
 	}
     public function process_post( $post_id, $api_id = '', $language = '', $job_id = '' ) {
+        PandaTranslate_Translation_Jobs::set_run( $job_id ); $job = $job_id ? PandaTranslate_Site_Progress::state( true ) : array();
+        if ( PandaTranslate_Translation_Jobs::is_cancelled() || ( $job_id && ( ( $job['id'] ?? '' ) !== $job_id || ! empty( $job['cancelled'] ) ) ) ) return;
         $api_id = $api_id ?: PandaTranslate_Providers::default_id(); $failed = false; $ran = false;
         if ( is_wp_error( PandaTranslate_Providers::get( $api_id ) ) ) $failed = true;
         else foreach ( self::language_rows() as $row ) {
             if ( empty( $row['active'] ) || $row['code'] === self::get_settings()['source_language'] || ( $language && $language !== $row['code'] ) ) continue;
-            $ran = true; $result = PandaTranslate_Translation_Jobs::scan( $post_id, $row['code'], $api_id, (bool) $job_id ); $failed = $failed || is_wp_error( $result );
+            if ( PandaTranslate_Translation_Jobs::is_cancelled() ) return;
+            $ran = true; $result = PandaTranslate_Translation_Jobs::scan( $post_id, $row['code'], $api_id, (bool) $job_id, $job_id ); $failed = $failed || is_wp_error( $result );
             if ( ! is_wp_error( $result ) && class_exists( 'PandaTranslate_SEO' ) && ( ! class_exists( 'PandaTranslate_Edition' ) || PandaTranslate_Edition::multilingual() ) ) PandaTranslate_SEO::auto_translate( $post_id, $row['code'], $api_id );
         }
         if ( class_exists( 'PandaTranslate_Site_Progress' ) ) PandaTranslate_Site_Progress::finish( $job_id, $post_id, $language, $failed || ! $ran );
@@ -810,7 +848,7 @@ final class PandaTranslate_Plugin {
         if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( array(), 403 );
         check_ajax_referer( 'pandatranslate_language_batch', 'nonce' );
         ob_start(); PandaTranslate_Site_Progress::render(); $html = ob_get_clean();
-        $state = PandaTranslate_Site_Progress::state(); $running = false; foreach ( $state['languages'] ?? array() as $counts ) if ( ! in_array( $counts['phase'] ?? '', array( 'done', 'failed' ), true ) ) $running = true;
+        $state = PandaTranslate_Site_Progress::state(); $running = false; foreach ( $state['languages'] ?? array() as $counts ) if ( ! in_array( $counts['phase'] ?? '', array( 'done', 'failed', 'cancelled' ), true ) ) $running = true;
         wp_send_json_success( array( 'html' => $html, 'running' => $running ) );
     }
 

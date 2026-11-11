@@ -70,11 +70,14 @@ final class PandaTranslate_Repository {
 		return array( 'cursor' => $cursor, 'done' => count( $rows ) < 250, 'processed' => count( $rows ) );
 	}
 
+	public function record_error( $key, $language, $message ) { global $wpdb; return $wpdb->update( self::table(), array( 'last_error' => $message ), array( 'unit_key' => $key, 'target_language' => $language ) ); }
+
 	public function list_rows( array $filters = array() ) {
 		global $wpdb;
 		$where = array( '1=1' ); $args = array();
 		if ( ! empty( $filters['language'] ) ) { $where[] = 'target_language = %s'; $args[] = sanitize_key( $filters['language'] ); }
 		if ( ! empty( $filters['status'] ) && in_array( $filters['status'], self::STATUSES, true ) ) { $where[] = 'status = %s'; $args[] = $filters['status']; }
+		if ( 'failed' === ( $filters['status'] ?? '' ) ) $where[] = "last_error IS NOT NULL AND TRIM(last_error) <> ''";
 		if ( ! empty( $filters['post_id'] ) ) { $where[] = 'unit_key IN (SELECT unit_key FROM ' . $wpdb->prefix . 'pandatranslate_contexts WHERE post_id = %d)'; $args[] = absint( $filters['post_id'] ); }
 		if ( ! empty( $filters['query'] ) ) { $where[] = '(source_html LIKE %s OR translated_html LIKE %s)'; $search = '%' . $wpdb->esc_like( substr( (string) $filters['query'], 0, 200 ) ) . '%'; $args[] = $search; $args[] = $search; }
 		foreach ( array( 'source_kind', 'source_domain' ) as $field ) if ( ! empty( $filters[$field] ) ) { $where[] = $field . ' = %s'; $args[] = sanitize_text_field( $filters[$field] ); }

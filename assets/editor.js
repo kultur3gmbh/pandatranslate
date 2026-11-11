@@ -98,9 +98,9 @@
 
 	form.addEventListener('submit', function (event) { event.preventDefault(); save(); });
 	shell.querySelector('[data-publish]').addEventListener('click', function () { save('published'); });
-	function confirmPaid(){try{if(sessionStorage.getItem('pandatranslatePaidConfirmed')==='1')return true;}catch(e){}if(!window.confirm(config.i18n.automaticConfirm))return false;try{sessionStorage.setItem('pandatranslatePaidConfirmed','1');}catch(e){}return true;}
+
 	shell.querySelector('[data-automatic]').addEventListener('click', function () {
-		if (!selected || !apiSelect.value || !confirmPaid()) return;
+		if (!selected || !apiSelect.value) return;
 		var autoNode = selected, autoVersion = selectionGeneration;
 		message.textContent = 'Translating…';
 		fetch(config.autoUrl, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce}, body: JSON.stringify({key: selected.dataset.pandatranslateUnit, language: config.language, api: apiSelect.value, confirm: true})})
@@ -108,7 +108,19 @@
 			.then(function (data) { if (selected !== autoNode || autoVersion !== selectionGeneration) return; selectedRevision = data.revision || ''; selected.innerHTML = data.translated_html; translation.value = protect(data.translated_html).text; status.value = data.status; message.textContent = 'Automatic draft saved.'; })
 			.catch(function (error) { message.textContent = error.message || 'Automatic translation failed.'; });
 	});
-	shell.querySelector('[data-automatic-page]').addEventListener('click',function(){if(!apiSelect.value||!confirmPaid())return;var api=apiSelect.value,units=Array.prototype.slice.call(document.querySelectorAll('[data-pandatranslate-unit]')).filter(function(node){return !node.closest('#wpadminbar,.pandatranslate-panel,.fusion-builder-ui,.elementor-editor-active');}),index=0,done=0,failed=0,button=this,total=units.length;button.disabled=true;apiSelect.disabled=true;pageProgress.hidden=false;pageProgress.querySelector('[data-progress-title]').textContent=(config.i18n.progressTitle||'Translating current page')+' · '+apiChoices[api];function render(){var processed=done+failed,percent=total?Math.round(processed/total*100):100;pageProgress.querySelector('[data-progress-count]').textContent=processed+' / '+total+' ('+percent+'%)';pageProgress.querySelector('[data-progress-bar]').style.width=percent+'%';pageProgress.querySelector('[data-progress-detail]').textContent=done+' '+(config.i18n.progressDone||'translated')+' · '+failed+' '+(config.i18n.progressFailed||'failed');}function next(){render();if(index>=total){button.disabled=false;apiSelect.disabled=Object.keys(apiChoices).length<2;pageProgress.classList.add(failed?'has-errors':'is-complete');return;}var node=units[index++];fetch(config.autoUrl,{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':config.nonce},body:JSON.stringify({key:node.dataset.pandatranslateUnit,language:config.language,api:api,confirm:true})}).then(function(response){return response.json().then(function(data){if(!response.ok)throw data;return data;});}).then(function(data){node.innerHTML=data.translated_html;if(selected===node){selectedRevision=data.revision||'';translation.value=protect(data.translated_html).text;status.value=data.status;}done++;}).catch(function(){failed++;}).finally(next);}next();});
+	shell.querySelector('[data-automatic-page]').addEventListener('click',function(){
+        if(!apiSelect.value)return;
+        var api=apiSelect.value,units=Array.from(document.querySelectorAll('[data-pandatranslate-unit]')).filter(function(node){return !node.closest('#wpadminbar,.pandatranslate-panel,.fusion-builder-ui,.elementor-editor-active');}),index=0,done=0,failed=0,button=this,total=units.length,stopping=false,streak=0,lastCode='',lastError='';
+        var cancel=document.createElement('button');cancel.type='button';cancel.className='contactpanda-large-action';cancel.dataset.contactpandaAction='cancel';cancel.dataset.contactpandaActionMode='labelled';cancel.textContent=config.i18n.cancelLabel;
+        pageProgress.appendChild(cancel);if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(pageProgress);
+        cancel.addEventListener('click',function(){stopping=true;cancel.disabled=true;pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.cancelling;});
+        button.disabled=true;apiSelect.disabled=true;pageProgress.hidden=false;pageProgress.classList.remove('has-errors','is-complete');pageProgress.querySelector('[data-progress-title]').textContent=config.i18n.progressTitle+' · '+apiChoices[api];
+        function render(){var processed=done+failed,percent=total?Math.round(processed/total*100):100;pageProgress.querySelector('[data-progress-count]').textContent=processed+' / '+total+' ('+percent+'%)';pageProgress.querySelector('[data-progress-bar]').style.width=percent+'%';pageProgress.querySelector('[data-progress-detail]').textContent=done+' '+config.i18n.progressDone+' · '+failed+' '+config.i18n.progressFailed+(lastError?' · '+lastError:'');}
+        function next(){render();if(stopping||streak>=3||index>=total){button.disabled=false;apiSelect.disabled=Object.keys(apiChoices).length<2;cancel.remove();pageProgress.classList.add(failed?'has-errors':'is-complete');if(stopping)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.cancelled;if(streak>=3)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.repeatedErrors+' '+lastError;return;}
+            var node=units[index++];fetch(config.autoUrl,{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':config.nonce},body:JSON.stringify({key:node.dataset.pandatranslateUnit,language:config.language,api:api,confirm:true})}).then(function(r){return r.json().then(function(data){if(!r.ok)throw data;return data;});}).then(function(data){node.innerHTML=data.translated_html;if(selected===node){selectedRevision=data.revision||'';translation.value=protect(data.translated_html).text;status.value=data.status;}done++;streak=0;}).catch(function(error){failed++;var code=error.code||'request';streak=code===lastCode?streak+1:1;lastCode=code;lastError=error.message||code;}).finally(next);
+        }next();
+    });
+
 	shell.querySelector('.pandatranslate-close').addEventListener('click', function () { shell.classList.remove('is-open'); });
 
 	new MutationObserver(function () { document.dispatchEvent(new CustomEvent('pandatranslate:content-changed')); }).observe(document.body, {childList: true, subtree: true});

@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/class-pandatranslate-provider-markup.php';
 
 final class PandaTranslate_Google_Provider implements PandaTranslate_Provider {
 	private $project_id;
@@ -23,13 +24,15 @@ final class PandaTranslate_Google_Provider implements PandaTranslate_Provider {
 	}
 
 	public function translate( $protected_text, $source_language, $target_language, array $context = array() ) {
+		if ( class_exists( 'PandaTranslate_Translation_Jobs' ) && PandaTranslate_Translation_Jobs::is_cancelled() ) return new WP_Error( 'pandatranslate_cancelled', __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ) );
 		$configured = $this->configured();
 		if ( is_wp_error( $configured ) ) return $configured;
 		if ( 'v2' === $this->edition ) return $this->translate_v2( $protected_text, $source_language, $target_language );
 		$token = $this->access_token();
 		if ( is_wp_error( $token ) ) return $this->failed( $token, $protected_text );
 		$parent = 'projects/' . rawurlencode( $this->project_id ) . '/locations/' . rawurlencode( $this->location );
-		$body = array( 'contents' => array( (string) $protected_text ), 'mimeType' => 'text/plain', 'sourceLanguageCode' => sanitize_key( $source_language ), 'targetLanguageCode' => sanitize_key( $target_language ), 'labels' => array( 'product' => 'pandatranslate' ) );
+		$markup = PandaTranslate_Provider_Markup::protect( $protected_text );
+		$body = array( 'contents' => array( $markup['text'] ), 'mimeType' => $markup['tokens'] ? 'text/html' : 'text/plain', 'sourceLanguageCode' => sanitize_key( $source_language ), 'targetLanguageCode' => sanitize_key( $target_language ), 'labels' => array( 'product' => 'pandatranslate' ) );
 		if ( ! $source_language ) unset( $body['sourceLanguageCode'] );
 		$glossary = apply_filters( 'pandatranslate_google_glossary', '', $source_language, $target_language, $context );
 		if ( is_string( $glossary ) && '' !== $glossary ) $body['glossaryConfig'] = array( 'glossary' => $glossary );
@@ -41,22 +44,23 @@ final class PandaTranslate_Google_Provider implements PandaTranslate_Provider {
 			$message = sanitize_text_field( $data['error']['message'] ?? __( 'Google did not return a translation.', 'pandatranslate' ) );
 			return $this->failed( new WP_Error( 'pandatranslate_google_response', $message ), $protected_text );
 		}
-		$translated = html_entity_decode( (string) $data['translations'][0]['translatedText'], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$translated = PandaTranslate_Provider_Markup::restore( (string) $data['translations'][0]['translatedText'], $markup['tokens'] );
 		$characters = function_exists( 'mb_strlen' ) ? mb_strlen( wp_strip_all_tags( $protected_text ) ) : strlen( wp_strip_all_tags( $protected_text ) );
 		do_action( 'pandatranslate_provider_event', $this->id(), 'success', $characters, 0, '', $this->word_count( $protected_text ) );
-		return $translated;
+		return is_wp_error( $translated ) ? $this->failed( $translated, $protected_text ) : $translated;
 	}
 
 	private function translate_v2( $protected_text, $source_language, $target_language ) {
-		$body = array( 'q' => array( (string) $protected_text ), 'target' => sanitize_key( $target_language ), 'format' => 'text' ); if ( $source_language ) $body['source'] = sanitize_key( $source_language );
+		$markup = PandaTranslate_Provider_Markup::protect( $protected_text );
+		$body = array( 'q' => array( $markup['text'] ), 'target' => sanitize_key( $target_language ), 'format' => $markup['tokens'] ? 'html' : 'text' ); if ( $source_language ) $body['source'] = sanitize_key( $source_language );
 		$response = wp_remote_post( 'https://translation.googleapis.com/language/translate/v2?key=' . rawurlencode( $this->api_key() ), array( 'timeout' => 30, 'headers' => array( 'Content-Type' => 'application/json; charset=utf-8' ), 'body' => wp_json_encode( $body ) ) );
 		if ( is_wp_error( $response ) ) return $this->failed( $response, $protected_text );
 		$status = wp_remote_retrieve_response_code( $response ); $data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( $status < 200 || $status >= 300 || empty( $data['data']['translations'][0]['translatedText'] ) ) return $this->failed( new WP_Error( 'pandatranslate_google_v2_response', sanitize_text_field( $data['error']['message'] ?? __( 'Google v2 did not return a translation.', 'pandatranslate' ) ) ), $protected_text );
-		$translated = html_entity_decode( (string) $data['data']['translations'][0]['translatedText'], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$translated = PandaTranslate_Provider_Markup::restore( (string) $data['data']['translations'][0]['translatedText'], $markup['tokens'] );
 		$characters = function_exists( 'mb_strlen' ) ? mb_strlen( wp_strip_all_tags( $protected_text ) ) : strlen( wp_strip_all_tags( $protected_text ) );
 		do_action( 'pandatranslate_provider_event', 'google-cloud-translation-v2', 'success', $characters, 0, '', $this->word_count( $protected_text ) );
-		return $translated;
+		return is_wp_error( $translated ) ? $this->failed( $translated, $protected_text ) : $translated;
 	}
 
 	private function api_key() {
