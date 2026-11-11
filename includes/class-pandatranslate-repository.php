@@ -21,6 +21,8 @@ final class PandaTranslate_Repository {
 			translated_html longtext NOT NULL,
 			status varchar(20) NOT NULL DEFAULT 'untranslated',
 			provider varchar(50) NOT NULL DEFAULT '',
+			source_kind varchar(20) NOT NULL DEFAULT 'page',
+			source_domain varchar(100) NOT NULL DEFAULT '',
 			character_count bigint(20) unsigned NOT NULL DEFAULT 0,
 			cost_micros bigint(20) unsigned NOT NULL DEFAULT 0,
 			last_error text NULL,
@@ -31,7 +33,7 @@ final class PandaTranslate_Repository {
 			unit_key char(64) NOT NULL, post_id bigint(20) unsigned NOT NULL,
 			PRIMARY KEY (unit_key,post_id), KEY post_id (post_id)
 		) {$charset};" );
-		update_option( 'pandatranslate_schema', 2, false );
+		update_option( 'pandatranslate_schema', 3, false );
 	}
 	public function record_context( $key, $post_id ) {
 		global $wpdb;
@@ -58,11 +60,11 @@ final class PandaTranslate_Repository {
 	/** Create missing source-memory entries in bounded batches without replacing any existing translation. */
 	public function seed_language( $language, $cursor = 0 ) {
 		global $wpdb; $table = self::table();
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT source.* FROM {$table} source INNER JOIN (SELECT MIN(id) id FROM {$table} WHERE source_html <> '' GROUP BY source_hash) canonical ON canonical.id = source.id WHERE source.id > %d ORDER BY source.id LIMIT 250", $cursor ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT source.* FROM {$table} source INNER JOIN (SELECT MIN(id) id FROM {$table} WHERE source_html <> '' GROUP BY CASE WHEN source_kind = 'gettext' THEN unit_key ELSE source_hash END) canonical ON canonical.id = source.id WHERE source.id > %d ORDER BY source.id LIMIT 250", $cursor ), ARRAY_A );
 		if ( $wpdb->last_error ) return new WP_Error( 'pandatranslate_seed_failed', __( 'Source content could not be prepared.', 'pandatranslate' ) );
 		foreach ( $rows as $row ) {
-			$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE target_language = %s AND source_hash = %s LIMIT 1", $language, $row['source_hash'] ) );
-			if ( ! $exists ) { $saved = $this->save( array( 'key' => $row['unit_key'], 'source_hash' => $row['source_hash'], 'source_html' => $row['source_html'] ), $language, '', 'untranslated' ); if ( is_wp_error( $saved ) ) return $saved; }
+			$exists = 'gettext' === ( $row['source_kind'] ?? '' ) ? $this->find( $row['unit_key'], $language ) : $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$table} WHERE target_language = %s AND source_hash = %s LIMIT 1", $language, $row['source_hash'] ) );
+			if ( ! $exists ) { $saved = $this->save( array( 'key' => $row['unit_key'], 'source_hash' => $row['source_hash'], 'source_html' => $row['source_html'], 'source_kind' => $row['source_kind'] ?? 'page', 'source_domain' => $row['source_domain'] ?? '' ), $language, '', 'untranslated' ); if ( is_wp_error( $saved ) ) return $saved; }
 			$cursor = (int) $row['id'];
 		}
 		return array( 'cursor' => $cursor, 'done' => count( $rows ) < 250, 'processed' => count( $rows ) );
@@ -75,9 +77,10 @@ final class PandaTranslate_Repository {
 		if ( ! empty( $filters['status'] ) && in_array( $filters['status'], self::STATUSES, true ) ) { $where[] = 'status = %s'; $args[] = $filters['status']; }
 		if ( ! empty( $filters['post_id'] ) ) { $where[] = 'unit_key IN (SELECT unit_key FROM ' . $wpdb->prefix . 'pandatranslate_contexts WHERE post_id = %d)'; $args[] = absint( $filters['post_id'] ); }
 		if ( ! empty( $filters['query'] ) ) { $where[] = '(source_html LIKE %s OR translated_html LIKE %s)'; $search = '%' . $wpdb->esc_like( substr( (string) $filters['query'], 0, 200 ) ) . '%'; $args[] = $search; $args[] = $search; }
+		foreach ( array( 'source_kind', 'source_domain' ) as $field ) if ( ! empty( $filters[$field] ) ) { $where[] = $field . ' = %s'; $args[] = sanitize_text_field( $filters[$field] ); }
 		$limit = min( 200, max( 1, absint( $filters['limit'] ?? 50 ) ) );
 		$offset = min( 10000000, absint( $filters['offset'] ?? 0 ) );
-		$sql = 'SELECT unit_key,source_hash,source_html,target_language,translated_html,status,provider,character_count,cost_micros,last_error,updated_at FROM ' . self::table() . ' WHERE ' . implode( ' AND ', $where ) . ' ORDER BY id ASC LIMIT ' . $limit . ' OFFSET ' . $offset;
+		$sql = 'SELECT unit_key,source_hash,source_html,target_language,translated_html,status,provider,source_kind,source_domain,character_count,cost_micros,last_error,updated_at FROM ' . self::table() . ' WHERE ' . implode( ' AND ', $where ) . ' ORDER BY id ASC LIMIT ' . $limit . ' OFFSET ' . $offset;
 		return $args ? $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A ) : $wpdb->get_results( $sql, ARRAY_A );
 	}
 
@@ -90,8 +93,12 @@ final class PandaTranslate_Repository {
 
 	/** Atomic compare-and-swap: edits made after the preceding read cannot be overwritten. */
 	public function save_revision( array $known, $translated_html, $status ) {
+		$provider = $translated_html === $known['translated_html'] ? $known['provider'] : ( in_array( $known['provider'], array( 'translatepress-import', 'manual-dictionary' ), true ) ? 'manual-dictionary' : 'manual' );
+		return $this->save_automatic_revision( $known, $translated_html, $status, $provider );
+	}
+	public function save_automatic_revision( array $known, $translated_html, $status, $provider ) {
 		global $wpdb;
-		$provider = in_array( $known['provider'], array( 'translatepress-import', 'manual-dictionary' ), true ) ? 'manual-dictionary' : 'manual';
+		if ( ! in_array( $status, self::STATUSES, true ) ) return new WP_Error( 'pandatranslate_status', __( 'Invalid translation status.', 'pandatranslate' ) );
 		$set = array( $translated_html, $status, $provider, current_time( 'mysql', true ), $known['id'] );
 		$where = array( 'id = %d' );
 		foreach ( array( 'unit_key', 'target_language', 'source_hash', 'source_html', 'translated_html', 'status', 'provider', 'updated_at' ) as $field ) { $where[] = "BINARY {$field} = BINARY %s"; $set[] = (string) $known[$field]; }
@@ -104,7 +111,7 @@ final class PandaTranslate_Repository {
 
 	public function language_stats() {
 		global $wpdb;
-		$rows = $wpdb->get_results( "SELECT target_language, CASE WHEN status = 'untranslated' OR TRIM(translated_html) = '' THEN 'untranslated' WHEN provider = 'manual' THEN 'manual' WHEN provider = 'translatepress-import' THEN 'migrated' WHEN provider LIKE 'google-cloud-translation%' OR provider LIKE 'api:%' OR status = 'automatic' THEN 'automatic' ELSE 'manual' END AS category, COUNT(*) AS total, SUM(character_count) AS characters FROM " . self::table() . ' GROUP BY target_language, category', ARRAY_A );
+		$rows = $wpdb->get_results( "SELECT target_language, CASE WHEN status = 'untranslated' OR TRIM(translated_html) = '' THEN 'untranslated' WHEN provider = 'manual' THEN 'manual' WHEN provider IN ('translatepress-import','native-locale') THEN 'migrated' WHEN provider LIKE 'google-cloud-translation%' OR provider LIKE 'api:%' OR status = 'automatic' THEN 'automatic' ELSE 'manual' END AS category, COUNT(*) AS total, SUM(character_count) AS characters FROM " . self::table() . ' GROUP BY target_language, category', ARRAY_A );
 		$stats = array();
 		foreach ( $rows as $row ) { $language = $row['target_language']; if ( ! isset( $stats[ $language ] ) ) $stats[ $language ] = array( 'total' => 0, 'untranslated' => 0, 'automatic' => 0, 'migrated' => 0, 'manual' => 0, 'characters' => array() ); $count = absint( $row['total'] ); $stats[ $language ]['total'] += $count; $stats[ $language ][ $row['category'] ] += $count; $stats[ $language ]['characters'][ $row['category'] ] = absint( $row['characters'] ); }
 		return $stats;
@@ -127,6 +134,7 @@ final class PandaTranslate_Repository {
 			'updated_at' => current_time( 'mysql', true ),
 		);
 		$existing = $this->find( $unit['key'], $language );
+		if ( ! $existing || isset( $unit['source_kind'] ) ) { $data['source_kind'] = sanitize_key( $unit['source_kind'] ?? 'page' ); $data['source_domain'] = sanitize_text_field( $unit['source_domain'] ?? '' ); }
 		$result = $existing ? $wpdb->update( self::table(), $data, array( 'id' => $existing['id'] ) ) : $wpdb->insert( self::table(), $data );
 		return false === $result ? new WP_Error( 'pandatranslate_database', __( 'The translation could not be stored.', 'pandatranslate' ) ) : true;
 	}

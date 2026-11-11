@@ -9,10 +9,10 @@ final class PandaTranslate_Inline_Protector {
 		$tokens = array();
 		$index  = 0;
 		$protected = preg_replace_callback(
-			'/<\/?(?:a|abbr|b|br|code|em|i|mark|small|span|strong|sub|sup|u)\b[^>]*>/i',
+			'/<\/?(?:a|abbr|b|br|code|em|i|mark|small|span|strong|sub|sup|u)\b[^>]*>|(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]|\{[a-z_][a-z0-9_]*\}/i',
 			function ( $match ) use ( &$tokens, &$index ) {
 				$tag   = $match[0];
-				$void  = (bool) preg_match( '/^<br\b/i', $tag );
+				$void  = in_array( substr( $tag, 0, 1 ), array( '%', '{' ), true ) || (bool) preg_match( '/^<br\b/i', $tag );
 				$close = (bool) preg_match( '/^<\//', $tag );
 				$type  = $void ? 'VOID' : ( $close ? 'CLOSE' : 'OPEN' );
 				$token = '[[PT:' . $index++ . ':' . $type . ']]';

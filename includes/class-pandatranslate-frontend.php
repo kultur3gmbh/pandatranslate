@@ -86,6 +86,7 @@ final class PandaTranslate_Frontend {
 			$id = self::$post_ids[$source]; $slug = $id ? get_post_meta( $id, '_pandatranslate_slug_' . $language, true ) : '';
 			if ( $slug && $path ) { $segments = explode( '/', trim( $path, '/' ) ); $segments[count( $segments ) - 1] = sanitize_title( $slug ); $path = implode( '/', $segments ) . ( '/' === substr( $path, -1 ) ? '/' : '' ); }
 		}
+		if ( 'path' === $settings['url_mode'] ) $path = apply_filters( 'pandatranslate_localized_path', $path, $language );
 		$result = home_url( '/' . ( 'query' === $settings['url_mode'] ? '' : $target['slug'] . '/' ) . $path );
 		$query = $parts['query'] ?? '';
 		if ( 'query' === $settings['url_mode'] ) $query .= ( '' !== $query ? '&' : '' ) . 'pt_lang=' . rawurlencode( $language );

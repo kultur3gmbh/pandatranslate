@@ -9,6 +9,7 @@ final class PandaTranslate_Providers {
 			'google-v2' => array( 'label' => __( 'Google Translate v2', 'pandatranslate' ), 'provider' => new PandaTranslate_Google_Provider( $s['google_project_id'], $s['google_location'], 'v2' ), 'enabled' => (bool) $s['google_v2_enabled'] ),
 			'google-v3' => array( 'label' => __( 'Google Translate v3', 'pandatranslate' ), 'provider' => new PandaTranslate_Google_Provider( $s['google_project_id'], $s['google_location'], 'v3' ), 'enabled' => (bool) $s['google_v3_enabled'] ),
 		);
+		if ( class_exists( 'PandaTranslate_DeepL_Provider' ) ) $entries['deepl'] = array( 'label' => 'DeepL', 'provider' => new PandaTranslate_DeepL_Provider(), 'enabled' => ! empty( $s['deepl_enabled'] ) );
 		// Existing integrations can register a configured instance, class, or a labelled descriptor.
 		foreach ( (array) apply_filters( 'pandatranslate_providers', array() ) as $id => $entry ) {
 			if ( 'google-cloud-translation' === $id ) continue;

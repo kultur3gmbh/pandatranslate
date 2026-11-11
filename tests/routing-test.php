@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('apply_filters')) { function apply_filters($hook,$value,...$args){return $value;} }
 define( 'ABSPATH', __DIR__ );
 class PandaTranslate_Repository { public function public_language_counts() { global $public_counts; return $public_counts ?? array('de'=>1,'en'=>1,'fr'=>1); } }
 $stored = array( 'source_language' => 'de', 'target_languages' => 'en,fr', 'url_mode' => 'path' );

@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('apply_filters')) { function apply_filters($hook,$value,...$args){return $value;} }
 require __DIR__ . '/routing-test.php';
 require dirname( __DIR__ ) . '/includes/class-pandatranslate-frontend.php';
 function is_admin() { global $admin; return ! empty( $admin ); }

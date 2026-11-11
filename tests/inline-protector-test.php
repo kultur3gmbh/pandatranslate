@@ -18,4 +18,6 @@ assert( is_wp_error( $missing ) && 'pandatranslate_tokens_missing' === $missing-
 $invalid = PandaTranslate_Inline_Protector::restore( '[[PT:0:OPEN]][[PT:1:OPEN]]Text[[PT:3:CLOSE]][[PT:2:CLOSE]][[PT:4:OPEN]]Link[[PT:5:CLOSE]]', $protected['tokens'] );
 assert( is_wp_error( $invalid ) && 'pandatranslate_tokens_nested' === $invalid->get_error_code() );
 
+assert(array() === PandaTranslate_Inline_Protector::protect('100% satisfaction')['tokens']);
+$variables = PandaTranslate_Inline_Protector::protect('Order %1$s costs %.2f {order_number}'); assert(3 === count($variables['tokens']));
 echo "inline protector: ok\n";

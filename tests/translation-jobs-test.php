@@ -2,6 +2,7 @@
 require __DIR__ . '/bootstrap.php';
 define( 'PANDATRANSLATE_VERSION', '0.4.5' ); define( 'MINUTE_IN_SECONDS', 60 );
 $stored = array( 'source_language'=>'de', 'target_languages'=>'en,es', 'auto_post_types'=>array('page'), 'auto_provider'=>'other-api', 'auto_publish'=>1 ); $transients=array(); $calls=array(); $scan_valid=true;
+function wp_json_encode($value){return json_encode($value);}
 function get_option( $key, $default=array() ) { global $stored; return 'pandatranslate_settings'===$key?$stored:$default; }
 function wp_parse_args( $args, $defaults ) { return array_merge($defaults,$args); }
 function sanitize_key( $value ) { return strtolower(preg_replace('/[^a-zA-Z0-9_-]/','',$value)); }
@@ -34,6 +35,7 @@ final class Job_Test_DB {
 	public function get_row($statement,$format){[$sql,$args]=$statement;foreach($this->rows as $row)if($row['unit_key']===$args[0]&&$row['target_language']===$args[1])return $row;return null;}
 	public function insert($table,$data){$data['id']=count($this->rows)+1;$this->rows[$data['id']]=$data;return 1;}
 	public function update($table,$data,$where){$this->rows[$where['id']]=array_merge($this->rows[$where['id']],$data);return 1;}
+	public function query($statement){[$sql,$args]=$statement;$row=$this->rows[$args[4]];foreach(array('unit_key','target_language','source_hash','source_html','translated_html','status','provider','updated_at') as $i=>$field)if($row[$field]!==$args[$i+5])return 0;foreach(array('translated_html','status','provider','updated_at') as $i=>$field)$row[$field]=$args[$i];$this->rows[$args[4]]=$row;return 1;}
 	public function get_var($statement){if(is_string($statement))return $this->rows?max(array_keys($this->rows)):0;[$sql,$args]=$statement;if(strpos($sql,'COUNT(*)')!==false)return count(array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&$row['id']<=$args[1]&&('untranslated'===$row['status']||''===$row['translated_html']);}));$rows=array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&(!isset($args[1])||$row['source_hash']===$args[1]);});return strpos($sql,'MAX(id)')!==false?($rows?max(array_keys($rows)):0):($rows?reset($rows)['id']:null);}
 	public function get_results($statement,$format){[$sql,$args]=$statement;if(strpos($sql,'canonical')!==false){$seen=array();$rows=array();foreach($this->rows as $row){if(isset($seen[$row['source_hash']]))continue;$seen[$row['source_hash']]=true;if($row['id']>$args[0])$rows[]=$row;}return array_slice($rows,0,250);}if(strpos($sql,'SELECT id,unit_key')!==false){return array_values(array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&$row['id']>$args[1]&&$row['id']<=$args[2]&&('untranslated'===$row['status']||''===$row['translated_html']);}));}throw new RuntimeException('Unexpected SQL: '.$sql);}
 }

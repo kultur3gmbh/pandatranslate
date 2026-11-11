@@ -48,6 +48,7 @@ final class PandaTranslate_Routing {
 			$slug = get_post_meta( get_queried_object_id(), '_pandatranslate_slug_' . $code, true );
 			if ( $slug && $path ) { $parts = explode( '/', trim( $path, '/' ) ); $parts[count( $parts ) - 1] = sanitize_title( $slug ); $path = implode( '/', $parts ); }
 		}
+		$path = apply_filters( 'pandatranslate_localized_path', $path, $code );
 		$url = home_url( user_trailingslashit( '/' . ( $code === $settings['source_language'] ? '' : $target['slug'] . '/' ) . ltrim( $path, '/' ) ) );
 		$query = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_QUERY ); parse_str( $query, $args );
 		unset( $args['pt_lang'], $args['pandatranslate'], $args['pandatranslate_scan'] );
@@ -60,7 +61,7 @@ final class PandaTranslate_Routing {
 	}
 	public static function original_path( $url ) {
 		$path = self::relative_path( (string) wp_parse_url( $url, PHP_URL_PATH ) );
-		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] !== PandaTranslate_Plugin::get_settings()['source_language'] && ( $path === $row['slug'] || 0 === strpos( $path, $row['slug'] . '/' ) ) ) return ltrim( substr( $path, strlen( $row['slug'] ) ), '/' );
+		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] !== PandaTranslate_Plugin::get_settings()['source_language'] && ( $path === $row['slug'] || 0 === strpos( $path, $row['slug'] . '/' ) ) ) return apply_filters( 'pandatranslate_original_path', ltrim( substr( $path, strlen( $row['slug'] ) ), '/' ), $row['code'] );
 		return $path;
 	}
 	public static function resolve_translated_slug( $wp ) {

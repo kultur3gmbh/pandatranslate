@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('apply_filters')) { function apply_filters($hook,$value,...$args){return $value;} }
 require __DIR__.'/routing-test.php';
 class WP_Error{private $code,$message;function __construct($code,$message='',$data=null){$this->code=$code;$this->message=$message;}function get_error_code(){return $this->code;}}
 function is_wp_error($value){return $value instanceof WP_Error;}

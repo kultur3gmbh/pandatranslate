@@ -30,6 +30,7 @@ final class PandaTranslate_Google_Provider implements PandaTranslate_Provider {
 		if ( is_wp_error( $token ) ) return $this->failed( $token, $protected_text );
 		$parent = 'projects/' . rawurlencode( $this->project_id ) . '/locations/' . rawurlencode( $this->location );
 		$body = array( 'contents' => array( (string) $protected_text ), 'mimeType' => 'text/plain', 'sourceLanguageCode' => sanitize_key( $source_language ), 'targetLanguageCode' => sanitize_key( $target_language ), 'labels' => array( 'product' => 'pandatranslate' ) );
+		if ( ! $source_language ) unset( $body['sourceLanguageCode'] );
 		$glossary = apply_filters( 'pandatranslate_google_glossary', '', $source_language, $target_language, $context );
 		if ( is_string( $glossary ) && '' !== $glossary ) $body['glossaryConfig'] = array( 'glossary' => $glossary );
 		$response = wp_remote_post( 'https://translation.googleapis.com/v3/' . $parent . ':translateText', array( 'timeout' => 30, 'headers' => array( 'Authorization' => 'Bearer ' . $token, 'Content-Type' => 'application/json; charset=utf-8', 'x-goog-user-project' => $this->project_id ), 'body' => wp_json_encode( $body ) ) );
@@ -47,7 +48,8 @@ final class PandaTranslate_Google_Provider implements PandaTranslate_Provider {
 	}
 
 	private function translate_v2( $protected_text, $source_language, $target_language ) {
-		$response = wp_remote_post( 'https://translation.googleapis.com/language/translate/v2?key=' . rawurlencode( $this->api_key() ), array( 'timeout' => 30, 'headers' => array( 'Content-Type' => 'application/json; charset=utf-8' ), 'body' => wp_json_encode( array( 'q' => array( (string) $protected_text ), 'source' => sanitize_key( $source_language ), 'target' => sanitize_key( $target_language ), 'format' => 'text' ) ) ) );
+		$body = array( 'q' => array( (string) $protected_text ), 'target' => sanitize_key( $target_language ), 'format' => 'text' ); if ( $source_language ) $body['source'] = sanitize_key( $source_language );
+		$response = wp_remote_post( 'https://translation.googleapis.com/language/translate/v2?key=' . rawurlencode( $this->api_key() ), array( 'timeout' => 30, 'headers' => array( 'Content-Type' => 'application/json; charset=utf-8' ), 'body' => wp_json_encode( $body ) ) );
 		if ( is_wp_error( $response ) ) return $this->failed( $response, $protected_text );
 		$status = wp_remote_retrieve_response_code( $response ); $data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( $status < 200 || $status >= 300 || empty( $data['data']['translations'][0]['translatedText'] ) ) return $this->failed( new WP_Error( 'pandatranslate_google_v2_response', sanitize_text_field( $data['error']['message'] ?? __( 'Google v2 did not return a translation.', 'pandatranslate' ) ) ), $protected_text );

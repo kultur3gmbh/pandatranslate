@@ -5,7 +5,7 @@
  * Requires at least: 6.4
  * Requires PHP: 7.4
  * Update URI: https://github.com/kultur3gmbh/pandatranslate
- * Version: 0.5.3
+ * Version: 0.6.0
  * Author: Panda
  * Text Domain: pandatranslate
  */
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'PANDATRANSLATE_FILE', __FILE__ );
 define( 'PANDATRANSLATE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PANDATRANSLATE_URL', plugin_dir_url( __FILE__ ) );
-define( 'PANDATRANSLATE_VERSION', '0.5.3' );
+define( 'PANDATRANSLATE_VERSION', '0.6.0' );
 
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-inline-protector.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-unit-extractor.php';
@@ -23,6 +23,7 @@ require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-repository.php'
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-translation-memory.php';
 require_once PANDATRANSLATE_DIR . 'includes/interface-pandatranslate-provider.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-google-provider.php';
+require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-deepl-provider.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-providers.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-translation-jobs.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-site-progress.php';
@@ -38,6 +39,10 @@ require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-routing.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-frontend.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-language-content.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-family-ui.php';
+require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-strings.php';
+require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-static-inventory.php';
+require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-text-admin.php';
+require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-media.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-plugin.php';
 
 register_activation_hook( __FILE__, function () { PandaTranslate_Repository::install(); PandaTranslate_Routing::boot(); flush_rewrite_rules(); } );
@@ -51,3 +56,9 @@ PandaTranslate_Language_Content::boot();
 
 PandaTranslate_Edition::boot();
 add_action( 'init', function () { if ( ! defined( 'CONTACTPANDA_VERSION' ) ) load_textdomain( 'contactpanda', PANDATRANSLATE_DIR . 'languages/contactpanda-' . determine_locale() . '.mo' ); }, 2 );
+
+add_action( 'plugins_loaded', array( 'PandaTranslate_Strings', 'boot' ), 20 );
+
+PandaTranslate_Text_Admin::boot();
+
+PandaTranslate_Static_Inventory::boot();

@@ -2,7 +2,7 @@
 Contributors: panda
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.5.3
+Stable tag: 0.6.0
 License: Proprietary prototype
 
 PandaTranslate: visual WordPress translation with two languages, language paths, switchers, menus and page-builder elements.
@@ -46,6 +46,17 @@ Free updates use the public kultur3gmbh/pandatranslate GitHub releases and a che
 The pandatranslate_migration_sources filter allows verified future import adapters to register label, detected and render callbacks. Adapters must enforce administrative capabilities, nonces, bounded batches and existing manual-translation protection. TranslatePress is the only supported built-in source in 0.5.0; no other importer is advertised as working. The Migration tab appears only for detected registered sources.
 
 == Changelog ==
+
+= 0.6.0 =
+* Language-specific images with the shared Panda ImagePicker, local alternative text, title and caption, responsive sources, original-image fallback and conflict detection.
+* Central translation text list with search, status/language/domain filters, protected formatting variables and bulk publication.
+* Static plugin/theme text collection with progress and resume support; published translations for dynamic visitor content without automatic external API requests.
+* DeepL API Free and Pro with encrypted credentials and per-run API selection.
+* Expanded Multilingual SEO: Yoast/RankMath variables, schema, multilingual sitemaps, taxonomy/archive metadata, translated URL bases and safe automatic drafts.
+* Multilingual WooCommerce static labels, checkout-session/order language, customer email locale and reusable email templates; customer/order values excluded from external translation APIs.
+* Translation editor role, language-dependent menu visibility and optional browser-language suggestion in Multilingual.
+* Existing TranslatePress migration retained. WPML, Polylang and Weglot migration is planned for a later version.
+
 
 = 0.5.3 =
 * Parallel native WordPress Abilities (including miniOrange), Royal MCP and standalone transports with shared permissions and revision-safe writes.

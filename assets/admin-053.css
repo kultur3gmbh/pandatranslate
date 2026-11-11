@@ -18,3 +18,5 @@
 .pandatranslate-language-actions [data-language-run-status]{flex-basis:100%;margin:4px 0 0}
 .pandatranslate-site-job{margin-top:20px}
 @media(max-width:782px){.pandatranslate-api-settings{--pandatranslate-field-gap:8px}.pandatranslate-admin .pandatranslate-api-row,.pandatranslate-api-settings [data-google-fields]>label:not(.pandatranslate-check){grid-template-columns:1fr}.pandatranslate-api-help{margin-left:0}.pandatranslate-site-action-grid{grid-template-columns:1fr}.pandatranslate-site-actions{padding:16px}.pandatranslate-settings-actions{justify-content:stretch}}
+
+.pandatranslate-text-admin [hidden]{display:none!important}
