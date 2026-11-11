@@ -48,6 +48,7 @@ The pandatranslate_migration_sources filter allows verified future import adapte
 == Changelog ==
 
 = 0.6.1 =
+* Default new language selectors to flag and language code.
 * Fix a frontend fatal error when another plugin translates text before the WordPress query exists.
 * Guard language resolution against recursive gettext filters.
 

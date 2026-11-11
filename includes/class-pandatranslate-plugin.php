@@ -77,7 +77,7 @@ final class PandaTranslate_Plugin {
 			'switcher_floating' => 0,
 			'switcher_position' => 'bottom-right',
 			'switcher_show_names' => 1,
-			'switcher_label_mode' => 'native',
+			'switcher_label_mode' => 'flag_code',
 			'switcher_native_names' => 1,
 			'switcher_display_schema' => 2,
 			'switcher_menu_label_mode' => 'inherit',
