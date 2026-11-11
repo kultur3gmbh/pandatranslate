@@ -1,0 +1,20 @@
+/* Product layout only; family controls use the unchanged canonical library. */
+.pandatranslate-admin{max-width:none}
+.pandatranslate-api-settings{--pandatranslate-label-width:clamp(170px,24%,280px);--pandatranslate-field-gap:20px;width:100%;margin-top:22px}
+.pandatranslate-admin .pandatranslate-api-row,.pandatranslate-api-settings [data-google-fields]>label:not(.pandatranslate-check){display:grid;grid-template-columns:var(--pandatranslate-label-width) minmax(0,1fr);gap:var(--pandatranslate-field-gap);align-items:center;margin:16px 0}
+.pandatranslate-api-settings input:not([type=checkbox]),.pandatranslate-api-settings select,.pandatranslate-key-controls,.pandatranslate-key-mask{box-sizing:border-box;width:100%;min-width:0;max-width:none}
+.pandatranslate-api-settings .pandatranslate-key-field{display:block;margin:0}
+.pandatranslate-api-settings .pandatranslate-key-field>label,.pandatranslate-api-settings .pandatranslate-key-field>small{grid-column:auto}
+.pandatranslate-api-settings .pandatranslate-key-mask{min-height:42px;font-size:15px;letter-spacing:1px}
+.pandatranslate-api-help{display:block;margin:6px 0 20px calc(var(--pandatranslate-label-width) + var(--pandatranslate-field-gap));color:#646970}
+.pandatranslate-settings-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:28px;padding-top:22px;border-top:1px solid #dcdcde}
+.pandatranslate-site-actions{margin-top:28px;padding:22px;border:1px solid #dcdcde;border-radius:8px}
+.pandatranslate-run-provider{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:18px 0}
+.pandatranslate-site-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:18px}
+.pandatranslate-site-action-grid>button{justify-self:start}
+.pandatranslate-site-action-grid .pandatranslate-all-languages{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:0}
+.pandatranslate-all-languages small{color:#646970}
+.pandatranslate-language-actions progress{flex-basis:100%;width:100%;height:12px;margin-top:8px}
+.pandatranslate-language-actions [data-language-run-status]{flex-basis:100%;margin:4px 0 0}
+.pandatranslate-site-job{margin-top:20px}
+@media(max-width:782px){.pandatranslate-api-settings{--pandatranslate-field-gap:8px}.pandatranslate-admin .pandatranslate-api-row,.pandatranslate-api-settings [data-google-fields]>label:not(.pandatranslate-check){grid-template-columns:1fr}.pandatranslate-api-help{margin-left:0}.pandatranslate-site-action-grid{grid-template-columns:1fr}.pandatranslate-site-actions{padding:16px}.pandatranslate-settings-actions{justify-content:stretch}}

@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/class-pandatranslate-html.php';
 
 /** Indexed reuse of published dictionary entries, independent of their old page keys. */
 final class PandaTranslate_Translation_Memory {
@@ -36,9 +37,10 @@ final class PandaTranslate_Translation_Memory {
 	public function lookup( $source ) { $value = $this->translations[self::canonical( $source )] ?? null; return is_string( $value ) && '' !== $value ? $value : null; }
 	public function transform( $html ) {
 		if ( ! $this->translations ) return $html;
-		$document = self::document( $html ); if ( ! $document ) return $html;
+		$raw = PandaTranslate_HTML::protect_raw( $html );
+		$document = self::document( $raw['html'] ); if ( ! $document ) return $html;
 		$this->walk( $document );
-		return preg_replace( '/^<\?xml[^>]+>\s*/', '', $document->saveHTML() );
+		return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $document->saveHTML() ), $raw );
 	}
 	private function walk( $node ) {
 		if ( XML_ELEMENT_NODE === $node->nodeType ) {
@@ -55,6 +57,7 @@ final class PandaTranslate_Translation_Memory {
 	private static function inline_content( $node ) { foreach ( $node->childNodes as $child ) if ( XML_ELEMENT_NODE === $child->nodeType && ! in_array( strtolower( $child->nodeName ), array( 'a','span','strong','em','b','i','u','small','sup','sub','br','s','mark' ), true ) ) return false; return true; }
 	private static function excluded( $node ) {
 		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) {
+			if ( $current->hasAttribute( 'data-no-translation' ) ) return true;
 			if ( in_array( strtolower( $current->nodeName ), array( 'script','style','noscript','textarea','pre','code','svg' ), true ) || in_array( $current->getAttribute( 'id' ), array( 'wpadminbar','query-monitor-main','elementor-editor-wrapper','bricks-toolbar' ), true ) || 'no' === $current->getAttribute( 'translate' ) ) return true;
 			if ( preg_match( '/(?:^|\s)(?:notranslate|ab-sub-wrapper|ab-item|fusion-builder-ui|awb-builder|fl-builder-bar|pandatranslate-panel|pandatranslate-floating|pandatranslate-switcher|pandatranslate-menu-item|pandatranslate-menu-link)(?:\s|$)/', $current->getAttribute( 'class' ) ) ) return true;
 		}

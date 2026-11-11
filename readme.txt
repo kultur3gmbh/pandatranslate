@@ -2,7 +2,7 @@
 Contributors: panda
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.5.2
+Stable tag: 0.5.3
 License: Proprietary prototype
 
 PandaTranslate: visual WordPress translation with two languages, language paths, switchers, menus and page-builder elements.
@@ -31,7 +31,7 @@ Translations use the selected API. Publication follows the Automatic translation
 
 The language switcher can be added to registered navigation locations, displayed as a floating menu, or inserted with `[pandatranslate_switcher]`.
 
-The MCP tab shows the authenticated Streamable HTTP endpoint. Use a dedicated WordPress administrator application password. Write and paid tools require `confirm=true`. When ContactPanda is active, PandaTranslate tools are also added to its central MCP endpoint. Royal MCP 1.5.11 or later automatically lists the same tools on its existing connection via royal_mcp_tools and royal_mcp_execute_tool_external. Royal authentication, read-only mode, drafts-only mode and connection restrictions remain in force; PandaTranslate additionally requires manage_options for every call. No additional connector or Royal dependency is required.
+Settings > System status shows the authenticated Streamable HTTP endpoint. Use a dedicated WordPress administrator application password. Write and paid tools require `confirm=true`. When ContactPanda is active, PandaTranslate tools are also added to its central MCP endpoint. Royal MCP 1.5.11 or later automatically lists the same tools on its existing connection via royal_mcp_tools and royal_mcp_execute_tool_external. Royal authentication, read-only mode, drafts-only mode and connection restrictions remain in force; PandaTranslate additionally requires manage_options for every call. No additional connector or Royal dependency is required.
 
 Editorial MCP workflow: discover pandatranslate_settings_get, search pandatranslate_translations_list with language/query/limit/offset, then read pandatranslate_translation_get. Keep the complete source unit and all [[PT:...]] inline placeholders. Send translated_text, language, unit_key, reviewed/published status, expected_revision from that read, and confirm=true to pandatranslate_translation_save. Stale revisions and concurrent changes fail instead of overwriting; successful writes return verified=true and a freshly read translation. API keys and credential files are never returned. Collected units only are searchable; use the visual editor or automatic collection to capture new source pages. Pagination uses next_offset; one final empty page can occur at an exact page boundary.
 
@@ -46,6 +46,13 @@ Free updates use the public kultur3gmbh/pandatranslate GitHub releases and a che
 The pandatranslate_migration_sources filter allows verified future import adapters to register label, detected and render callbacks. Adapters must enforce administrative capabilities, nonces, bounded batches and existing manual-translation protection. TranslatePress is the only supported built-in source in 0.5.0; no other importer is advertised as working. The Migration tab appears only for detected registered sources.
 
 == Changelog ==
+
+= 0.5.3 =
+* Parallel native WordPress Abilities (including miniOrange), Royal MCP and standalone transports with shared permissions and revision-safe writes.
+* Preserve Unicode script/style contents, including currency selectors, across HTML processing.
+* Support existing language-include, language-exclude and trp_language content blocks independently of migration.
+* Bundle the complete canonical family UI in the license-free base; align API fields, simplify translation actions and combine MCP with System status.
+* Translate recorded source units without a mandatory loopback rescan; stop failed progress indicators.
 
 = 0.5.2 =
 * Use de/en in HTML language attributes on source and target pages while retaining regional language schemas in settings.
@@ -190,3 +197,9 @@ The pandatranslate_migration_sources filter allows verified future import adapte
 
 = 0.1.0 =
 * First installable local prototype.
+
+== MCP transports and content compatibility (0.5.3) ==
+
+WordPress 6.9 Abilities API: pandatranslate/settings-get, translations-list, translation-get, translation-save, google-translate and (Multilingual) seo-get. The existing Royal and ContactPanda registries and standalone endpoint remain available simultaneously. Additional authenticated transports can consume the native abilities or PandaTranslate_MCP::tools()/call(). Hosts retain responsibility for discovery policy, allowed tools and authentication; no host allow-list is modified. All calls additionally require manage_options; writes require confirmation and the last-read revision. Native abilities are not exposed as unauthenticated REST actions. On older WordPress versions Royal, ContactPanda and the standalone endpoint still work.
+
+Language blocks register only if another provider has not already registered the shortcode. lang accepts base or regional codes and comma-separated values. language-include and trp_language preserve visible localized editorial text from automatic retranslation by default; enable_translation="yes" explicitly opts in. language-exclude remains translatable unless enable_translation="no" is supplied. Hidden blocks are not executed. No stored content is stripped or rewritten.

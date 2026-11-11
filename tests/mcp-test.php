@@ -68,3 +68,29 @@ $seo=royal_call('pandatranslate_seo_get',array('post_id'=>42,'language'=>'en'));
 $allowed=false;foreach($tools as $tool){$result=royal_call($tool['name'],$args);assert(is_wp_error($result)&&$result->get_error_code()==='pandatranslate_forbidden');}
 $allowed=true;
 echo "MCP Royal hooks: discovery, paging/search, whole-paragraph read/save/re-read, draft status, protected placeholders, stale revision and atomic race refusal, active target validation, SEO read and permission denial: ok\n";
+
+// Native Abilities registration is independent of the Royal transport.
+$abilities=array();$categories=array();
+function wp_register_ability_category($name,$args){global $categories;$categories[$name]=$args;}
+function wp_register_ability($name,$args){global $abilities;assert(!isset($abilities[$name]));$abilities[$name]=$args;}
+foreach($hooks['wp_abilities_api_categories_init'] as $callback)$callback();
+foreach($hooks['wp_abilities_api_init'] as $callback)$callback();
+assert(isset($categories['pandatranslate'])&&count($abilities)===count($tools));
+foreach($tools as $tool){
+ $name='pandatranslate/'.str_replace('_','-',substr($tool['name'],strlen('pandatranslate_')));
+ $ability=$abilities[$name];assert(wp_json_encode($ability['input_schema'])===wp_json_encode($tool['inputSchema']));
+ assert($ability['meta']['required_cap']==='manage_options');
+ assert($ability['meta']['annotations']['readonly']===!empty($tool['annotations']['readOnlyHint']));
+ assert($ability['meta']['annotations']['open_world']===($tool['name']==='pandatranslate_google_translate'));
+}
+$status=($abilities['pandatranslate/settings-get']['execute_callback'])(array());assert($status['version']===PANDATRANSLATE_VERSION);
+$read=($abilities['pandatranslate/translation-get']['execute_callback'])($args);
+$save['expected_revision']=$read['revision'];$save['translated_text']='A [[PT:0:OPEN]]complete[[PT:1:CLOSE]] paragraph.';$save['status']='reviewed';
+$result=($abilities['pandatranslate/translation-save']['execute_callback'])($save);assert($result['saved']&&$result['verified']);
+$again=($abilities['pandatranslate/translation-get']['execute_callback'])($args);assert($again['revision']===$result['translation']['revision']);
+assert(is_wp_error(($abilities['pandatranslate/translation-save']['execute_callback'])($save)));
+$allowed=false;assert(!($abilities['pandatranslate/translation-get']['permission_callback'])());
+assert(is_wp_error(($abilities['pandatranslate/translation-get']['execute_callback'])($args)));
+$allowed=true;
+assert(count(apply_filters('royal_mcp_tools',array()))===count($tools));
+echo "MCP WordPress Abilities: parallel registration, annotations, native read/save/re-read, conflicts and permission denial: ok\n";

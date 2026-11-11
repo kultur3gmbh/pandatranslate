@@ -221,20 +221,14 @@ final class PandaTranslate_Plugin {
 		if ( false === strpos( $hook, 'pandatranslate' ) ) return;
 		wp_enqueue_style( 'dashicons' );
 		wp_enqueue_media();
-		if ( ! wp_script_is( 'contactpanda-admin-ui', 'registered' ) ) {
-			$shared = WP_PLUGIN_DIR . '/contactpanda/assets/contactpanda-admin-ui.js';
-			wp_register_script( 'contactpanda-admin-ui', file_exists( $shared ) ? plugins_url( 'contactpanda/assets/contactpanda-admin-ui.js' ) : PANDATRANSLATE_URL . 'assets/contactpanda-admin-ui.js', array( 'wp-api-fetch' ), PANDATRANSLATE_VERSION, true );
-		}
-		wp_enqueue_script( 'contactpanda-admin-ui' );
-		wp_enqueue_style( 'pandatranslate-shared-controls', PANDATRANSLATE_URL . 'assets/contactpanda-admin-ui.css', array(), PANDATRANSLATE_VERSION );
+		PandaTranslate_Family_UI::admin();
 		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_style( 'pandatranslate-admin', PANDATRANSLATE_URL . 'assets/admin.css', array(), PANDATRANSLATE_VERSION );
 		wp_enqueue_style( 'pandatranslate-admin-features', PANDATRANSLATE_URL . 'assets/admin-features.css', array( 'pandatranslate-admin' ), PANDATRANSLATE_VERSION );
 		wp_enqueue_style( 'pandatranslate-admin-fixes', PANDATRANSLATE_URL . 'assets/admin-fixes.css', array( 'pandatranslate-admin-features' ), PANDATRANSLATE_VERSION );
+		wp_enqueue_style( 'pandatranslate-admin-053', PANDATRANSLATE_URL . 'assets/admin-053.css', array( 'pandatranslate-admin-050' ), PANDATRANSLATE_VERSION );
 		wp_enqueue_style( 'pandatranslate-admin-050', PANDATRANSLATE_URL . 'assets/admin-050.css', array( 'pandatranslate-admin-045' ), PANDATRANSLATE_VERSION );
 		wp_enqueue_style( 'pandatranslate-admin-045', PANDATRANSLATE_URL . 'assets/admin-045.css', array( 'pandatranslate-admin-fixes' ), PANDATRANSLATE_VERSION );
-		wp_enqueue_style( 'pandatranslate-family-actions', PANDATRANSLATE_URL . 'assets/contactpanda-actions.css', array( 'pandatranslate-admin-fixes', 'pandatranslate-shared-controls' ), PANDATRANSLATE_VERSION );
-		wp_enqueue_style( 'pandatranslate-family-modal', PANDATRANSLATE_URL . 'assets/contactpanda-modal.css', array(), PANDATRANSLATE_VERSION );
 		wp_enqueue_script( 'pandatranslate-glossary', PANDATRANSLATE_URL . 'assets/glossary.js', array( 'pandatranslate-admin' ), PANDATRANSLATE_VERSION, true );
 		wp_enqueue_script( 'pandatranslate-admin', PANDATRANSLATE_URL . 'assets/admin.js', array( 'contactpanda-admin-ui' ), PANDATRANSLATE_VERSION, true );
 		$this->enqueue_switcher_assets();
@@ -266,6 +260,7 @@ final class PandaTranslate_Plugin {
 		$defaults = array( 'pandatranslate' => 'general', 'pandatranslate-translation' => 'automation', 'pandatranslate-glossary' => 'glossary', 'pandatranslate-settings' => 'switcher' );
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ( $defaults[$page] ?? 'general' );
 		$allowed_tabs = array( 'general', 'switcher', 'google', 'automation', 'glossary', 'mcp', 'advanced', 'license', 'woocommerce' ); if ( $has_translatepress ) $allowed_tabs[] = 'migration';
+		if ( 'mcp' === $tab ) $tab = 'advanced';
 		if ( ! in_array( $tab, $allowed_tabs, true ) ) $tab = 'general';
 		$editor_url = add_query_arg( array( 'pandatranslate' => 'edit', 'pt_lang' => $s['default_target_language'] ), home_url( '/' ) );
 		$system_checks = $this->system_checks();
@@ -276,7 +271,7 @@ final class PandaTranslate_Plugin {
 			<?php settings_errors(); ?>
 			<?php if ( $critical_issues ) : ?><div class="notice notice-error pandatranslate-system-warning"><p><strong><?php esc_html_e( 'PandaTranslate needs attention.', 'pandatranslate' ); ?></strong> <?php echo esc_html( implode( ' ', wp_list_pluck( $critical_issues, 'message' ) ) ); ?> <a href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-settings&tab=advanced' ) ); ?>"><?php esc_html_e( 'Open system status', 'pandatranslate' ); ?></a></p></div><?php endif; ?>
             <?php if ( ! in_array( $tab, array( 'general', 'automation', 'glossary' ), true ) ) : ?>
-            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'PandaTranslate settings', 'pandatranslate' ); ?>"><?php $navigation_tabs = array( 'switcher' => __( 'Language switcher', 'pandatranslate' ), 'google' => __( 'Translation APIs', 'pandatranslate' ), 'woocommerce' => 'WooCommerce', 'license' => __( 'License', 'pandatranslate' ) ); if ( $has_translatepress ) $navigation_tabs['migration'] = __( 'Migration', 'pandatranslate' ); $navigation_tabs['mcp'] = 'MCP'; $navigation_tabs['advanced'] = __( 'System status', 'pandatranslate' ); foreach ( $navigation_tabs as $tab_key => $tab_label ) : ?><a class="nav-tab <?php echo $tab_key === $tab ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-settings&tab=' . $tab_key ) ); ?>"><?php echo esc_html( $tab_label ); ?></a><?php endforeach; ?></nav>
+            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'PandaTranslate settings', 'pandatranslate' ); ?>"><?php $navigation_tabs = array( 'switcher' => __( 'Language switcher', 'pandatranslate' ), 'google' => __( 'Translation APIs', 'pandatranslate' ), 'woocommerce' => 'WooCommerce', 'license' => __( 'License', 'pandatranslate' ) ); if ( $has_translatepress ) $navigation_tabs['migration'] = __( 'Migration', 'pandatranslate' ); $navigation_tabs['advanced'] = __( 'System status', 'pandatranslate' ); foreach ( $navigation_tabs as $tab_key => $tab_label ) : ?><a class="nav-tab <?php echo $tab_key === $tab ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-settings&tab=' . $tab_key ) ); ?>"><?php echo esc_html( $tab_label ); ?></a><?php endforeach; ?></nav>
             <?php endif; ?>
             <?php if ( class_exists( 'PandaTranslate_Edition' ) ) PandaTranslate_Edition::promotion(); ?>
 
@@ -312,24 +307,18 @@ final class PandaTranslate_Plugin {
 					<h3><?php esc_html_e( 'Content types', 'pandatranslate' ); ?></h3><?php foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $post_type ) : ?><label class="pandatranslate-check"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[auto_post_types][]" value="<?php echo esc_attr( $post_type->name ); ?>" <?php checked( in_array( $post_type->name, (array) $s['auto_post_types'], true ) ); ?>><span><?php echo esc_html( $post_type->labels->name ); ?></span></label><?php endforeach; ?>
 					<label class="pandatranslate-check"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[auto_publish]" value="1" <?php checked( $s['auto_publish'], 1 ); ?>><span><?php esc_html_e( 'Publish automatic translations immediately', 'pandatranslate' ); ?></span></label><p><small><?php esc_html_e( 'Recommended: leave disabled so translations remain automatic drafts until reviewed.', 'pandatranslate' ); ?></small></p>
 					<?php $this->render_api_selector( self::OPTION . '[auto_provider]', 'pandatranslate-run-api' ); $this->render_translation_progress(); ?>
-					<h3><?php esc_html_e( 'Translate existing website', 'pandatranslate' ); ?></h3><p><?php esc_html_e( 'Queues all published content of the selected types for the selected translation API.', 'pandatranslate' ); ?></p>
+					<section class="pandatranslate-site-actions"><h3><?php esc_html_e( 'Translate existing website', 'pandatranslate' ); ?></h3><p><?php esc_html_e( 'Queues all published content of the selected types for the selected translation API.', 'pandatranslate' ); ?></p>
+					<p class="pandatranslate-run-provider"><span><?php esc_html_e( 'Translation API', 'pandatranslate' ); ?></span><strong data-api-run-label><?php echo esc_html( PandaTranslate_Providers::label( PandaTranslate_Providers::default_id() ) ); ?></strong></p><div class="pandatranslate-site-action-grid">
 					<?php wp_nonce_field( 'pandatranslate_translate_site', 'pandatranslate_site_nonce' ); ?>
-					<button type="submit" class="contactpanda-large-action" data-contactpanda-action="start" data-contactpanda-action-mode="labelled" data-translate-site name="action" value="pandatranslate_translate_site" formaction="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" <?php disabled( ! PandaTranslate_Providers::choices() ); ?>><span class="dashicons dashicons-controls-play"></span><span data-api-run-label><?php echo esc_html( sprintf( __( 'Translate entire website with %s', 'pandatranslate' ), PandaTranslate_Providers::label( PandaTranslate_Providers::default_id() ) ) ); ?></span></button>
+					<button type="submit" class="contactpanda-large-action" data-contactpanda-action="start" data-contactpanda-action-mode="labelled" data-translate-site name="action" value="pandatranslate_translate_site" formaction="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" <?php disabled( ! PandaTranslate_Providers::choices() ); ?>><span class="dashicons dashicons-controls-play"></span><span><?php esc_html_e( 'Translate entire website', 'pandatranslate' ); ?></span></button>
+					<?php $this->render_all_languages_action(); ?></div>
 					<div data-site-job data-nonce="<?php echo esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ); ?>"><?php PandaTranslate_Site_Progress::render(); ?></div>
 					<?php if ( isset( $_GET['queued'] ) ) : ?><p class="is-ok"><?php echo esc_html( sprintf( __( '%d content items were queued.', 'pandatranslate' ), absint( $_GET['queued'] ) ) ); ?></p><?php endif; ?>
+					</section>
 					<?php elseif ( 'glossary' === $tab ) : ?>
 					<?php $this->render_glossary(); ?>
 					<?php elseif ( 'migration' === $tab ) : ?>
 					<?php if ( isset( $_GET['imported'] ) ) : ?><div class="notice notice-success inline"><p><?php echo esc_html( sprintf( __( '%1$d translations imported; %2$d existing or invalid entries skipped.', 'pandatranslate' ), absint( $_GET['imported'] ), absint( $_GET['skipped'] ?? 0 ) ) ); ?></p></div><?php endif; ?><?php PandaTranslate_Migration_Sources::render(); ?>
-					<?php elseif ( 'mcp' === $tab ) : ?>
-					<h2><?php esc_html_e( 'MCP access', 'pandatranslate' ); ?></h2><p><?php esc_html_e( 'Connect an MCP client with a dedicated WordPress administrator application password. Revoke the application password to disable access immediately.', 'pandatranslate' ); ?></p>
-					<label><span><?php esc_html_e( 'Standalone endpoint', 'pandatranslate' ); ?></span><input class="large-text code" readonly value="<?php echo esc_attr( PandaTranslate_MCP::endpoint() ); ?>"></label>
-					<h3>Royal MCP</h3><p><?php esc_html_e( 'With Royal MCP 1.5.11 or later active, PandaTranslate tools appear on the existing Royal connection. Royal permissions and read-only restrictions also apply.', 'pandatranslate' ); ?></p>
-					<label><span><?php esc_html_e( 'Royal MCP endpoint', 'pandatranslate' ); ?></span><input class="large-text code" readonly value="<?php echo esc_attr( rest_url( 'royal-mcp/v1/mcp' ) ); ?>"></label>
-					<p><?php esc_html_e( 'Read a translation before editing. Saving requires its current revision and returns the verified saved translation.', 'pandatranslate' ); ?></p>
-					<div class="pandatranslate-note"><strong><?php esc_html_e( 'Available tools', 'pandatranslate' ); ?></strong><p><?php foreach ( PandaTranslate_MCP::tools() as $mcp_tool ) echo '<code>' . esc_html( $mcp_tool['name'] ) . '</code><br>'; ?></p></div>
-					<p><?php esc_html_e( 'When ContactPanda is active, the same tools are also registered on its central MCP endpoint.', 'pandatranslate' ); ?></p>
-					<h3><?php esc_html_e( 'Recent MCP activity', 'pandatranslate' ); ?></h3><?php $audit = PandaTranslate_MCP::audit_entries(); if ( ! $audit ) : ?><p><?php esc_html_e( 'No MCP activity has been recorded yet.', 'pandatranslate' ); ?></p><?php else : ?><table class="widefat striped"><thead><tr><th><?php esc_html_e( 'Time', 'pandatranslate' ); ?></th><th><?php esc_html_e( 'Tool', 'pandatranslate' ); ?></th><th><?php esc_html_e( 'Result', 'pandatranslate' ); ?></th></tr></thead><tbody><?php foreach ( array_slice( $audit, 0, 20 ) as $entry ) : ?><tr><td><?php echo esc_html( $entry['time'] ?? '' ); ?></td><td><code><?php echo esc_html( $entry['tool'] ?? '' ); ?></code></td><td><?php echo esc_html( ! empty( $entry['success'] ) ? __( 'Successful', 'pandatranslate' ) : __( 'Failed', 'pandatranslate' ) ); ?></td></tr><?php endforeach; ?></tbody></table><?php endif; ?>
 					<?php elseif ( 'license' === $tab || 'woocommerce' === $tab ) : ?>
                     <?php if ( has_action( 'pandatranslate_settings_' . $tab ) ) do_action( 'pandatranslate_settings_' . $tab ); else { echo '<h2>' . esc_html( 'license' === $tab ? __( 'License', 'pandatranslate' ) : 'WooCommerce' ) . '</h2><p>' . esc_html__( 'Available with PandaTranslate Multilingual. Free requires no paid license.', 'pandatranslate' ) . '</p>'; } ?>
                     <?php else : ?>
@@ -337,29 +326,44 @@ final class PandaTranslate_Plugin {
 					<p><?php esc_html_e( 'Technical checks for translation, background processing, URLs and SEO integrations.', 'pandatranslate' ); ?></p>
 					<?php foreach ( $system_checks as $check ) $this->status_row( $check['label'], $check['value'], $check['status'] ); ?>
 					<div class="pandatranslate-note"><strong><?php esc_html_e( 'Troubleshooting', 'pandatranslate' ); ?></strong><p><?php esc_html_e( 'If the editor opens but no content can be selected, check the PHP DOM extension first. URL rules can be refreshed by saving WordPress permalinks once.', 'pandatranslate' ); ?></p></div>
+					<?php $this->render_mcp(); ?>
 					<?php endif; ?>
-					<?php if ( ! in_array( $tab, array( 'mcp', 'migration', 'advanced', 'glossary', 'license', 'woocommerce' ), true ) ) : ?><button type="submit" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="save"><span class="dashicons dashicons-saved" aria-hidden="true"></span><?php esc_html_e( 'Save settings', 'pandatranslate' ); ?></button><?php endif; ?>
-                    <?php if ( 'automation' === $tab ) $this->render_all_languages_action(); ?>
+					<?php if ( ! in_array( $tab, array( 'mcp', 'migration', 'advanced', 'glossary', 'license', 'woocommerce' ), true ) ) : ?><div class="pandatranslate-settings-actions"><button type="submit" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="save"><span class="dashicons dashicons-saved" aria-hidden="true"></span><?php esc_html_e( 'Save settings', 'pandatranslate' ); ?></button></div><?php endif; ?>
 				</<?php echo in_array( $tab, array( 'license', 'woocommerce' ), true ) ? 'div' : 'form'; ?>>
 			</div>
 		</div>
 		<?php
 	}
 
+	private function render_mcp() { ?>
+					<h2><?php esc_html_e( 'MCP access', 'pandatranslate' ); ?></h2><p><?php esc_html_e( 'Standalone access uses a dedicated WordPress administrator application password. Royal MCP and WordPress Abilities transports use their own authenticated connections.', 'pandatranslate' ); ?></p>
+					<?php $this->status_row( 'WordPress Abilities API', function_exists( 'wp_register_ability' ) ? __( 'Available', 'pandatranslate' ) : __( 'Missing', 'pandatranslate' ), function_exists( 'wp_register_ability' ) ? 'ok' : 'neutral' ); ?>
+					<p><?php esc_html_e( 'Royal MCP, WordPress Abilities transports such as miniOrange, and the standalone MCP endpoint can be used simultaneously. Each connection retains its own access policy.', 'pandatranslate' ); ?></p>
+					<?php $this->status_row( 'Royal MCP', defined( 'ROYAL_MCP_VERSION' ) ? ROYAL_MCP_VERSION : __( 'Missing', 'pandatranslate' ), defined( 'ROYAL_MCP_VERSION' ) && version_compare( ROYAL_MCP_VERSION, '1.5.11', '>=' ) ? 'ok' : 'neutral' ); ?>
+					<label><span><?php esc_html_e( 'Standalone endpoint', 'pandatranslate' ); ?></span><input class="large-text code" readonly value="<?php echo esc_attr( PandaTranslate_MCP::endpoint() ); ?>"></label>
+					<h3>Royal MCP</h3><p><?php esc_html_e( 'With Royal MCP 1.5.11 or later active, PandaTranslate tools appear on the existing Royal connection. Royal permissions and read-only restrictions also apply.', 'pandatranslate' ); ?></p>
+					<label><span><?php esc_html_e( 'Royal MCP endpoint', 'pandatranslate' ); ?></span><input class="large-text code" readonly value="<?php echo esc_attr( rest_url( 'royal-mcp/v1/mcp' ) ); ?>"></label>
+					<p><?php esc_html_e( 'Read a translation before editing. Saving requires its current revision and returns the verified saved translation.', 'pandatranslate' ); ?></p>
+					<div class="pandatranslate-note"><strong><?php esc_html_e( 'Available tools', 'pandatranslate' ); ?></strong><p><?php foreach ( PandaTranslate_MCP::tools() as $mcp_tool ) echo '<code>' . esc_html( $mcp_tool['name'] ) . '</code><br>'; ?></p></div>
+					<p><?php esc_html_e( 'When ContactPanda is active, the same tools are also registered on its central MCP endpoint.', 'pandatranslate' ); ?></p>
+					<h3><?php esc_html_e( 'Recent MCP activity', 'pandatranslate' ); ?></h3><?php $audit = PandaTranslate_MCP::audit_entries(); if ( ! $audit ) : ?><p><?php esc_html_e( 'No MCP activity has been recorded yet.', 'pandatranslate' ); ?></p><?php else : ?><table class="widefat striped"><thead><tr><th><?php esc_html_e( 'Time', 'pandatranslate' ); ?></th><th><?php esc_html_e( 'Tool', 'pandatranslate' ); ?></th><th><?php esc_html_e( 'Result', 'pandatranslate' ); ?></th></tr></thead><tbody><?php foreach ( array_slice( $audit, 0, 20 ) as $entry ) : ?><tr><td><?php echo esc_html( $entry['time'] ?? '' ); ?></td><td><code><?php echo esc_html( $entry['tool'] ?? '' ); ?></code></td><td><?php echo esc_html( ! empty( $entry['success'] ) ? __( 'Successful', 'pandatranslate' ) : __( 'Failed', 'pandatranslate' ) ); ?></td></tr><?php endforeach; ?></tbody></table><?php endif; ?>
+
+	<?php }
+
 	private function status_row( $label, $value, $status = 'ok' ) { echo '<div class="pandatranslate-status-row"><span>' . esc_html( $label ) . '</span><strong class="' . esc_attr( 'is-' . $status ) . '">' . esc_html( $value ) . '</strong></div>'; }
 
 	private function render_api_settings( $s ) {
 		echo '<h2>' . esc_html__( 'Translation APIs', 'pandatranslate' ) . '</h2><p>' . esc_html__( 'Multiple APIs can be enabled simultaneously. The API is selected for each translation run.', 'pandatranslate' ) . '</p>';
 		foreach ( array( 'v2', 'v3' ) as $edition ) echo '<label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[google_' . $edition . '_enabled]' ) . '" value="1" ' . checked( $s['google_' . $edition . '_enabled'], 1, false ) . '><span>' . esc_html( sprintf( __( 'Enable %s', 'pandatranslate' ), PandaTranslate_Providers::label( 'google-' . $edition ) ) ) . '</span></label>';
-		echo '<label><span>' . esc_html__( 'API settings', 'pandatranslate' ) . '</span><select data-google-edition name="' . esc_attr( self::OPTION . '[google_api_version]' ) . '">';
+		echo '<div class="pandatranslate-api-settings"><label class="pandatranslate-api-row"><span>' . esc_html__( 'API settings', 'pandatranslate' ) . '</span><select data-google-edition name="' . esc_attr( self::OPTION . '[google_api_version]' ) . '">';
 		foreach ( array( 'v2', 'v3' ) as $edition ) echo '<option value="' . esc_attr( $edition ) . '" ' . selected( $s['google_api_version'], $edition, false ) . '>' . esc_html( PandaTranslate_Providers::label( 'google-' . $edition ) ) . '</option>';
 		echo '</select></label>';
 		foreach ( array( 'v2', 'v3' ) as $edition ) {
 			echo '<section data-google-fields="' . esc_attr( $edition ) . '"' . ( $edition !== $s['google_api_version'] ? ' hidden' : '' ) . '>';
 			if ( 'v2' === $edition ) {
-				echo '<div class="pandatranslate-key-field"><strong>' . esc_html__( 'Google v2 API key', 'pandatranslate' ) . '</strong>';
-				if ( $s['google_api_key_encrypted'] ) echo '<div class="pandatranslate-key-mask"><span aria-hidden="true">•••• •••• ••••</span><code>' . esc_html( $s['google_api_key_last4'] ) . '</code></div>';
-				echo '<label><span>' . esc_html__( 'Enter or replace API key', 'pandatranslate' ) . '</span><input type="password" autocomplete="new-password" name="' . esc_attr( self::OPTION . '[google_api_key]' ) . '"></label><small>' . esc_html__( 'Stored encrypted. Only the last four characters are shown.', 'pandatranslate' ) . '</small></div>';
+				echo '<div class="pandatranslate-key-field">';
+				if ( $s['google_api_key_encrypted'] ) echo '<div class="pandatranslate-api-row"><strong>' . esc_html__( 'Google v2 API key', 'pandatranslate' ) . '</strong><div class="pandatranslate-key-controls"><div class="pandatranslate-key-mask"><span aria-hidden="true">•••• •••• ••••</span><code>' . esc_html( $s['google_api_key_last4'] ) . '</code></div></div></div>';
+				echo '<label class="pandatranslate-api-row"><span>' . esc_html( $s['google_api_key_encrypted'] ? __( 'Enter or replace API key', 'pandatranslate' ) : __( 'Google v2 API key', 'pandatranslate' ) ) . '</span><input type="password" autocomplete="new-password" name="' . esc_attr( self::OPTION . '[google_api_key]' ) . '" aria-describedby="pandatranslate-key-help"></label><small id="pandatranslate-key-help" class="pandatranslate-api-help">' . esc_html__( 'Stored encrypted. Only the last four characters are shown.', 'pandatranslate' ) . '</small></div>';
 				if ( $s['google_api_key_encrypted'] ) echo '<label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[google_api_key_remove]' ) . '" value="1"><span>' . esc_html__( 'Delete stored API key', 'pandatranslate' ) . '</span></label>';
 			} else {
 				echo '<label><span>' . esc_html__( 'Google Cloud project ID', 'pandatranslate' ) . '</span><input data-google-project name="' . esc_attr( self::OPTION . '[google_project_id]' ) . '" value="' . esc_attr( $s['google_project_id'] ) . '"></label><label><span>' . esc_html__( 'API location', 'pandatranslate' ) . '</span><input data-google-location name="' . esc_attr( self::OPTION . '[google_location]' ) . '" value="' . esc_attr( $s['google_location'] ) . '"></label>';
@@ -372,7 +376,7 @@ final class PandaTranslate_Plugin {
 			echo '<button type="button" class="contactpanda-large-action" data-contactpanda-action="test" data-contactpanda-action-mode="labelled" data-google-test="' . esc_attr( $edition ) . '"><span class="dashicons dashicons-admin-tools" aria-hidden="true"></span>' . esc_html( 'v2' === $edition ? __( 'Test API key', 'pandatranslate' ) : __( 'Run connection test', 'pandatranslate' ) ) . '</button><p data-google-result role="status">' . esc_html( $test['error'] ?? '' ) . '</p></section>';
 		}
 		$usage = $this->provider_usage();
-		echo '<h3>' . esc_html__( 'Translation usage', 'pandatranslate' ) . '</h3>';
+		echo '</div><h3>' . esc_html__( 'Translation usage', 'pandatranslate' ) . '</h3>';
 		$this->status_row( __( 'Characters sent to translation APIs', 'pandatranslate' ), number_format_i18n( $usage['characters'] ) );
 		$this->status_row( __( 'Words (PandaTranslate count)', 'pandatranslate' ), number_format_i18n( $usage['words'] ) );
 	}
@@ -415,7 +419,6 @@ final class PandaTranslate_Plugin {
 		echo '<p hidden role="status" data-language-limit-message>' . esc_html__( 'Free includes the source language and one translation language. Existing additional language data remains stored.', 'pandatranslate' ) . '</p>';
 		$rows = self::language_rows(); $catalog = PandaTranslate_Features::catalog(); $stats = $this->repository->language_stats();
         $wp_source = class_exists( 'PandaTranslate_Source_Language' ) ? PandaTranslate_Source_Language::wordpress_code( $rows ) : $rows[0]['code'];
-        echo '<label><span>' . esc_html__( 'Default language', 'pandatranslate' ) . '</span><input readonly value="' . esc_attr( $catalog[$wp_source]['name'] ?? $wp_source ) . '"><small>' . esc_html__( 'Inherited from the WordPress website language.', 'pandatranslate' ) . '</small></label>';
         if ( class_exists( 'PandaTranslate_Source_Language' ) && PandaTranslate_Source_Language::mismatch( $rows ) ) echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'The stored translation source differs from the WordPress website language. Changing it affects language assignments and URLs. Existing translations are retained and are not reversed automatically.', 'pandatranslate' ) . '</p><label><input type="checkbox" name="' . esc_attr( self::OPTION ) . '[adopt_wordpress_source]" value="1"> ' . esc_html__( 'Confirm adoption of the WordPress website language as the translation source.', 'pandatranslate' ) . '</label></div>';
 
 		echo '<div class="pandatranslate-languages-scroll"><table class="pandatranslate-languages"><colgroup><col style="width:64px"><col style="width:56px"><col style="width:98px"><col><col><col style="width:164px"><col style="width:132px"><col style="width:92px"><col style="width:168px"><col style="width:70px"><col style="width:56px"></colgroup><thead><tr>';
@@ -518,7 +521,7 @@ final class PandaTranslate_Plugin {
 
 	private function render_all_languages_action() {
         $targets = array(); foreach ( self::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] !== self::get_settings()['source_language'] ) $targets[] = $row['code'];
-        echo '<div class="pandatranslate-language-actions pandatranslate-all-languages"><button type="button" class="contactpanda-large-action" data-contactpanda-action="start" data-contactpanda-action-mode="labelled" data-language-translate-all data-languages="' . esc_attr( wp_json_encode( $targets ) ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '"' . ( ! PandaTranslate_Providers::choices() || ! $targets ? ' disabled' : '' ) . '>' . esc_html__( 'Translate all untranslated content in all languages', 'pandatranslate' ) . '</button><progress hidden aria-label="' . esc_attr__( 'Translation progress', 'pandatranslate' ) . '"></progress><p data-language-run-status role="status" aria-live="polite"></p></div>';
+        echo '<div class="pandatranslate-language-actions pandatranslate-all-languages"><button type="button" class="contactpanda-large-action" data-contactpanda-action="start" data-contactpanda-action-mode="labelled" aria-label="' . esc_attr__( 'Translate all untranslated content in all languages', 'pandatranslate' ) . '" data-language-translate-all data-languages="' . esc_attr( wp_json_encode( $targets ) ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '"' . ( ! PandaTranslate_Providers::choices() || ! $targets ? ' disabled' : '' ) . '>' . esc_html__( 'Translate missing content', 'pandatranslate' ) . '</button><small>' . esc_html__( 'All active target languages.', 'pandatranslate' ) . '</small><progress hidden aria-label="' . esc_attr__( 'Translation progress', 'pandatranslate' ) . '"></progress><p data-language-run-status role="status" aria-live="polite"></p></div>';
 	}
 
 	public function language_translation_batch() {

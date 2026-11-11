@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/class-pandatranslate-html.php';
 
 /** Language presentation and internal navigation, without filtering global home/admin URLs. */
 final class PandaTranslate_Frontend {
@@ -100,8 +101,9 @@ final class PandaTranslate_Frontend {
 	public static function transform( $html, $language ) {
 		if ( is_admin() || ! class_exists( 'DOMDocument' ) || false === stripos( $html, '<html' ) ) return $html;
 		$row = self::row( $language );
+		$raw = PandaTranslate_HTML::protect_raw( $html );
 		$previous = libxml_use_internal_errors( true ); $doc = new DOMDocument( '1.0', 'UTF-8' );
-		$loaded = $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NODEFDTD ); libxml_clear_errors(); libxml_use_internal_errors( $previous ); if ( ! $loaded ) return $html;
+		$loaded = $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $raw['html'], LIBXML_HTML_NODEFDTD ); libxml_clear_errors(); libxml_use_internal_errors( $previous ); if ( ! $loaded ) return $html;
 		$root = $doc->documentElement; $locale = self::locale( $row ); $root->setAttribute( 'lang', $locale ); $root->setAttribute( 'dir', self::direction( $locale ) ); if ( $root->hasAttribute( 'xml:lang' ) ) $root->setAttribute( 'xml:lang', $locale );
 		$base = ''; foreach ( $doc->getElementsByTagName( 'base' ) as $element ) if ( $element->hasAttribute( 'href' ) ) { $base = $element->getAttribute( 'href' ); break; }
 		foreach ( ( new DOMXPath( $doc ) )->query( '//*' ) as $node ) {
@@ -110,7 +112,7 @@ final class PandaTranslate_Frontend {
 			foreach ( array( 'title', 'alt', 'placeholder', 'aria-label' ) as $attribute ) if ( $node->hasAttribute( $attribute ) ) $node->setAttribute( $attribute, self::glyphs( $node->getAttribute( $attribute ) ) );
 			foreach ( $node->childNodes as $child ) if ( XML_TEXT_NODE === $child->nodeType ) { $value = self::glyphs( $child->nodeValue ); if ( $value !== $child->nodeValue ) $child->nodeValue = $value; }
 		}
-		return preg_replace( '/^<\?xml[^>]+>\s*/', '', $doc->saveHTML() );
+		return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $doc->saveHTML() ), $raw );
 	}
 	private static function excluded( $node ) {
 		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) if ( in_array( strtolower( $current->nodeName ), array( 'script', 'style', 'noscript', 'code', 'pre', 'textarea', 'svg' ), true ) || in_array( $current->getAttribute( 'id' ), array( 'wpadminbar', 'query-monitor-main', 'elementor-editor-wrapper', 'bricks-toolbar' ), true ) || preg_match( '/(?:^|\s)(?:ab-sub-wrapper|fusion-builder-ui|awb-builder|fl-builder-bar|pandatranslate-panel)(?:\s|$)/', $current->getAttribute( 'class' ) ) ) return true;

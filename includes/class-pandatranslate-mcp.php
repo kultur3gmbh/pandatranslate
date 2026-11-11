@@ -6,12 +6,38 @@ final class PandaTranslate_MCP {
 	const AUDIT_OPTION = 'pandatranslate_mcp_audit';
 
 	public static function boot() {
+		add_action( 'wp_abilities_api_categories_init', array( __CLASS__, 'register_ability_category' ) );
+		add_action( 'wp_abilities_api_init', array( __CLASS__, 'register_abilities' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_route' ) );
 		add_filter( 'contactpanda_mcp_tools', array( __CLASS__, 'register_contactpanda_tools' ) );
 		add_filter( 'contactpanda_mcp_tool_call', array( __CLASS__, 'call_contactpanda_tool' ), 10, 3 );
 		// Royal MCP >= 1.5.11: reuse its authenticated transport and safety switches.
 		add_filter( 'royal_mcp_tools', array( __CLASS__, 'register_contactpanda_tools' ) );
 		add_filter( 'royal_mcp_execute_tool_external', array( __CLASS__, 'call_contactpanda_tool' ), 10, 3 );
+	}
+
+	/** Native registry used by miniOrange and other WordPress Abilities transports. */
+	public static function register_ability_category() {
+		if ( function_exists( 'wp_register_ability_category' ) ) wp_register_ability_category( 'pandatranslate', array( 'label' => 'PandaTranslate', 'description' => 'Stored website translations and translation provider status.' ) );
+	}
+
+	public static function register_abilities() {
+		if ( ! function_exists( 'wp_register_ability' ) ) return;
+		foreach ( self::tools() as $tool ) {
+			$name = $tool['name'];
+			$read = ! empty( $tool['annotations']['readOnlyHint'] );
+			wp_register_ability( 'pandatranslate/' . str_replace( '_', '-', substr( $name, strlen( 'pandatranslate_' ) ) ) , array(
+				'label' => 'PandaTranslate: ' . str_replace( '_', ' ', substr( $name, strlen( 'pandatranslate_' ) ) ),
+				'description' => $tool['description'], 'category' => 'pandatranslate', 'input_schema' => $tool['inputSchema'],
+				'permission_callback' => array( __CLASS__, 'allowed' ),
+				'execute_callback' => static function ( $input = array() ) use ( $name ) {
+					$result = self::call( $name, (array) $input );
+					self::audit( $name, ! is_wp_error( $result ) );
+					return $result;
+				},
+				'meta' => array( 'show_in_rest' => false, 'required_cap' => 'manage_options', 'annotations' => array( 'readonly' => $read, 'destructive' => ! $read, 'idempotent' => $read, 'open_world' => 'pandatranslate_google_translate' === $name ) ),
+			) );
+		}
 	}
 
 	public static function register_route() {

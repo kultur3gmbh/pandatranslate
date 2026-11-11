@@ -34,14 +34,14 @@ final class Job_Test_DB {
 	public function get_row($statement,$format){[$sql,$args]=$statement;foreach($this->rows as $row)if($row['unit_key']===$args[0]&&$row['target_language']===$args[1])return $row;return null;}
 	public function insert($table,$data){$data['id']=count($this->rows)+1;$this->rows[$data['id']]=$data;return 1;}
 	public function update($table,$data,$where){$this->rows[$where['id']]=array_merge($this->rows[$where['id']],$data);return 1;}
-	public function get_var($statement){[$sql,$args]=$statement;if(strpos($sql,'COUNT(*)')!==false)return count(array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&$row['id']<=$args[1]&&('untranslated'===$row['status']||''===$row['translated_html']);}));$rows=array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&(!isset($args[1])||$row['source_hash']===$args[1]);});return strpos($sql,'MAX(id)')!==false?($rows?max(array_keys($rows)):0):($rows?reset($rows)['id']:null);}
+	public function get_var($statement){if(is_string($statement))return $this->rows?max(array_keys($this->rows)):0;[$sql,$args]=$statement;if(strpos($sql,'COUNT(*)')!==false)return count(array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&$row['id']<=$args[1]&&('untranslated'===$row['status']||''===$row['translated_html']);}));$rows=array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&(!isset($args[1])||$row['source_hash']===$args[1]);});return strpos($sql,'MAX(id)')!==false?($rows?max(array_keys($rows)):0):($rows?reset($rows)['id']:null);}
 	public function get_results($statement,$format){[$sql,$args]=$statement;if(strpos($sql,'canonical')!==false){$seen=array();$rows=array();foreach($this->rows as $row){if(isset($seen[$row['source_hash']]))continue;$seen[$row['source_hash']]=true;if($row['id']>$args[0])$rows[]=$row;}return array_slice($rows,0,250);}if(strpos($sql,'SELECT id,unit_key')!==false){return array_values(array_filter($this->rows,function($row)use($args){return $row['target_language']===$args[0]&&$row['id']>$args[1]&&$row['id']<=$args[2]&&('untranslated'===$row['status']||''===$row['translated_html']);}));}throw new RuntimeException('Unexpected SQL: '.$sql);}
 }
 define('ARRAY_A','ARRAY_A');$wpdb=new Job_Test_DB();$repository=new PandaTranslate_Repository();
 foreach(array(array('en','Old imported text','Old translation','translatepress-import'),array('es','Manual source','Manual text','manual')) as $row)$repository->save(array('key'=>hash('sha256',$row[1]),'source_hash'=>hash('sha256',$row[1]),'source_html'=>$row[1]),$row[0],$row[2],'published',$row[3]);
 assert(count(PandaTranslate_Providers::choices())===2);
 assert(PandaTranslate_Providers::default_id()==='other-api');
-$state=array('language'=>'es','api'=>'mock-api','mode'=>'missing');$phases=array();
+$state=array('language'=>'es','api'=>'mock-api','mode'=>'missing','phase'=>'collect');$phases=array();
 for($i=0;$i<10;$i++){$result=PandaTranslate_Translation_Jobs::batch($state);assert(!is_wp_error($result));$phases[]=$result['phase'];$state=array_merge($state,$result);if($result['done'])break;}
 assert($result['done']);assert($result['total_units']===2);assert($result['processed']===2);assert(in_array('collect',$phases,true)&&in_array('prepare',$phases,true)&&in_array('translate',$phases,true));
 assert($calls===array('chosen','chosen'));assert($result['success']===2);
@@ -52,3 +52,10 @@ $scan_valid=false;$result=PandaTranslate_Translation_Jobs::batch(array('language
 assert(is_wp_error($result));assert(count($calls)===2);
 assert(is_wp_error(PandaTranslate_Providers::get('deleted-api')));
 echo "new-language jobs: collect, seed imported sources, selected API pinned over default, preserve manual translations, publish setting and failed scan detection: ok\n";
+
+// Existing inventory remains translatable when fresh loopback collection is unavailable.
+$inventory_before=count($calls); $state=array('language'=>'es','api'=>'mock-api','phase'=>'start','mode'=>'missing');
+for($i=0;$i<10;$i++){$result=PandaTranslate_Translation_Jobs::batch($state);assert(!is_wp_error($result));assert($result['phase']!=='collect');$state=array_merge($state,$result);if($result['done'])break;}
+assert($result['done']);assert(count($calls)>$inventory_before);
+assert($repository->find(hash('sha256','Manual source'),'es')['translated_html']==='Manual text');
+echo "Recorded missing units translate without a loopback rescan, preserving manual translations: ok\n";

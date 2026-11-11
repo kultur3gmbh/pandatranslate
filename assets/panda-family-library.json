@@ -1,0 +1,17 @@
+{
+  "source": "ContactPanda Basic shared UI library",
+  "files": {
+    "assets/contactpanda-admin-ui.js": "d67670cbba4a9286a43532c56f345a8c19ef88e7f863155736764d03823dcb5e",
+    "assets/contactpanda-admin.css": "d17cafbd74c0c17b2155cdf777e90a1a14aef71b12ef61f48408f5c02e768471",
+    "assets/panda-editor-ui.js": "619d50b14f98fa90e1b62c9e6d6d3025be2a43fa18f8afdbef99e27e59751955",
+    "assets/panda-editor-ui.css": "30ddda3b03ab923634e2a428c20c1818c4decf513250bf29bd6a4d35e2430afd",
+    "assets/panda-transfer-ui.js": "ddbce6e5d3a87ac79c5014d0d6d9ff7b30d9e8e78068ffa80ee278f7d902af16",
+    "assets/panda-transfer-ui.css": "d2ae26707c3b224fd655cd056a37aa9c782a552a595249c24f5390015ad28f5f",
+    "assets/panda-import-review.css": "d84775b7b3d24a6cf3cdea738f2dd7e840e1fff5005512fca3df7611be4c3e2e",
+    "assets/panda-number-format.js": "740e0bf04af391cf586a7a0b128a0bc9a3a1c1cb5c31937ced0dd8e059d13ddd",
+    "assets/icons/panda-door-closed.svg": "d8bb30d68c43ad2fe3baccfabc9b79c1416742d2c2266bd4d58a05d2251df1f1",
+    "assets/icons/panda-door-open.svg": "64a188b592463e3d778c5a251c4995288e54cfb9688edb2928c8f21e59488702",
+    "assets/icons/README.txt": "1101b3ca94e60b2f26539dd5c56cd05d75598e4e8b88a42be89185fa4bf16f31",
+    "includes/class-panda-number-format.php": "e2bb9bdc31c34a715125dcb7830921caa82edfc4fbbaff39087b19abb51136b8"
+  }
+}

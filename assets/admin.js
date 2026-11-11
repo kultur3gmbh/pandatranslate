@@ -15,7 +15,7 @@
 	});});
 	var apiSelector=document.querySelector('#pandatranslate-run-api'),runLabel=document.querySelector('[data-api-run-label]');
 	function selectedApi(){return apiSelector?apiSelector.value:config.defaultApi;}
-	function updateRunLabel(){if(runLabel&&apiSelector&&apiSelector.selectedOptions.length)runLabel.textContent=apiSelector.value?config.runLabel.replace('%s',apiSelector.selectedOptions[0].textContent):config.noApi;}
+	function updateRunLabel(){if(runLabel&&apiSelector&&apiSelector.selectedOptions.length)runLabel.textContent=apiSelector.value?apiSelector.selectedOptions[0].textContent:config.noApi;}
 	if(apiSelector){apiSelector.addEventListener('change',updateRunLabel);updateRunLabel();}
 	var picker = document.querySelector('[data-language-picker]'), rows = document.querySelector('[data-language-rows]');
 	if(rows)rows.addEventListener('change',function(e){if(rows.dataset.languageLimit!=='2'||!e.target.matches('input[type="checkbox"][name$="[active]"]')||!e.target.checked)return;rows.querySelectorAll('[data-language-row]:not(.is-source-language) input[type="checkbox"][name$="[active]"]').forEach(function(input){if(input!==e.target)input.checked=false;});});
@@ -27,14 +27,14 @@
         function unlock(){controls.forEach(function(c,i){c.disabled=previous[i];});}
         function next(){
             if(index>=languages.length){unlock();return;}
-            var language=languages[index],state={phase:'collect',cursor:0,limit_id:0,success:0,errors:0,api:api,total_pages:0,total_units:0,prepared:0};
+            var language=languages[index],state={phase:'start',cursor:0,limit_id:0,success:0,errors:0,api:api,total_pages:0,total_units:0,prepared:0};
             function batch(){var body=new URLSearchParams(Object.assign({action:'pandatranslate_language_batch',nonce:button.dataset.nonce,language:language,mode:mode},state));
                 fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:body}).then(function(response){return response.json().then(function(result){if(!response.ok||!result.success)throw new Error(result.data&&result.data.message||'Request failed');return result.data;});}).then(function(data){
                     Object.keys(state).forEach(function(key){if(data[key]!==undefined)state[key]=data[key];});
                     output.textContent=language.toUpperCase()+' ('+(index+1)+' / '+languages.length+') · '+data.message;
                     if(progress){if(data.total>0){progress.max=data.total;progress.value=Math.min(data.processed,data.total);}else progress.removeAttribute('value');}
                     if(data.done){succeeded+=data.success||0;failed+=data.errors||0;index++;if(index<languages.length)next();else{unlock();output.textContent=index+' / '+languages.length+' · '+(config.batchSummary||'%1$d translated · %2$d failed').replace('%1$d',succeeded).replace('%2$d',failed);if(progress){progress.max=1;progress.value=1;}refreshOverview(button.dataset.nonce,output.textContent);}}else batch();
-                }).catch(function(error){output.textContent=language.toUpperCase()+' · '+error.message;unlock();});
+                }).catch(function(error){output.textContent=language.toUpperCase()+' · '+error.message;if(progress)progress.hidden=true;unlock();});
             }batch();
         }next();
     }

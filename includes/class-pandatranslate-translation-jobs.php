@@ -27,7 +27,12 @@ final class PandaTranslate_Translation_Jobs {
 		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( $row['code'] === $language && $row['active'] && $language !== $s['source_language'] ) $valid = true;
 		if ( ! $valid ) return new WP_Error( 'pandatranslate_language', __( 'Invalid target language.', 'pandatranslate' ) );
 		$api_id = sanitize_key( $input['api'] ?? '' ) ?: PandaTranslate_Providers::default_id(); $provider = PandaTranslate_Providers::get( $api_id ); if ( is_wp_error( $provider ) ) return $provider;
-		$phase = $input['phase'] ?? 'collect'; $cursor = absint( $input['cursor'] ?? 0 ); $limit = absint( $input['limit_id'] ?? 0 );
+		$phase = $input['phase'] ?? 'start'; $cursor = absint( $input['cursor'] ?? 0 ); $limit = absint( $input['limit_id'] ?? 0 );
+		if ( 'start' === $phase ) {
+			// Per-language actions translate the recorded inventory; a full-site run explicitly scans pages.
+			global $wpdb; $table = PandaTranslate_Repository::table();
+			$phase = (int) $wpdb->get_var( "SELECT MAX(id) FROM {$table}" ) > 0 ? 'prepare' : 'collect';
+		}
 		$result = array( 'phase' => $phase, 'cursor' => $cursor, 'limit_id' => $limit, 'api' => $api_id, 'done' => false, 'success' => absint( $input['success'] ?? 0 ), 'errors' => absint( $input['errors'] ?? 0 ) );
 		$result['total_pages'] = absint( $input['total_pages'] ?? 0 ); $result['total_units'] = absint( $input['total_units'] ?? 0 ); $result['prepared'] = absint( $input['prepared'] ?? 0 ); $result['stage'] = $phase;
 		if ( 'collect' === $phase ) {

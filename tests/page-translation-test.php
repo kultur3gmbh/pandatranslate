@@ -46,3 +46,17 @@ check( true, false !== strpos( $plugin->transform_page( $html ), 'Corrected dict
 $repository->row = array( 'status'=>'published', 'translated_html'=>'Page-specific manual text', 'provider'=>'manual' );
 check( true, false !== strpos( $plugin->transform_page( $html ), 'Page-specific manual text' ) );
 echo "page integration: migrated output, builder layout, no visitor writes, manual override, unpublished draft protection and editor reuse: ok\n";
+
+$raw_script = "const symbols={EUR:'€',GBP:'£'};const label='Währung ✓';const markup='<span>ä &amp; β</span>';";
+$raw_style = '.price:after{content:"€ ✓"}.icon{background:url("/größe.svg")}';
+$raw_page = '<!doctype html><html><head><style>'.$raw_style.'</style><script nonce="test">'.$raw_script.'</script><script type="application/ld+json">{"name":"Österreich €"}</script></head><body><p>Hallo Welt</p></body></html>';
+foreach ( array( false, true ) as $source_page ) {
+ if ( $source_page ) { $_GET['pt_lang']=''; }
+ $raw_result=$plugin->transform_page($raw_page);
+ preg_match('~<script nonce="test">(.*?)</script>~s',$raw_result,$actual_script);
+ preg_match('~<style>(.*?)</style>~s',$raw_result,$actual_style);
+ check($raw_script,$actual_script[1]); check($raw_style,$actual_style[1]);
+ check(true,strpos($raw_result,'{"name":"Österreich €"}')!==false);
+}
+unset($_GET['pt_lang']);
+echo "Unicode script/style/JSON and CSP-relevant script bytes preserved on source and translated pages: ok\n";

@@ -14,3 +14,4 @@
 .menu-item .pandatranslate-language-content>.pandatranslate-flag,.pandatranslate-switcher.is-menu .pandatranslate-language-content>.pandatranslate-flag{font-size:24px;line-height:1.2;min-width:32px;min-height:29px;flex-shrink:0}
 .menu-item .pandatranslate-language-content>.pandatranslate-flag img,.pandatranslate-switcher.is-menu .pandatranslate-language-content>.pandatranslate-flag img{width:32px;height:24px;max-width:none;object-fit:contain}
 .pandatranslate-floating .pandatranslate-switcher,.pandatranslate-floating .pandatranslate-language-name{font-size:14px!important;font-weight:400;line-height:1.4}.pandatranslate-floating .pandatranslate-flag{font-size:20px;line-height:1.2}
+.pandatranslate-language-content{display:contents}

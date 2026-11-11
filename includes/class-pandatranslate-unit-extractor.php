@@ -1,15 +1,17 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/class-pandatranslate-html.php';
 
 final class PandaTranslate_Unit_Extractor {
 	private $selector = '//p|//h1|//h2|//h3|//h4|//h5|//h6|//li|//td|//th|//button|//a[@role="button"]|//input[@type="submit"]';
 
 	public function transform( $html, callable $resolver, $context = '' ) {
 		if ( ! class_exists( 'DOMDocument' ) || false === stripos( (string) $html, '<' ) ) return $html;
+		$raw = PandaTranslate_HTML::protect_raw( $html );
 		$previous = libxml_use_internal_errors( true );
 		$document = new DOMDocument( '1.0', 'UTF-8' );
 		$is_document = false !== stripos( $html, '<html' ) || false !== stripos( $html, '<!doctype' );
-		$markup = $is_document ? (string) $html : '<div data-pandatranslate-root="1">' . $html . '</div>';
+		$markup = $is_document ? $raw['html'] : '<div data-pandatranslate-root="1">' . $raw['html'] . '</div>';
 		$options = $is_document ? LIBXML_HTML_NODEFDTD : LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD;
 		$loaded = $document->loadHTML( '<?xml encoding="utf-8" ?>' . $markup, $options );
 		libxml_clear_errors();
@@ -41,16 +43,17 @@ final class PandaTranslate_Unit_Extractor {
 		}
 		if ( $is_document ) {
 			$result = $document->saveHTML();
-			return preg_replace( '/^<\?xml[^>]+>\s*/', '', $result );
+			return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $result ), $raw );
 		}
 		$root = $xpath->query( '//*[@data-pandatranslate-root="1"]' )->item( 0 );
-		return $root ? $this->inner_html( $root ) : $html;
+		return $root ? PandaTranslate_HTML::restore_raw( $this->inner_html( $root ), $raw ) : $html;
 	}
 
 	private function is_excluded( DOMNode $node ) {
 		$ids = array( 'wpadminbar', 'query-monitor-main', 'elementor-editor-wrapper', 'bricks-toolbar', 'wp-toolbar' );
 		$classes = array( 'ab-sub-wrapper', 'ab-item', 'elementor-editor-active', 'elementor-editor-preview', 'fusion-builder-live', 'fusion-builder-ui', 'awb-builder', 'bricks-is-frontend', 'et-fb', 'fl-builder-bar', 'pandatranslate-panel', 'pandatranslate-floating', 'pandatranslate-switcher', 'pandatranslate-menu-item', 'pandatranslate-menu-link', 'notranslate' );
 		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) {
+			if ( $current->hasAttribute( 'data-no-translation' ) ) return true;
 			if ( in_array( strtolower( $current->nodeName ), array( 'script', 'style', 'textarea', 'pre', 'code', 'svg' ), true ) || 'no' === $current->getAttribute( 'translate' ) ) return true;
 			if ( method_exists( $current, 'getAttribute' ) && in_array( $current->getAttribute( 'id' ), $ids, true ) ) return true;
 			if ( method_exists( $current, 'getAttribute' ) ) { $value = ' ' . $current->getAttribute( 'class' ) . ' '; foreach ( $classes as $class ) if ( false !== strpos( $value, ' ' . $class . ' ' ) ) return true; }
