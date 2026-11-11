@@ -1,4 +1,6 @@
 <?php
+// Model the initialized WordPress query used by normal frontend requests.
+$wp_query = new class { public function get($key) { return get_query_var($key); } };
 define( 'ABSPATH', __DIR__ );
 function is_admin() { return false; }
 function __( $text ) { return $text; }

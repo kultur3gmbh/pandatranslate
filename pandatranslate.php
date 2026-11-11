@@ -5,7 +5,7 @@
  * Requires at least: 6.4
  * Requires PHP: 7.4
  * Update URI: https://github.com/kultur3gmbh/pandatranslate
- * Version: 0.6.0
+ * Version: 0.6.1
  * Author: Panda
  * Text Domain: pandatranslate
  */
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'PANDATRANSLATE_FILE', __FILE__ );
 define( 'PANDATRANSLATE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PANDATRANSLATE_URL', plugin_dir_url( __FILE__ ) );
-define( 'PANDATRANSLATE_VERSION', '0.6.0' );
+define( 'PANDATRANSLATE_VERSION', '0.6.1' );
 
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-inline-protector.php';
 require_once PANDATRANSLATE_DIR . 'includes/class-pandatranslate-unit-extractor.php';

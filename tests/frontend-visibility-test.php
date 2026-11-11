@@ -1,4 +1,6 @@
 <?php
+// Model the initialized WordPress query used by normal frontend requests.
+$wp_query = new class { public function get($key) { return get_query_var($key); } };
 require __DIR__.'/routing-test.php';
 function __($text){return $text;}
 function esc_attr($text){return htmlspecialchars($text,ENT_QUOTES);}

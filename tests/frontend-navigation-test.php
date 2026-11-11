@@ -1,4 +1,6 @@
 <?php
+// Model the initialized WordPress query used by normal frontend requests.
+$wp_query = new class { public function get($key) { return get_query_var($key); } };
 if (!function_exists('apply_filters')) { function apply_filters($hook,$value,...$args){return $value;} }
 require __DIR__ . '/routing-test.php';
 require dirname( __DIR__ ) . '/includes/class-pandatranslate-frontend.php';

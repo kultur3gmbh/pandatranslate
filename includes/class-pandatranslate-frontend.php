@@ -11,7 +11,10 @@ final class PandaTranslate_Frontend {
 	}
 	public static function current_language() {
 		if ( is_admin() ) return '';
-		$requested = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : sanitize_key( get_query_var( 'pt_lang' ) );
+		// Gettext also runs during plugin loading, before WordPress creates its query.
+		global $wp_query;
+		$query_language = is_object( $wp_query ) && is_callable( array( $wp_query, 'get' ) ) ? $wp_query->get( 'pt_lang' ) : '';
+		$requested = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : sanitize_key( $query_language );
 		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] === $requested ) return $requested;
 		return '';
 	}

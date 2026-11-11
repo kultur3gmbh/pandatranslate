@@ -37,12 +37,13 @@ final class PandaTranslate_Strings {
 	}
 	private static function lookup( $translated, $original, $domain, $context ) {
 		if ( self::$busy || ( is_admin() && ! self::$email_language ) || in_array( $domain, array( 'pandatranslate', 'pandatranslate-multilingual' ), true ) || ! trim( $translated ) || strlen( $translated ) > 4000 ) return $translated;
+		// Language/settings filters may themselves translate labels. Guard the entire resolution.
+		self::$busy = true;
+		try {
 		$language = self::$email_language ?: PandaTranslate_Frontend::current_language();
 		if ( ! $language || ! PandaTranslate_Edition::allows_language( $language ) ) return $translated;
 		$key = hash( 'sha256', 'gettext|' . $domain . '|' . $context . '|' . $original ); $cache_key = $key . '|' . $language;
 		if ( array_key_exists( $cache_key, self::$cache ) ) return self::$cache[$cache_key] ?? $translated;
-		self::$busy = true;
-		try {
 			$repo = new PandaTranslate_Repository();
 			$collect = ! self::$email_language && current_user_can( 'manage_options' ) && isset( $_GET['pandatranslate'] ) && 'edit' === $_GET['pandatranslate'];
 			$row = $collect ? $repo->find( $key, $language ) : ( self::published( $language )[$key] ?? null );
