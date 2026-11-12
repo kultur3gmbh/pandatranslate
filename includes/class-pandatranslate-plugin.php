@@ -339,7 +339,7 @@ final class PandaTranslate_Plugin {
 					<p><?php esc_html_e( 'Technical checks for translation, background processing, URLs and SEO integrations.', 'pandatranslate' ); ?></p>
 					<?php foreach ( $system_checks as $check ) $this->status_row( $check['label'], $check['value'], $check['status'] ); ?>
 					<div class="pandatranslate-note"><strong><?php esc_html_e( 'Troubleshooting', 'pandatranslate' ); ?></strong><p><?php esc_html_e( 'If the editor opens but no content can be selected, check the PHP DOM extension first. URL rules can be refreshed by saving WordPress permalinks once.', 'pandatranslate' ); ?></p></div>
-					<?php $this->render_mcp(); ?>
+					<?php PandaTranslate_Edition::render_update_status(); $this->render_mcp(); ?>
 					<?php endif; ?>
 					<?php if ( ! in_array( $tab, array( 'mcp', 'migration', 'advanced', 'glossary', 'license', 'woocommerce' ), true ) ) : ?><div class="pandatranslate-settings-actions"><button type="submit" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="save"><span class="dashicons dashicons-saved" aria-hidden="true"></span><?php esc_html_e( 'Save settings', 'pandatranslate' ); ?></button></div><?php endif; ?>
 				</<?php echo in_array( $tab, array( 'license', 'woocommerce' ), true ) ? 'div' : 'form'; ?>>
@@ -620,12 +620,14 @@ final class PandaTranslate_Plugin {
 		wp_enqueue_style( 'pandatranslate-editor', PANDATRANSLATE_URL . 'assets/editor.css', array(), PANDATRANSLATE_VERSION );
 		wp_enqueue_style( 'pandatranslate-editor-fixes', PANDATRANSLATE_URL . 'assets/editor-fixes.css', array( 'pandatranslate-editor' ), PANDATRANSLATE_VERSION );
 		wp_enqueue_style( 'pandatranslate-family-actions', PANDATRANSLATE_URL . 'assets/contactpanda-actions.css', array( 'pandatranslate-editor-fixes' ), PANDATRANSLATE_VERSION );
-		wp_enqueue_script( 'pandatranslate-editor', PANDATRANSLATE_URL . 'assets/editor.js', array( 'contactpanda-admin-ui' ), PANDATRANSLATE_VERSION, true );
+		wp_enqueue_script( 'pandatranslate-editor-request', PANDATRANSLATE_URL . 'assets/editor-request.js', array(), PANDATRANSLATE_VERSION, true );
+		wp_enqueue_script( 'pandatranslate-editor', PANDATRANSLATE_URL . 'assets/editor.js', array( 'contactpanda-admin-ui', 'pandatranslate-editor-request' ), PANDATRANSLATE_VERSION, true );
 		wp_enqueue_script( 'pandatranslate-media-editor', PANDATRANSLATE_URL . 'assets/media-editor.js', array( 'pandatranslate-editor', 'contactpanda-admin-ui' ), PANDATRANSLATE_VERSION, true );
 		wp_localize_script( 'pandatranslate-media-editor', 'PandaTranslateMedia', array( 'url' => rest_url( 'pandatranslate/v1/media' ), 'labels' => array( 'title' => __( 'Image translation', 'pandatranslate' ), 'source' => __( 'Original image', 'pandatranslate' ), 'alt' => __( 'Alternative text', 'pandatranslate' ), 'titleText' => __( 'Image title', 'pandatranslate' ), 'caption' => __( 'Caption', 'pandatranslate' ), 'save' => __( 'Save image translation', 'pandatranslate' ), 'remove' => __( 'Remove image mapping', 'pandatranslate' ), 'saved' => __( 'Saved.', 'pandatranslate' ), 'failed' => __( 'The image mapping could not be saved.', 'pandatranslate' ) ) ) );
 		wp_localize_script( 'pandatranslate-editor', 'PandaTranslateEditor', array(
 			'dynamicUrl' => rest_url( 'pandatranslate/v1/dynamic' ), 'postId' => get_queried_object_id(), 'captureAllowed' => apply_filters( 'pandatranslate_capture_allowed', true ),
 			'restUrl' => esc_url_raw( rest_url( 'pandatranslate/v1/unit' ) ),
+			'nonceUrl' => esc_url_raw( admin_url( 'admin-ajax.php?action=rest-nonce' ) ),
 			'autoUrl' => esc_url_raw( rest_url( 'pandatranslate/v1/unit/auto' ) ),
 			'canPublish' => current_user_can( 'publish_posts' ) || current_user_can( 'manage_options' ),
 			'apis' => current_user_can( 'edit_posts' ) || current_user_can( 'manage_options' ) ? PandaTranslate_Providers::choices() : array(),
@@ -633,7 +635,12 @@ final class PandaTranslate_Plugin {
 			'nonce' => wp_create_nonce( 'wp_rest' ),
 			'language' => $this->target_language() ?: $s['default_target_language'],
 			'statuses' => array( 'untranslated', 'automatic', 'reviewed', 'published' ),
-			'i18n' => array( 'close' => __( 'Close', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => __( 'PandaTranslate', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => __( 'Translate with %s', 'pandatranslate' ), 'automaticPage' => __( 'Translate entire page with %s', 'pandatranslate' ), 'apiLabel' => __( 'Translation API', 'pandatranslate' ), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'select' => __( 'Select visible content to translate it.', 'pandatranslate' ), 'progressTitle' => __( 'Translating current page', 'pandatranslate' ), 'progressDone' => __( 'translated', 'pandatranslate' ), 'progressFailed' => __( 'failed', 'pandatranslate' ), 'cancelLabel' => __( 'Cancel translation', 'pandatranslate' ), 'cancelled' => __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ), 'cancelling' => __( 'Stopping after the current request…', 'pandatranslate' ), 'repeatedErrors' => __( 'Stopped after repeated errors.', 'pandatranslate' ) ),
+			'i18n' => array(
+				'requestNetworkError' => __( 'The connection was interrupted. Reload the editor and check the saved translation before retrying.', 'pandatranslate' ),
+				'requestSessionError' => __( 'The login session could not be renewed. Sign in and reload the editor.', 'pandatranslate' ),
+				'requestOriginError' => __( 'The editor and API addresses use different domains. Check the WordPress website addresses.', 'pandatranslate' ),
+				'requestResponseError' => __( 'The website returned an unexpected API response. Check the connection and server logs.', 'pandatranslate' ),
+				'saving' => __( 'Saving…', 'pandatranslate' ), 'saved' => __( 'Saved.', 'pandatranslate' ), 'translating' => __( 'Translating…', 'pandatranslate' ), 'close' => __( 'Close', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => __( 'PandaTranslate', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => __( 'Translate with %s', 'pandatranslate' ), 'automaticPage' => __( 'Translate entire page with %s', 'pandatranslate' ), 'apiLabel' => __( 'Translation API', 'pandatranslate' ), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'select' => __( 'Select visible content to translate it.', 'pandatranslate' ), 'progressTitle' => __( 'Translating current page', 'pandatranslate' ), 'progressDone' => __( 'translated', 'pandatranslate' ), 'progressFailed' => __( 'failed', 'pandatranslate' ), 'cancelLabel' => __( 'Cancel translation', 'pandatranslate' ), 'cancelled' => __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ), 'cancelling' => __( 'Stopping after the current request…', 'pandatranslate' ), 'repeatedErrors' => __( 'Stopped after repeated errors.', 'pandatranslate' ) ),
 		) );
 	}
 

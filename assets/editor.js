@@ -1,7 +1,8 @@
 (function () {
 	'use strict';
 	var config = window.PandaTranslateEditor;
-	if (!config) return;
+	if (!config || !window.PandaTranslateRequest) return;
+	var request = window.PandaTranslateRequest.create(config), automaticBusy = false;
 
 	var selected = null, selectedRevision = '', selectionGeneration = 0;
 	document.addEventListener('pandatranslate:media-selected',function(){if(selected)selected.classList.remove('pandatranslate-selected');selected=null;selectedRevision='';selectionGeneration++;});
@@ -58,8 +59,7 @@
 		var prepared = protect(original);
 		source.value = prepared.text; translation.value = prepared.text; status.value = 'untranslated'; message.textContent = '';
 		form.hidden = false; shell.querySelector('.pandatranslate-empty').hidden = true;
-		fetch(config.restUrl + '?key=' + encodeURIComponent(node.dataset.pandatranslateUnit) + '&language=' + encodeURIComponent(config.language), {headers: {'X-WP-Nonce': config.nonce}})
-			.then(function (response) { return response.json(); }).then(function (row) {
+		request(config.restUrl + '?key=' + encodeURIComponent(node.dataset.pandatranslateUnit) + '&language=' + encodeURIComponent(config.language)).then(function (row) {
 				if (selected !== node || selectionVersion !== selectionGeneration) return;
 				selectedRevision = row.revision || '';
 				if (row.source_html) {
@@ -79,7 +79,7 @@
 			var candidate = event.target.closest('p,h1,h2,h3,h4,h5,h6,li,td,th,button,a[role=button]');
 			if (!config.captureAllowed || !config.postId || !candidate || candidate.closest('#wpadminbar,.pandatranslate-panel,.pandatranslate-switcher,form,[translate=no],[data-no-translation],.notranslate') || candidate.querySelector('p,li,td,th,div,img,input,textarea,select') || !candidate.textContent.trim()) return;
 			event.preventDefault(); event.stopPropagation();
-			fetch(config.dynamicUrl, {method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':config.nonce},body:JSON.stringify({post_id:config.postId,language:config.language,source_html:candidate.innerHTML})}).then(function(r){return r.json().then(function(data){if(!r.ok)throw data;return data;});}).then(function(data){candidate.dataset.pandatranslateUnit=data.key;candidate.dataset.pandatranslateSourceHash=data.source_hash;candidate.dataset.pandatranslateOriginal=data.source_html;openUnit(candidate);}).catch(function(e){message.textContent=e.message;}); return;
+			request(config.dynamicUrl, {post_id:config.postId,language:config.language,source_html:candidate.innerHTML}).then(function(data){candidate.dataset.pandatranslateUnit=data.key;candidate.dataset.pandatranslateSourceHash=data.source_hash;candidate.dataset.pandatranslateOriginal=data.source_html;openUnit(candidate);}).catch(function(e){message.textContent=e.message;}); return;
 		}
 		if (shell.contains(unit)) return;
 		event.preventDefault(); event.stopPropagation(); openUnit(unit);
@@ -88,11 +88,10 @@
 	function save(nextStatus) {
 		if (!selected || !selectedRevision) return;
 		var savedNode = selected, savedVersion = selectionGeneration;
-		message.textContent = 'Saving…';
+		message.textContent = config.i18n.saving;
 		var body = {revision: selectedRevision, key: selected.dataset.pandatranslateUnit, source_hash: selected.dataset.pandatranslateSourceHash, source_html: selected.dataset.pandatranslateOriginal, translated_text: translation.value, language: config.language, status: nextStatus || status.value};
-		fetch(config.restUrl, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce}, body: JSON.stringify(body)})
-			.then(function (response) { return response.json().then(function (data) { if (!response.ok) throw data; return data; }); })
-			.then(function (data) { if (selected !== savedNode || savedVersion !== selectionGeneration) return; selectedRevision = data.revision || ''; status.value = data.status; selected.innerHTML = data.translated_html; message.textContent = 'Saved.'; })
+		request(config.restUrl, body)
+			.then(function (data) { if (selected !== savedNode || savedVersion !== selectionGeneration) return; selectedRevision = data.revision || ''; status.value = data.status; selected.innerHTML = data.translated_html; message.textContent = config.i18n.saved; })
 			.catch(function (error) { message.textContent = error.message || 'Could not save.'; });
 	}
 
@@ -100,24 +99,27 @@
 	shell.querySelector('[data-publish]').addEventListener('click', function () { save('published'); });
 
 	shell.querySelector('[data-automatic]').addEventListener('click', function () {
-		if (!selected || !apiSelect.value) return;
+		if (!selected || !apiSelect.value || automaticBusy) return;
+		automaticBusy = true;
+		var automaticButton = shell.querySelector('[data-automatic]');
+		automaticButton.disabled = true; shell.querySelector('[data-automatic-page]').disabled = true; apiSelect.disabled = true;
 		var autoNode = selected, autoVersion = selectionGeneration;
-		message.textContent = 'Translating…';
-		fetch(config.autoUrl, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce}, body: JSON.stringify({key: selected.dataset.pandatranslateUnit, language: config.language, api: apiSelect.value, confirm: true})})
-			.then(function (response) { return response.json().then(function (data) { if (!response.ok) throw data; return data; }); })
-			.then(function (data) { if (selected !== autoNode || autoVersion !== selectionGeneration) return; selectedRevision = data.revision || ''; selected.innerHTML = data.translated_html; translation.value = protect(data.translated_html).text; status.value = data.status; message.textContent = 'Automatic draft saved.'; })
-			.catch(function (error) { message.textContent = error.message || 'Automatic translation failed.'; });
+		message.textContent = config.i18n.translating;
+		request(config.autoUrl, {key: selected.dataset.pandatranslateUnit, language: config.language, api: apiSelect.value, confirm: true})
+			.then(function (data) { if (selected !== autoNode || autoVersion !== selectionGeneration) return; selectedRevision = data.revision || ''; selected.innerHTML = data.translated_html; translation.value = protect(data.translated_html).text; status.value = data.status; message.textContent = config.i18n.saved; })
+			.catch(function (error) { if (selected === autoNode && autoVersion === selectionGeneration) message.textContent = error.message; })
+			.finally(function () { automaticBusy = false; updateApiLabels(); });
 	});
 	shell.querySelector('[data-automatic-page]').addEventListener('click',function(){
-        if(!apiSelect.value)return;
+        if(!apiSelect.value||automaticBusy)return;automaticBusy=true;shell.querySelector('[data-automatic]').disabled=true;
         var api=apiSelect.value,units=Array.from(document.querySelectorAll('[data-pandatranslate-unit]')).filter(function(node){return !node.closest('#wpadminbar,.pandatranslate-panel,.fusion-builder-ui,.elementor-editor-active');}),index=0,done=0,failed=0,button=this,total=units.length,stopping=false,streak=0,lastCode='',lastError='';
         var cancel=document.createElement('button');cancel.type='button';cancel.className='contactpanda-large-action';cancel.dataset.contactpandaAction='cancel';cancel.dataset.contactpandaActionMode='labelled';cancel.textContent=config.i18n.cancelLabel;
         pageProgress.appendChild(cancel);if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(pageProgress);
         cancel.addEventListener('click',function(){stopping=true;cancel.disabled=true;pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.cancelling;});
         button.disabled=true;apiSelect.disabled=true;pageProgress.hidden=false;pageProgress.classList.remove('has-errors','is-complete');pageProgress.querySelector('[data-progress-title]').textContent=config.i18n.progressTitle+' · '+apiChoices[api];
         function render(){var processed=done+failed,percent=total?Math.round(processed/total*100):100;pageProgress.querySelector('[data-progress-count]').textContent=processed+' / '+total+' ('+percent+'%)';pageProgress.querySelector('[data-progress-bar]').style.width=percent+'%';pageProgress.querySelector('[data-progress-detail]').textContent=done+' '+config.i18n.progressDone+' · '+failed+' '+config.i18n.progressFailed+(lastError?' · '+lastError:'');}
-        function next(){render();if(stopping||streak>=3||index>=total){button.disabled=false;apiSelect.disabled=Object.keys(apiChoices).length<2;cancel.remove();pageProgress.classList.add(failed?'has-errors':'is-complete');if(stopping)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.cancelled;if(streak>=3)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.repeatedErrors+' '+lastError;return;}
-            var node=units[index++];fetch(config.autoUrl,{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':config.nonce},body:JSON.stringify({key:node.dataset.pandatranslateUnit,language:config.language,api:api,confirm:true})}).then(function(r){return r.json().then(function(data){if(!r.ok)throw data;return data;});}).then(function(data){node.innerHTML=data.translated_html;if(selected===node){selectedRevision=data.revision||'';translation.value=protect(data.translated_html).text;status.value=data.status;}done++;streak=0;}).catch(function(error){failed++;var code=error.code||'request';streak=code===lastCode?streak+1:1;lastCode=code;lastError=error.message||code;}).finally(next);
+        function next(){render();if(stopping||streak>=3||index>=total){automaticBusy=false;updateApiLabels();cancel.remove();pageProgress.classList.add(failed?'has-errors':'is-complete');if(stopping)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.cancelled;if(streak>=3)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.repeatedErrors+' '+lastError;return;}
+            var node=units[index++];request(config.autoUrl,{key:node.dataset.pandatranslateUnit,language:config.language,api:api,confirm:true}).then(function(data){node.innerHTML=data.translated_html;if(selected===node){selectedRevision=data.revision||'';translation.value=protect(data.translated_html).text;status.value=data.status;}done++;streak=0;}).catch(function(error){failed++;var code=error.code||'request';streak=code===lastCode?streak+1:1;lastCode=code;lastError=error.message||code;}).finally(next);
         }next();
     });
 
