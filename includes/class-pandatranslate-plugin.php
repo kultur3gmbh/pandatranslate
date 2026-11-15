@@ -146,8 +146,11 @@ final class PandaTranslate_Plugin {
 			}
 			return $output;
 		}
+		if ( 'preferences' === $section ) {
+			$output['language_suggestion'] = '1' === (string) ( $input['language_suggestion'] ?? '0' ) ? 1 : 0;
+			return $output;
+		}
 		if ( 'switcher' === $section ) {
-			$output['language_suggestion'] = empty( $input['language_suggestion'] ) ? 0 : 1;
 			$output['url_mode'] = 'query' === ( $input['url_mode'] ?? '' ) ? 'query' : 'path';
 			$registered = array_keys( get_registered_nav_menus() );
 			$locations = array_map( 'sanitize_key', (array) ( $input['switcher_menu_locations'] ?? array() ) );
@@ -269,10 +272,11 @@ final class PandaTranslate_Plugin {
 		if ( ! empty( $s['google_api_key_encrypted'] ) && empty( $s['google_api_key_last4'] ) ) { $legacy_key = $this->decrypt_secret( $s['google_api_key_encrypted'] ); if ( ! is_wp_error( $legacy_key ) && '' !== $legacy_key ) { $s['google_api_key_last4'] = substr( $legacy_key, -4 ); update_option( self::OPTION, $s, false ); } }
 		$has_translatepress = class_exists( 'PandaTranslate_Migration_Sources' ) ? ! empty( PandaTranslate_Migration_Sources::available() ) : ! empty( PandaTranslate_Migration::tables() );
 		$page = sanitize_key( wp_unslash( $_GET['page'] ?? 'pandatranslate' ) );
-		$defaults = array( 'pandatranslate' => 'general', 'pandatranslate-translation' => 'automation', 'pandatranslate-glossary' => 'glossary', 'pandatranslate-settings' => 'switcher' );
+		$defaults = array( 'pandatranslate' => 'general', 'pandatranslate-translation' => 'automation', 'pandatranslate-glossary' => 'glossary', 'pandatranslate-settings' => 'preferences' );
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ( $defaults[$page] ?? 'general' );
-		$allowed_tabs = array( 'general', 'switcher', 'google', 'automation', 'glossary', 'mcp', 'advanced', 'license', 'woocommerce' ); if ( $has_translatepress ) $allowed_tabs[] = 'migration';
+		$allowed_tabs = array( 'general', 'preferences', 'switcher', 'google', 'automation', 'glossary', 'mcp', 'advanced', 'woocommerce' ); if ( $has_translatepress ) $allowed_tabs[] = 'migration';
 		if ( 'mcp' === $tab ) $tab = 'advanced';
+		if ( 'license' === $tab || ( 'general' === $tab && 'pandatranslate-settings' === $page ) ) $tab = 'preferences';
 		if ( ! in_array( $tab, $allowed_tabs, true ) ) $tab = 'general';
 		$editor_url = add_query_arg( array( 'pandatranslate' => 'edit', 'pt_lang' => $s['default_target_language'] ), home_url( '/' ) );
 		$system_checks = $this->system_checks();
@@ -283,22 +287,23 @@ final class PandaTranslate_Plugin {
 			<?php settings_errors(); ?>
 			<?php if ( $critical_issues ) : ?><div class="notice notice-error pandatranslate-system-warning"><p><strong><?php esc_html_e( 'PandaTranslate needs attention.', 'pandatranslate' ); ?></strong> <?php echo esc_html( implode( ' ', wp_list_pluck( $critical_issues, 'message' ) ) ); ?> <a href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-settings&tab=advanced' ) ); ?>"><?php esc_html_e( 'Open system status', 'pandatranslate' ); ?></a></p></div><?php endif; ?>
             <?php if ( ! in_array( $tab, array( 'general', 'automation', 'glossary' ), true ) ) : ?>
-            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'PandaTranslate settings', 'pandatranslate' ); ?>"><?php $navigation_tabs = array( 'switcher' => __( 'Language switcher', 'pandatranslate' ), 'google' => __( 'Translation APIs', 'pandatranslate' ), 'woocommerce' => 'WooCommerce', 'license' => __( 'License', 'pandatranslate' ) ); if ( $has_translatepress ) $navigation_tabs['migration'] = __( 'Migration', 'pandatranslate' ); $navigation_tabs['advanced'] = __( 'System status', 'pandatranslate' ); foreach ( $navigation_tabs as $tab_key => $tab_label ) : ?><a class="nav-tab <?php echo $tab_key === $tab ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-settings&tab=' . $tab_key ) ); ?>"><?php echo esc_html( $tab_label ); ?></a><?php endforeach; ?></nav>
+            <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'PandaTranslate settings', 'pandatranslate' ); ?>"><?php $navigation_tabs = array( 'preferences' => __( 'General', 'pandatranslate' ), 'switcher' => __( 'Language switcher', 'pandatranslate' ), 'google' => __( 'Translation APIs', 'pandatranslate' ), 'woocommerce' => 'WooCommerce' ); if ( $has_translatepress ) $navigation_tabs['migration'] = __( 'Migration', 'pandatranslate' ); $navigation_tabs['advanced'] = __( 'System status', 'pandatranslate' ); foreach ( $navigation_tabs as $tab_key => $tab_label ) : ?><a class="nav-tab <?php echo $tab_key === $tab ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-settings&tab=' . $tab_key ) ); ?>"><?php echo esc_html( $tab_label ); ?></a><?php endforeach; ?></nav>
             <?php endif; ?>
             <?php if ( class_exists( 'PandaTranslate_Edition' ) ) PandaTranslate_Edition::promotion(); ?>
 
 			<div class="pandatranslate-grid">
-				<<?php echo in_array( $tab, array( 'license', 'woocommerce' ), true ) ? 'div' : 'form'; ?> method="post" action="<?php echo esc_url( 'migration' === $tab ? admin_url( 'admin-post.php' ) : 'options.php' ); ?>" class="pandatranslate-card">
-					<?php if ( 'migration' === $tab ) : ?><input type="hidden" name="action" value="pandatranslate_import_translatepress"><?php wp_nonce_field( 'pandatranslate_import_translatepress' ); ?><?php else : settings_fields( 'pandatranslate' ); endif; ?>
+				<?php if ( in_array( $tab, array( 'preferences', 'woocommerce' ), true ) ) : ?><div class="pandatranslate-card"><?php else : ?><form method="post" action="<?php echo esc_url( 'migration' === $tab ? admin_url( 'admin-post.php' ) : 'options.php' ); ?>" class="pandatranslate-card"><?php endif; ?>
+					<?php if ( 'migration' === $tab ) : ?><input type="hidden" name="action" value="pandatranslate_import_translatepress"><?php wp_nonce_field( 'pandatranslate_import_translatepress' ); ?><?php elseif ( ! in_array( $tab, array( 'preferences', 'woocommerce' ), true ) ) : settings_fields( 'pandatranslate' ); endif; ?>
 					<input type="hidden" name="<?php echo esc_attr( self::OPTION ); ?>[_section]" value="<?php echo esc_attr( $tab ); ?>">
-					<?php if ( 'general' === $tab ) : ?>
+					<?php if ( 'preferences' === $tab ) : ?>
+					<?php $this->render_general_preferences( $s ); ?>
+					<?php elseif ( 'general' === $tab ) : ?>
 					<h2><?php esc_html_e( 'Language settings', 'pandatranslate' ); ?></h2>
 					<?php $this->render_language_settings(); ?>
 					<h2><?php esc_html_e( 'Editor', 'pandatranslate' ); ?></h2>
 					<label class="pandatranslate-check"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[show_admin_bar]" value="1" <?php checked( $s['show_admin_bar'], 1 ); ?>><span><?php esc_html_e( 'Show “Translate page” in the upper admin bar', 'pandatranslate' ); ?></span></label>
 					<?php elseif ( 'switcher' === $tab ) : ?>
 					<label><span><?php esc_html_e( 'Language URL format', 'pandatranslate' ); ?></span><select name="<?php echo esc_attr( self::OPTION ); ?>[url_mode]"><option value="path" <?php selected( $s['url_mode'], 'path' ); ?>><?php esc_html_e( 'Language paths (/en/…, /fr/…)', 'pandatranslate' ); ?></option><option value="query" <?php selected( $s['url_mode'], 'query' ); ?>><?php esc_html_e( 'URL parameters (?pt_lang=en)', 'pandatranslate' ); ?></option></select></label>
-					<?php do_action( 'pandatranslate_language_preferences' ); ?>
 					<h2><?php esc_html_e( 'Language switcher', 'pandatranslate' ); ?></h2>
 					<p><?php esc_html_e( 'Use the same switcher in navigation menus, as a shortcode, or as a floating control.', 'pandatranslate' ); ?></p>
 					<div class="pandatranslate-switcher-columns"><section class="pandatranslate-switcher-panel"><h3><?php esc_html_e( 'Navigation menus', 'pandatranslate' ); ?></h3>
@@ -332,7 +337,7 @@ final class PandaTranslate_Plugin {
 					<?php $this->render_glossary(); ?>
 					<?php elseif ( 'migration' === $tab ) : ?>
 					<?php if ( isset( $_GET['imported'] ) ) : ?><div class="notice notice-success inline"><p><?php echo esc_html( sprintf( __( '%1$d translations imported; %2$d existing or invalid entries skipped.', 'pandatranslate' ), absint( $_GET['imported'] ), absint( $_GET['skipped'] ?? 0 ) ) ); ?></p></div><?php endif; ?><?php PandaTranslate_Migration_Sources::render(); ?>
-					<?php elseif ( 'license' === $tab || 'woocommerce' === $tab ) : ?>
+					<?php elseif ( 'woocommerce' === $tab ) : ?>
                     <?php if ( has_action( 'pandatranslate_settings_' . $tab ) ) do_action( 'pandatranslate_settings_' . $tab ); else { echo '<h2>' . esc_html( 'license' === $tab ? __( 'License', 'pandatranslate' ) : 'WooCommerce' ) . '</h2><p>' . esc_html__( 'Available with PandaTranslate Multilingual. Free requires no paid license.', 'pandatranslate' ) . '</p>'; } ?>
                     <?php else : ?>
 					<h2><?php esc_html_e( 'System status', 'pandatranslate' ); ?></h2>
@@ -341,11 +346,26 @@ final class PandaTranslate_Plugin {
 					<div class="pandatranslate-note"><strong><?php esc_html_e( 'Troubleshooting', 'pandatranslate' ); ?></strong><p><?php esc_html_e( 'If the editor opens but no content can be selected, check the PHP DOM extension first. URL rules can be refreshed by saving WordPress permalinks once.', 'pandatranslate' ); ?></p></div>
 					<?php PandaTranslate_Edition::render_update_status(); $this->render_mcp(); ?>
 					<?php endif; ?>
-					<?php if ( ! in_array( $tab, array( 'mcp', 'migration', 'advanced', 'glossary', 'license', 'woocommerce' ), true ) ) : ?><div class="pandatranslate-settings-actions"><button type="submit" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="save"><span class="dashicons dashicons-saved" aria-hidden="true"></span><?php esc_html_e( 'Save settings', 'pandatranslate' ); ?></button></div><?php endif; ?>
-				</<?php echo in_array( $tab, array( 'license', 'woocommerce' ), true ) ? 'div' : 'form'; ?>>
+					<?php if ( ! in_array( $tab, array( 'mcp', 'migration', 'advanced', 'glossary', 'preferences', 'woocommerce' ), true ) ) : ?><div class="pandatranslate-settings-actions"><button type="submit" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="save"><span class="dashicons dashicons-saved" aria-hidden="true"></span><?php esc_html_e( 'Save settings', 'pandatranslate' ); ?></button></div><?php endif; ?>
+				</<?php echo in_array( $tab, array( 'preferences', 'woocommerce' ), true ) ? 'div' : 'form'; ?>>
 			</div>
 		</div>
 		<?php
+	}
+
+	private function render_general_preferences( $s ) {
+		echo '<h2>' . esc_html__( 'General', 'pandatranslate' ) . '</h2>';
+		if ( has_action( 'pandatranslate_settings_license' ) ) do_action( 'pandatranslate_settings_license' );
+		else echo '<section><h3>' . esc_html__( 'License status', 'pandatranslate' ) . '</h3><p>' . esc_html__( 'PandaTranslate — no license required.', 'pandatranslate' ) . '</p></section>';
+		echo '<section class="pandatranslate-general-detection"><h3>' . esc_html__( 'Browser language detection', 'pandatranslate' ) . '</h3><form method="post" action="' . esc_url( admin_url( 'options.php' ) ) . '">';
+		settings_fields( 'pandatranslate' );
+		echo '<input type="hidden" name="' . esc_attr( self::OPTION ) . '[_section]" value="preferences"><label><span>' . esc_html__( 'Visitor language behavior', 'pandatranslate' ) . '</span><select name="' . esc_attr( self::OPTION ) . '[language_suggestion]">';
+		echo '<option value="0" ' . selected( empty( $s['language_suggestion'] ), true, false ) . '>' . esc_html__( 'Manual switching only', 'pandatranslate' ) . '</option>';
+		echo '<option value="1" ' . selected( ! empty( $s['language_suggestion'] ), true, false ) . '>' . esc_html__( 'Automatically suggest the browser language', 'pandatranslate' ) . '</option></select></label>';
+		echo '<p class="description">' . esc_html__( 'Only active languages with published translations are offered. The language changes after a click; there is no automatic redirect.', 'pandatranslate' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Manual language switching remains available in both modes. A suggestion can be accepted or dismissed while keeping the current language.', 'pandatranslate' ) . '</p>';
+		if ( ! PandaTranslate_Edition::multilingual() ) echo '<p class="description">' . esc_html__( 'Language suggestions require a valid PandaTranslate Multilingual license. The selection is retained until activation.', 'pandatranslate' ) . '</p>';
+		echo '<div class="pandatranslate-settings-actions"><button type="submit" class="contactpanda-large-action" data-contactpanda-action="save" data-contactpanda-action-mode="labelled">' . esc_html__( 'Save settings', 'pandatranslate' ) . '</button></div></form></section>';
 	}
 
 	private function render_mcp() { ?>
