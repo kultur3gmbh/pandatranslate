@@ -2,7 +2,7 @@
 Contributors: panda
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.6.4
+Stable tag: 0.7.0
 License: Proprietary prototype
 
 PandaTranslate: visual WordPress translation with two languages, language paths, switchers, menus and page-builder elements.
@@ -46,6 +46,11 @@ Free updates use the public kultur3gmbh/pandatranslate GitHub releases and a che
 The pandatranslate_migration_sources filter allows verified future import adapters to register label, detected and render callbacks. Adapters must enforce administrative capabilities, nonces, bounded batches and existing manual-translation protection. TranslatePress is the only supported built-in source in 0.5.0; no other importer is advertised as working. The Migration tab appears only for detected registered sources.
 
 == Changelog ==
+
+= 0.7.0 =
+* Separate manual, suggestion and automatic visitor language behavior from the detection source.
+* Choose browser language, country of origin, or country with browser fallback; respect manual choices and explicit language URLs.
+* Resolve country hints per visitor without shared-page cache leakage or external geolocation requests.
 
 = 0.6.4 =
 * Add General settings with license status, a masked four-character license suffix and browser-language suggestion controls.

@@ -60,6 +60,7 @@ final class PandaTranslate_Plugin {
 			'google_location' => 'global',
 			'google_api_version' => 'v3',
 			'language_suggestion' => 0,
+			'language_detection_source' => 'country_browser',
 			'deepl_enabled' => 0, 'deepl_endpoint' => 'free', 'deepl_key_encrypted' => '', 'deepl_key_last4' => '',
 			'google_v2_enabled' => 0,
 			'google_v3_enabled' => 0,
@@ -95,6 +96,7 @@ final class PandaTranslate_Plugin {
 		if ( ! isset( $stored['menu_switcher_border_color_hover'] ) && isset( $stored['menu_switcher_border_color'] ) ) $stored['menu_switcher_border_color_hover'] = $stored['menu_switcher_border_color'];
 		if ( ! isset( $stored['switcher_label_mode'] ) && isset( $stored['switcher_show_names'] ) ) $stored['switcher_label_mode'] = ! empty( $stored['switcher_show_names'] ) ? 'native' : 'code';
 		$settings = wp_parse_args( $stored, self::defaults() );
+		if ( ! isset( $stored['language_detection_source'] ) && ! empty( $stored['language_suggestion'] ) ) $settings['language_detection_source'] = 'browser';
 		foreach ( array( 'v2', 'v3' ) as $edition ) if ( ! array_key_exists( 'google_' . $edition . '_enabled', $stored ) ) $settings['google_' . $edition . '_enabled'] = 'google-cloud-translation' === $settings['provider'] && $edition === $settings['google_api_version'] ? 1 : 0;
 		foreach ( self::defaults() as $key => $value ) if ( 0 === strpos( $key, 'switcher_' ) && ! isset( $settings['menu_' . $key] ) ) $settings['menu_' . $key] = $settings[$key];
 		if ( ! isset( $stored['menu_switcher_label_mode'] ) && 'inherit' !== $settings['switcher_menu_label_mode'] ) $settings['menu_switcher_label_mode'] = $settings['switcher_menu_label_mode'];
@@ -147,7 +149,10 @@ final class PandaTranslate_Plugin {
 			return $output;
 		}
 		if ( 'preferences' === $section ) {
-			$output['language_suggestion'] = '1' === (string) ( $input['language_suggestion'] ?? '0' ) ? 1 : 0;
+			$mode = (string) ( $input['language_suggestion'] ?? '0' );
+			$output['language_suggestion'] = in_array( $mode, array( '0', '1', '2' ), true ) ? (int) $mode : 0;
+			$source = $input['language_detection_source'] ?? $output['language_detection_source'];
+			$output['language_detection_source'] = in_array( $source, array( 'browser', 'country', 'country_browser' ), true ) ? $source : 'country_browser';
 			return $output;
 		}
 		if ( 'switcher' === $section ) {
@@ -361,10 +366,14 @@ final class PandaTranslate_Plugin {
 		settings_fields( 'pandatranslate' );
 		echo '<input type="hidden" name="' . esc_attr( self::OPTION ) . '[_section]" value="preferences"><label><span>' . esc_html__( 'Visitor language behavior', 'pandatranslate' ) . '</span><select name="' . esc_attr( self::OPTION ) . '[language_suggestion]">';
 		echo '<option value="0" ' . selected( empty( $s['language_suggestion'] ), true, false ) . '>' . esc_html__( 'Manual switching only', 'pandatranslate' ) . '</option>';
-		echo '<option value="1" ' . selected( ! empty( $s['language_suggestion'] ), true, false ) . '>' . esc_html__( 'Automatically suggest the browser language', 'pandatranslate' ) . '</option></select></label>';
-		echo '<p class="description">' . esc_html__( 'Only active languages with published translations are offered. The language changes after a click; there is no automatic redirect.', 'pandatranslate' ) . '</p>';
-		echo '<p class="description">' . esc_html__( 'Manual language switching remains available in both modes. A suggestion can be accepted or dismissed while keeping the current language.', 'pandatranslate' ) . '</p>';
-		if ( ! PandaTranslate_Edition::multilingual() ) echo '<p class="description">' . esc_html__( 'Language suggestions require a valid PandaTranslate Multilingual license. The selection is retained until activation.', 'pandatranslate' ) . '</p>';
+		echo '<option value="1" ' . selected( (int) $s['language_suggestion'], 1, false ) . '>' . esc_html__( 'Suggest the detected language', 'pandatranslate' ) . '</option><option value="2" ' . selected( (int) $s['language_suggestion'], 2, false ) . '>' . esc_html__( 'Automatically switch to the detected language', 'pandatranslate' ) . '</option></select></label>';
+		echo '<label><span>' . esc_html__( 'Language detection source', 'pandatranslate' ) . '</span><select name="' . esc_attr( self::OPTION ) . '[language_detection_source]">';
+		foreach ( array( 'browser' => __( 'Browser language', 'pandatranslate' ), 'country' => __( 'Country of origin', 'pandatranslate' ), 'country_browser' => __( 'Country of origin, otherwise browser language', 'pandatranslate' ) ) as $value => $label ) echo '<option value="' . esc_attr( $value ) . '" ' . selected( $s['language_detection_source'], $value, false ) . '>' . esc_html( $label ) . '</option>';
+		echo '</select></label>';
+		echo '<p class="description">' . esc_html__( 'Only active languages with published translations are used. Explicit language links and a manually selected language take priority over automatic detection.', 'pandatranslate' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Manual switching remains available in every mode. Suggestions can be accepted or dismissed; automatic switching runs once per session unless a manual language choice is saved.', 'pandatranslate' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Country detection uses server GeoIP data or an existing local WooCommerce geolocation database. Without a country match, the combined mode uses the browser language. No external geolocation service is contacted by PandaTranslate.', 'pandatranslate' ) . '</p>';
+		if ( ! PandaTranslate_Edition::multilingual() ) echo '<p class="description">' . esc_html__( 'Language detection requires a valid PandaTranslate Multilingual license. The selection is retained until activation.', 'pandatranslate' ) . '</p>';
 		echo '<div class="pandatranslate-settings-actions"><button type="submit" class="contactpanda-large-action" data-contactpanda-action="save" data-contactpanda-action-mode="labelled">' . esc_html__( 'Save settings', 'pandatranslate' ) . '</button></div></form></section>';
 	}
 
@@ -813,7 +822,7 @@ final class PandaTranslate_Plugin {
 		if ( ! $languages ) return '';
 		if ( 'theme-menu' === $context ) {
 			$html = '<a href="' . esc_url( self::language_url( $current ) ) . '" class="pandatranslate-theme-trigger" aria-label="' . esc_attr__( 'Language selection', 'pandatranslate' ) . '">' . PandaTranslate_Features::language_content( $current, $s ) . '</a><ul class="sub-menu">';
-			foreach ( $languages as $language => $row ) if ( $language !== $current ) $html .= '<li class="menu-item"><a href="' . esc_url( self::language_url( $language ) ) . '" lang="' . esc_attr( $language ) . '" hreflang="' . esc_attr( $language ) . '" aria-label="' . esc_attr( PandaTranslate_Features::language_name( $language ) ) . '">' . PandaTranslate_Features::language_content( $language, $s ) . '</a></li>';
+			foreach ( $languages as $language => $row ) if ( $language !== $current ) $html .= '<li class="menu-item"><a href="' . esc_url( self::language_url( $language ) ) . '" data-pt-language="' . esc_attr( $language ) . '" lang="' . esc_attr( $language ) . '" hreflang="' . esc_attr( $language ) . '" aria-label="' . esc_attr( PandaTranslate_Features::language_name( $language ) ) . '">' . PandaTranslate_Features::language_content( $language, $s ) . '</a></li>';
 			return $html . '</ul>';
 		}
 		$style = '--pt-bg:' . $s['switcher_background'] . ';--pt-bg-hover:' . $s['switcher_background_hover'] . ';--pt-text:' . $s['switcher_text'] . ';--pt-text-hover:' . $s['switcher_text_hover'] . ';--pt-border:' . $s['switcher_border_color'] . ';--pt-border-hover:' . $s['switcher_border_color_hover'] . ';--pt-border-width:' . $s['switcher_border_width'] . ';--pt-radius:' . $s['switcher_border_radius'] . ';--pt-width:' . $s['switcher_width'] . ';--pt-padding:' . $s['switcher_padding_top'] . ' ' . $s['switcher_padding_right'] . ' ' . $s['switcher_padding_bottom'] . ' ' . $s['switcher_padding_left'];
@@ -823,7 +832,7 @@ final class PandaTranslate_Plugin {
 		$html .= '<ul>';
 		foreach ( $languages as $language => $language_row ) {
 			$content = PandaTranslate_Features::language_content( $language, $s );
-			$html .= '<li' . ( $language === $current ? ' class="is-current"' : '' ) . '><a href="' . esc_url( self::language_url( $language ) ) . '" lang="' . esc_attr( $language ) . '" hreflang="' . esc_attr( $language ) . '" aria-label="' . esc_attr( PandaTranslate_Features::language_name( $language ) ) . '"' . ( $language === $current ? ' aria-current="page"' : '' ) . '>' . $content . '</a>' . ( $language === $current && 'dropdown' === $s['switcher_type'] ? '<button type="button" data-pandatranslate-toggle aria-expanded="false" aria-label="' . esc_attr__( 'Language selection', 'pandatranslate' ) . '"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></button>' : '' ) . '</li>';
+			$html .= '<li' . ( $language === $current ? ' class="is-current"' : '' ) . '><a href="' . esc_url( self::language_url( $language ) ) . '" data-pt-language="' . esc_attr( $language ) . '" lang="' . esc_attr( $language ) . '" hreflang="' . esc_attr( $language ) . '" aria-label="' . esc_attr( PandaTranslate_Features::language_name( $language ) ) . '"' . ( $language === $current ? ' aria-current="page"' : '' ) . '>' . $content . '</a>' . ( $language === $current && 'dropdown' === $s['switcher_type'] ? '<button type="button" data-pandatranslate-toggle aria-expanded="false" aria-label="' . esc_attr__( 'Language selection', 'pandatranslate' ) . '"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></button>' : '' ) . '</li>';
 		}
 		return $html . '</ul></nav>';
 	}

@@ -163,7 +163,7 @@ final class PandaTranslate_Features {
 		if ( 0 !== strpos( $url, '#pandatranslate:' ) ) return $atts;
 		$code = substr( $url, strlen( '#pandatranslate:' ) ); if ( 'switcher' === $code ) return $atts;
 		if ( 'current' === $code ) $code = self::current_language();
-		$atts['href'] = PandaTranslate_Plugin::language_url( $code ); $atts['hreflang'] = $code;
+		$atts['href'] = PandaTranslate_Plugin::language_url( $code ); $atts['hreflang'] = $code; $atts['data-pt-language'] = $code;
 		$atts['aria-label'] = self::catalog()[$code]['name'] ?? strtoupper( $code );
 		$atts['class'] = trim( ( $atts['class'] ?? '' ) . ' pandatranslate-language-link' );
 		return $atts;

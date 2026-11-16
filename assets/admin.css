@@ -8,3 +8,5 @@
 .pandatranslate-general-detection label{display:grid;grid-template-columns:minmax(180px,240px) minmax(0,1fr);align-items:center;gap:16px}
 .pandatranslate-general-detection select{width:100%;min-width:0;max-width:100%}
 @media(max-width:782px){.pandatranslate-general-detection label{grid-template-columns:minmax(0,1fr);gap:8px}}
+
+.pandatranslate-general-detection label+label{margin-top:16px}
