@@ -1,0 +1,11 @@
+Panda Translate
+Copyright (C) 2026 Kultur3 GmbH
+
+The Panda Translate base plugin is distributed under GNU GPL version 3.
+SPDX-License-Identifier: GPL-3.0-only
+See LICENSE for the complete terms.
+
+The shared Panda UI assets are maintained by the same product family.
+The separately installed Panda Translate Multilingual product is not included
+in this license grant or this package. No third-party page-builder code is
+bundled; adapters use the APIs of the installed builder.

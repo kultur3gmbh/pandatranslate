@@ -1,0 +1,6 @@
+.pandatranslate-page-button{margin:0 0 18px}
+.pandatranslate-page-progress{display:grid;gap:10px;margin:0 0 20px;padding:18px;border:2px solid #1d2327;border-radius:7px;background:#1d2327;color:#fff;box-shadow:0 5px 18px rgba(0,0,0,.25)}
+.pandatranslate-page-progress[hidden]{display:none}
+.pandatranslate-page-progress strong{font-size:17px}.pandatranslate-page-progress [data-progress-count]{font-size:25px;font-weight:800}.pandatranslate-page-progress small{color:#fff;font-size:14px}.pandatranslate-progress-track{display:block;height:12px;overflow:hidden;border-radius:20px;background:#59636d}.pandatranslate-progress-track i{display:block;width:0;height:100%;border-radius:inherit;background:#35b764;transition:width .18s ease}.pandatranslate-page-progress.has-errors{border-color:#d63638}.pandatranslate-page-progress.is-complete{border-color:#35b764}
+body.admin-bar .pandatranslate-panel{top:32px;height:calc(100vh - 32px)}
+@media(max-width:782px){body.admin-bar .pandatranslate-panel{top:46px;height:calc(100vh - 46px)}}
