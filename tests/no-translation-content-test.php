@@ -16,7 +16,7 @@ foreach ($variants as $marker) foreach (array('de','en') as $language) {
  $html=(new PandaTranslate_Translation_Memory($html,$language,$repo))->transform($html);
  $html=PandaTranslate_Frontend::transform($html,$current_language);
  check(false,strpos($html,'WRONG')!==false);check(true,strpos($html,$style)!==false);
- $previous=libxml_use_internal_errors(true);$doc=new DOMDocument();$doc->loadHTML($html);libxml_clear_errors();libxml_use_internal_errors($previous);$container=$doc->getElementById('manual');
+ $previous=libxml_use_internal_errors(true);$doc=new DOMDocument();$doc->loadHTML('<?xml encoding="UTF-8">'.$html);libxml_clear_errors();libxml_use_internal_errors($previous);$container=$doc->getElementById('manual');
  check(true,$container instanceof DOMElement);check(false,$container->hasAttribute('hidden'));check(false,strpos($container->getAttribute('style'),'display:none')!==false);
  check($language,$doc->documentElement->getAttribute('lang'));
  check(true,strpos($container->textContent,'de'===$language?'Manuell Deutsch':'Manual English')!==false);
