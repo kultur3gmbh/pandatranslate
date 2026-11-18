@@ -35,12 +35,12 @@ final class PandaTranslate_Routing {
 		$settings = PandaTranslate_Plugin::get_settings(); $rows = PandaTranslate_Plugin::language_rows(); $target = null;
 		foreach ( $rows as $row ) if ( $row['code'] === $code && ! empty( $row['active'] ) ) $target = $row;
 		if ( ! $target ) return home_url( '/' );
-		$base = is_singular() ? get_permalink( get_queried_object_id() ) : home_url( '/' . ltrim( self::original_path( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ), '/' ) );
+		$base = is_singular() ? get_permalink( get_queried_object_id() ) : home_url( '/' . ltrim( self::original_path( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ) ), '/' ) );
 		$path = self::relative_path( (string) wp_parse_url( $base, PHP_URL_PATH ) );
 		if ( 'query' === $settings['url_mode'] ) {
 			$url = home_url( user_trailingslashit( '/' . $path ) );
-			$query = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_QUERY ); parse_str( $query, $args );
-			unset( $args['pt_lang'], $args['pandatranslate'], $args['pandatranslate_scan'] );
+			$query = (string) wp_parse_url( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) ), PHP_URL_QUERY ); parse_str( $query, $args );
+			unset( $args['pt_lang'], $args['pandatranslate'], $args['pandatranslate_scan'], $args['_pt_editor_nonce'] );
 			if ( $code !== $settings['source_language'] ) $args['pt_lang'] = $code;
 			return $args ? add_query_arg( $args, $url ) : $url;
 		}
@@ -50,8 +50,8 @@ final class PandaTranslate_Routing {
 		}
 		$path = apply_filters( 'pandatranslate_localized_path', $path, $code );
 		$url = home_url( user_trailingslashit( '/' . ( $code === $settings['source_language'] ? '' : $target['slug'] . '/' ) . ltrim( $path, '/' ) ) );
-		$query = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_QUERY ); parse_str( $query, $args );
-		unset( $args['pt_lang'], $args['pandatranslate'], $args['pandatranslate_scan'] );
+		$query = (string) wp_parse_url( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) ), PHP_URL_QUERY ); parse_str( $query, $args );
+		unset( $args['pt_lang'], $args['pandatranslate'], $args['pandatranslate_scan'], $args['_pt_editor_nonce'] );
 		return $args ? add_query_arg( $args, $url ) : $url;
 	}
 	private static function relative_path( $path ) {
@@ -72,6 +72,7 @@ final class PandaTranslate_Routing {
 			// Pin the configured page explicitly for both /en/ and /?pt_lang=en.
 			$front = 'page' === get_option( 'show_on_front' ) ? (int) get_option( 'page_on_front' ) : 0;
 			if ( ! $front ) return;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value.
 			foreach ( array( 's', 'p', 'name', 'cat', 'tag', 'author', 'feed', 'taxonomy' ) as $selector ) if ( ! empty( $wp->query_vars[$selector] ) && (int) ( $wp->query_vars['page_id'] ?? 0 ) === $front && empty( $_GET['page_id'] ) ) { unset( $wp->query_vars['page_id'] ); return; }
 			foreach ( array( 's', 'p', 'page_id', 'pagename', 'name', 'post_type', 'cat', 'category_name', 'tag', 'author', 'author_name', 'feed', 'taxonomy', 'rest_route' ) as $selector ) if ( ! empty( $wp->query_vars[$selector] ) ) return;
 			$wp->query_vars['page_id'] = $front; unset( $wp->query_vars['error'] );
@@ -79,6 +80,7 @@ final class PandaTranslate_Routing {
 			return;
 		}
 		if ( class_exists( 'PandaTranslate_Edition' ) && ! PandaTranslate_Edition::multilingual() ) return;
+		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key,WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Read-only translated-slug lookup is bounded to two published posts; standard postmeta API is needed for existing stored slug assignments.
 		$posts = get_posts( array( 'post_type' => 'any', 'post_status' => 'publish', 'posts_per_page' => 2, 'meta_key' => '_pandatranslate_slug_' . $language, 'meta_value' => sanitize_title( basename( $path ) ) ) );
 		foreach ( $posts as $post ) {
 			$original = self::relative_path( (string) wp_parse_url( get_permalink( $post->ID ), PHP_URL_PATH ) );

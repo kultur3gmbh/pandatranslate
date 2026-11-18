@@ -15,7 +15,8 @@ final class PandaTranslate_Translation_Jobs {
 		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) return (bool) wp_cache_get( $key, 'transient', true );
 		// Bypass the request-local options cache: cancellation is written by a concurrent request.
 		global $wpdb;
-		return (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT v.option_value FROM ' . $wpdb->options . ' v INNER JOIN ' . $wpdb->options . ' t ON t.option_name = %s WHERE v.option_name = %s AND CAST(t.option_value AS UNSIGNED) > %d LIMIT 1', '_transient_timeout_' . $key, '_transient_' . $key, time() ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
+		return (bool) $wpdb->get_var( $wpdb->prepare( 'SELECT v.option_value FROM %i v INNER JOIN %i t ON t.option_name = %s WHERE v.option_name = %s AND CAST(t.option_value AS UNSIGNED) > %d LIMIT 1', $wpdb->options, $wpdb->options, '_transient_timeout_' . $key, '_transient_' . $key, time() ) );
 	}
 	public static function safe_error( $error ) {
 		$message = wp_strip_all_tags( $error->get_error_message() );
@@ -37,7 +38,7 @@ final class PandaTranslate_Translation_Jobs {
 		$url = get_permalink( $post_id ); if ( ! $url ) return new WP_Error( 'pandatranslate_page_missing', __( 'The source page could not be found.', 'pandatranslate' ) );
 		$token = wp_generate_password( 32, false, false );
 		set_transient( 'pandatranslate_scan_' . $token, array( 'language' => $language, 'api' => $api_id, 'collect_only' => $collect_only, 'run_id' => $run_id ), 5 * MINUTE_IN_SECONDS );
-		$response = wp_safe_remote_get( add_query_arg( array( 'pandatranslate_scan' => $token, 'pt_lang' => $language ), $url ), array( 'timeout' => 90, 'redirection' => 2, 'user-agent' => 'PandaTranslate/' . PANDATRANSLATE_VERSION ) );
+		$response = wp_safe_remote_get( add_query_arg( array( 'pandatranslate_scan' => $token, 'pt_lang' => $language ), $url ), array( 'timeout' => 90, 'redirection' => 2, 'user-agent' => 'Panda Translate/' . PANDATRANSLATE_VERSION ) );
 		delete_transient( 'pandatranslate_scan_' . $token );
 		if ( is_wp_error( $response ) ) return $response;
 		if ( 200 !== wp_remote_retrieve_response_code( $response ) || '1' !== wp_remote_retrieve_header( $response, 'x-pandatranslate-scan' ) ) return new WP_Error( 'pandatranslate_scan_failed', __( 'Source content could not be collected. Check loopback requests and page caching.', 'pandatranslate' ) );
@@ -54,7 +55,8 @@ final class PandaTranslate_Translation_Jobs {
 		if ( 'start' === $phase ) {
 			// Per-language actions translate the recorded inventory; a full-site run explicitly scans pages.
 			global $wpdb; $table = PandaTranslate_Repository::table();
-			$phase = (int) $wpdb->get_var( "SELECT MAX(id) FROM {$table}" ) > 0 ? 'prepare' : 'collect';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
+			$phase = (int) $wpdb->get_var( $wpdb->prepare( "SELECT MAX(id) FROM %i", $table ) ) > 0 ? 'prepare' : 'collect';
 		}
 		$result = array( 'phase' => $phase, 'cursor' => $cursor, 'limit_id' => $limit, 'api' => $api_id, 'done' => false, 'success' => absint( $input['success'] ?? 0 ), 'errors' => absint( $input['errors'] ?? 0 ) );
 		$result['total_pages'] = absint( $input['total_pages'] ?? 0 ); $result['total_units'] = absint( $input['total_units'] ?? 0 ); $result['prepared'] = absint( $input['prepared'] ?? 0 ); $result['stage'] = $phase;
@@ -81,11 +83,14 @@ final class PandaTranslate_Translation_Jobs {
 		}
 		if ( 'translate' !== $phase ) return new WP_Error( 'pandatranslate_phase', __( 'Invalid translation phase.', 'pandatranslate' ) );
 		global $wpdb; $table = PandaTranslate_Repository::table();
-		if ( ! $limit ) $limit = (int) $wpdb->get_var( $wpdb->prepare( "SELECT MAX(id) FROM {$table} WHERE target_language = %s", $language ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
+		if ( ! $limit ) $limit = (int) $wpdb->get_var( $wpdb->prepare( "SELECT MAX(id) FROM %i WHERE target_language = %s", $table, $language ) );
 		$condition = 'all' === ( $input['mode'] ?? '' ) ? '' : ( 'failed' === ( $input['mode'] ?? '' ) ? " AND last_error IS NOT NULL AND TRIM(last_error) <> ''" : " AND (status = 'untranslated' OR TRIM(translated_html) = '')" );
-		if ( ! $result['total_units'] ) $result['total_units'] = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE target_language = %s AND id <= %d {$condition}", $language, $limit ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
+		if ( ! $result['total_units'] ) $result['total_units'] = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE target_language = %s AND id <= %d {$condition}", $table, $language, $limit ) );
 		if ( ! $limit ) return new WP_Error( 'pandatranslate_no_sources', __( 'No source content was collected. Check published content types and source-page collection.', 'pandatranslate' ) );
-		$units = $wpdb->get_results( $wpdb->prepare( "SELECT id,unit_key FROM {$table} WHERE target_language = %s AND id > %d AND id <= %d {$condition} ORDER BY id ASC LIMIT 5", $language, $cursor, $limit ), ARRAY_A );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
+		$units = $wpdb->get_results( $wpdb->prepare( "SELECT id,unit_key FROM %i WHERE target_language = %s AND id > %d AND id <= %d {$condition} ORDER BY id ASC LIMIT 5", $table, $language, $cursor, $limit ), ARRAY_A );
 		foreach ( $units as $unit ) {
 			if ( self::is_cancelled() ) { $result['cancelled'] = true; break; }
 			$translated = PandaTranslate_Plugin::auto_translate_known( $unit['unit_key'], $language, $api_id );
@@ -102,7 +107,8 @@ final class PandaTranslate_Translation_Jobs {
 		}
 		if ( self::is_cancelled() ) $result['cancelled'] = true;
 		$result['limit_id'] = $limit; $result['done'] = count( $units ) < 5 || ! empty( $result['failed'] ) || ! empty( $result['cancelled'] );
-		$result['message'] = sprintf( __( '%1$d translated · %2$d failed', 'pandatranslate' ), $result['success'], $result['errors'] ) . ' · ' . PandaTranslate_Providers::label( $api_id );
+		$result['message'] = sprintf( /* translators: %1$d: translated items, %2$d: failed items. */
+		__( '%1$d translated · %2$d failed', 'pandatranslate' ), $result['success'], $result['errors'] ) . ' · ' . PandaTranslate_Providers::label( $api_id );
 		$result['processed'] = $result['success'] + $result['errors']; $result['total'] = $result['total_units'];
 		$result['message'] .= ' · ' . $result['processed'] . ' / ' . $result['total_units'];
 		if ( $result['last_error_message'] ) $result['message'] .= ' · ' . $result['last_error_message'] . ' [' . $result['last_error_code'] . ']';

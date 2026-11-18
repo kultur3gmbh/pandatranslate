@@ -1,5 +1,13 @@
 msgid ""
-msgstr "Project-Id-Version: pandatranslate 0.7.0\nPO-Revision-Date: 2026-11-11 01:00+0100\nLast-Translator: Panda\nLanguage-Team: en_US\nLanguage: en_US\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+msgstr ""
+"Project-Id-Version: pandatranslate 0.7.0\n"
+"PO-Revision-Date: 2026-11-11 01:00+0100\n"
+"Last-Translator: Panda\n"
+"Language-Team: en_US\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 #: includes/class-pandatranslate-plugin.php:507
 #: includes/class-pandatranslate-plugin.php:554
@@ -125,7 +133,9 @@ msgstr "Automatic translation"
 msgid ""
 "Automatically collect and translate newly published or updated content with "
 "the configured translation API."
-msgstr "Automatically collect and translate newly published or updated content with the configured translation API."
+msgstr ""
+"Automatically collect and translate newly published or updated content with "
+"the configured translation API."
 
 #: includes/class-pandatranslate-plugin.php:369
 msgid "Automatically switch to the detected language"
@@ -162,8 +172,9 @@ msgstr "Available tools"
 
 #: includes/class-pandatranslate-plugin.php:346
 msgid ""
-"Available with PandaTranslate Multilingual. Free requires no paid license."
-msgstr "Available with PandaTranslate Multilingual. Free requires no paid license."
+"Available with Panda Translate Multilingual. Free requires no paid license."
+msgstr ""
+"Available with Panda Translate Multilingual. Free requires no paid license."
 
 #: includes/class-pandatranslate-plugin.php:539
 msgid "Background color"
@@ -285,7 +296,8 @@ msgstr "Configure languages and open the visual translation editor."
 #: includes/class-pandatranslate-plugin.php:469
 msgid ""
 "Confirm adoption of the WordPress website language as the translation source."
-msgstr "Confirm adoption of the WordPress website language as the translation source."
+msgstr ""
+"Confirm adoption of the WordPress website language as the translation source."
 
 #: includes/class-pandatranslate-plugin.php:717
 msgid "Confirm the paid Google request."
@@ -311,9 +323,13 @@ msgstr "Content types"
 msgid ""
 "Country detection uses server GeoIP data or an existing local WooCommerce "
 "geolocation database. Without a country match, the combined mode uses the "
-"browser language. No external geolocation service is contacted by "
-"PandaTranslate."
-msgstr "Country detection uses server GeoIP data or an existing local WooCommerce geolocation database. Without a country match, the combined mode uses the browser language. No external geolocation service is contacted by PandaTranslate."
+"browser language. No external geolocation service is contacted by Panda "
+"Translate."
+msgstr ""
+"Country detection uses server GeoIP data or an existing local WooCommerce "
+"geolocation database. Without a country match, the combined mode uses the "
+"browser language. No external geolocation service is contacted by Panda "
+"Translate."
 
 #: includes/class-pandatranslate-plugin.php:371
 msgid "Country of origin"
@@ -327,7 +343,9 @@ msgstr "Country of origin, otherwise browser language"
 msgid ""
 "Counts cover recorded translation units. Source characters are an estimate; "
 "API billing may differ."
-msgstr "Counts cover recorded translation units. Source characters are an estimate; API billing may differ."
+msgstr ""
+"Counts cover recorded translation units. Source characters are an estimate; "
+"API billing may differ."
 
 #: includes/class-pandatranslate-glossary-admin.php:28
 #: includes/class-pandatranslate-plugin.php:256
@@ -365,7 +383,9 @@ msgstr "Default language"
 msgid ""
 "Define PANDATRANSLATE_GOOGLE_CREDENTIALS_FILE in wp-config.php with a "
 "readable service-account JSON path."
-msgstr "Define PANDATRANSLATE_GOOGLE_CREDENTIALS_FILE in wp-config.php with a readable service-account JSON path."
+msgstr ""
+"Define PANDATRANSLATE_GOOGLE_CREDENTIALS_FILE in wp-config.php with a "
+"readable service-account JSON path."
 
 #: includes/class-pandatranslate-plugin.php:472
 msgid "Delete"
@@ -474,7 +494,9 @@ msgstr "Errors"
 msgid ""
 "Existing navigation menus use the theme menu styling. These design settings "
 "apply to the standalone language menu and builder elements."
-msgstr "Existing navigation menus use the theme menu styling. These design settings apply to the standalone language menu and builder elements."
+msgstr ""
+"Existing navigation menus use the theme menu styling. These design settings "
+"apply to the standalone language menu and builder elements."
 
 #: includes/class-pandatranslate-edition.php:25
 msgid "Explore extended features"
@@ -526,7 +548,9 @@ msgstr "Floating menu"
 msgid ""
 "Formatting or glossary placeholders were not preserved by the translation "
 "API."
-msgstr "Formatting or glossary placeholders were not preserved by the translation API."
+msgstr ""
+"Formatting or glossary placeholders were not preserved by the translation "
+"API."
 
 #: includes/class-pandatranslate-inline-protector.php:49
 msgid "Formatting placeholders are not validly nested."
@@ -550,7 +574,9 @@ msgstr "Found translations"
 msgid ""
 "Free includes the source language and one translation language. Existing "
 "additional language data remains stored."
-msgstr "Free includes the source language and one translation language. Existing additional language data remains stored."
+msgstr ""
+"Free includes the source language and one translation language. Existing "
+"additional language data remains stored."
 
 #: includes/class-pandatranslate-plugin.php:295
 #: includes/class-pandatranslate-plugin.php:362
@@ -613,7 +639,10 @@ msgid ""
 "If the editor opens but no content can be selected, check the PHP DOM "
 "extension first. URL rules can be refreshed by saving WordPress permalinks "
 "once."
-msgstr "If the editor opens but no content can be selected, check the PHP DOM extension first. URL rules can be refreshed by saving WordPress permalinks once."
+msgstr ""
+"If the editor opens but no content can be selected, check the PHP DOM "
+"extension first. URL rules can be refreshed by saving WordPress permalinks "
+"once."
 
 #: includes/class-pandatranslate-plugin.php:655
 msgid "Image title"
@@ -639,8 +668,10 @@ msgstr "Importing TranslatePress translations…"
 #: includes/class-pandatranslate-migration.php:77
 msgid ""
 "Imports existing TranslatePress dictionary entries and preserves their "
-"publication status. Existing PandaTranslate entries are preserved."
-msgstr "Imports existing TranslatePress dictionary entries and preserves their publication status. Existing PandaTranslate entries are preserved."
+"publication status. Existing Panda Translate entries are preserved."
+msgstr ""
+"Imports existing TranslatePress dictionary entries and preserves their "
+"publication status. Existing Panda Translate entries are preserved."
 
 #: includes/class-pandatranslate-plugin.php:256
 msgid "Inactive"
@@ -689,9 +720,11 @@ msgstr "Language code only"
 
 #: includes/class-pandatranslate-plugin.php:376
 msgid ""
-"Language detection requires a valid PandaTranslate Multilingual license. The "
-"selection is retained until activation."
-msgstr "Language detection requires a valid PandaTranslate Multilingual license. The selection is retained until activation."
+"Language detection requires a valid Panda Translate Multilingual license. "
+"The selection is retained until activation."
+msgstr ""
+"Language detection requires a valid Panda Translate Multilingual license. "
+"The selection is retained until activation."
 
 #: includes/class-pandatranslate-plugin.php:370
 msgid "Language detection source"
@@ -794,7 +827,10 @@ msgid ""
 "Manual switching remains available in every mode. Suggestions can be "
 "accepted or dismissed; automatic switching runs once per session unless a "
 "manual language choice is saved."
-msgstr "Manual switching remains available in every mode. Suggestions can be accepted or dismissed; automatic switching runs once per session unless a manual language choice is saved."
+msgstr ""
+"Manual switching remains available in every mode. Suggestions can be "
+"accepted or dismissed; automatic switching runs once per session unless a "
+"manual language choice is saved."
 
 #: includes/class-pandatranslate-plugin.php:523
 msgid "Menu container background"
@@ -836,13 +872,17 @@ msgstr "Missing"
 msgid ""
 "More than two languages, multilingual SEO and WooCommerce integrations. "
 "Included in the All-in bundle."
-msgstr "More than two languages, multilingual SEO and WooCommerce integrations. Included in the All-in bundle."
+msgstr ""
+"More than two languages, multilingual SEO and WooCommerce integrations. "
+"Included in the All-in bundle."
 
 #: includes/class-pandatranslate-plugin.php:398
 msgid ""
 "Multiple APIs can be enabled simultaneously. The API is selected for each "
 "translation run."
-msgstr "Multiple APIs can be enabled simultaneously. The API is selected for each translation run."
+msgstr ""
+"Multiple APIs can be enabled simultaneously. The API is selected for each "
+"translation run."
 
 #: includes/class-pandatranslate-plugin.php:314
 msgid "Navigation menus"
@@ -873,7 +913,9 @@ msgstr "No matching language found."
 msgid ""
 "No source content was collected. Check published content types and source-"
 "page collection."
-msgstr "No source content was collected. Check published content types and source-page collection."
+msgstr ""
+"No source content was collected. Check published content types and source-"
+"page collection."
 
 #: includes/class-pandatranslate-plugin.php:256
 #: includes/class-pandatranslate-plugin.php:434
@@ -905,7 +947,10 @@ msgid ""
 "Only active languages with published translations are used. Explicit "
 "language links and a manually selected language take priority over automatic "
 "detection."
-msgstr "Only active languages with published translations are used. Explicit language links and a manually selected language take priority over automatic detection."
+msgstr ""
+"Only active languages with published translations are used. Explicit "
+"language links and a manually selected language take priority over automatic "
+"detection."
 
 #: includes/class-pandatranslate-plugin.php:293
 msgid "Open system status"
@@ -942,8 +987,8 @@ msgstr "Page"
 #: includes/class-pandatranslate-features.php:109
 #: includes/class-pandatranslate-plugin.php:291
 #: includes/class-pandatranslate-plugin.php:672
-msgid "PandaTranslate"
-msgstr "PandaTranslate"
+msgid "Panda Translate"
+msgstr "Panda Translate"
 
 #: includes/class-pandatranslate-beaver-menu-module.php:5
 #: includes/class-pandatranslate-bricks-menu-element.php:6
@@ -952,20 +997,20 @@ msgstr "PandaTranslate"
 #: includes/class-pandatranslate-features.php:192
 #: includes/class-pandatranslate-features.php:193
 #: includes/class-pandatranslate-features.php:194
-msgid "PandaTranslate language menu"
-msgstr "PandaTranslate language menu"
+msgid "Panda Translate language menu"
+msgstr "Panda Translate language menu"
 
 #: includes/class-pandatranslate-plugin.php:293
-msgid "PandaTranslate needs attention."
-msgstr "PandaTranslate needs attention."
+msgid "Panda Translate needs attention."
+msgstr "Panda Translate needs attention."
 
 #: includes/class-pandatranslate-plugin.php:295
-msgid "PandaTranslate settings"
-msgstr "PandaTranslate settings"
+msgid "Panda Translate settings"
+msgstr "Panda Translate settings"
 
 #: includes/class-pandatranslate-plugin.php:364
-msgid "PandaTranslate — no license required."
-msgstr "PandaTranslate — no license required."
+msgid "Panda Translate — no license required."
+msgstr "Panda Translate — no license required."
 
 #: includes/class-pandatranslate-text-admin.php:53
 msgid "Pause text collection"
@@ -984,7 +1029,9 @@ msgstr "Permission required to start this translation run."
 msgid ""
 "Place this in wp-config.php. The JSON file should be outside the public web "
 "root and readable only by the web server."
-msgstr "Place this in wp-config.php. The JSON file should be outside the public web root and readable only by the web server."
+msgstr ""
+"Place this in wp-config.php. The JSON file should be outside the public web "
+"root and readable only by the web server."
 
 #: includes/class-pandatranslate-edition.php:49
 msgid "Plugin updates"
@@ -1025,7 +1072,8 @@ msgstr "Progress by language"
 
 #: includes/class-pandatranslate-glossary-admin.php:27
 msgid "Protect product terms or define an exact replacement for each language."
-msgstr "Protect product terms or define an exact replacement for each language."
+msgstr ""
+"Protect product terms or define an exact replacement for each language."
 
 #: includes/class-pandatranslate-plugin.php:672
 msgid "Publish"
@@ -1052,7 +1100,9 @@ msgstr "Publishing permission is required."
 msgid ""
 "Queues all published content of the selected types for the selected "
 "translation API."
-msgstr "Queues all published content of the selected types for the selected translation API."
+msgstr ""
+"Queues all published content of the selected types for the selected "
+"translation API."
 
 #: includes/class-pandatranslate-plugin.php:455
 msgid "REST API"
@@ -1062,13 +1112,17 @@ msgstr "REST API"
 msgid ""
 "Read a translation before editing. Saving requires its current revision and "
 "returns the verified saved translation."
-msgstr "Read a translation before editing. Saving requires its current revision and returns the verified saved translation."
+msgstr ""
+"Read a translation before editing. Saving requires its current revision and "
+"returns the verified saved translation."
 
 #: includes/class-pandatranslate-mcp.php:55
 msgid ""
 "Read tools are safe. Translation writes and paid Google requests require "
 "confirm=true."
-msgstr "Read tools are safe. Translation writes and paid Google requests require confirm=true."
+msgstr ""
+"Read tools are safe. Translation writes and paid Google requests require "
+"confirm=true."
 
 #: includes/class-pandatranslate-plugin.php:417
 #: includes/class-pandatranslate-plugin.php:457
@@ -1083,7 +1137,9 @@ msgstr "Recent MCP activity"
 msgid ""
 "Recommended: leave disabled so translations remain automatic drafts until "
 "reviewed."
-msgstr "Recommended: leave disabled so translations remain automatic drafts until reviewed."
+msgstr ""
+"Recommended: leave disabled so translations remain automatic drafts until "
+"reviewed."
 
 #: includes/class-pandatranslate-plugin.php:459
 msgid "Refresh recommended"
@@ -1146,7 +1202,10 @@ msgid ""
 "Royal MCP, WordPress Abilities transports such as miniOrange, and the "
 "standalone MCP endpoint can be used simultaneously. Each connection retains "
 "its own access policy."
-msgstr "Royal MCP, WordPress Abilities transports such as miniOrange, and the standalone MCP endpoint can be used simultaneously. Each connection retains its own access policy."
+msgstr ""
+"Royal MCP, WordPress Abilities transports such as miniOrange, and the "
+"standalone MCP endpoint can be used simultaneously. Each connection retains "
+"its own access policy."
 
 #: includes/class-pandatranslate-plugin.php:418
 msgid "Run connection test"
@@ -1291,7 +1350,9 @@ msgstr "Source"
 msgid ""
 "Source content could not be collected. Check loopback requests and page "
 "caching."
-msgstr "Source content could not be collected. Check loopback requests and page caching."
+msgstr ""
+"Source content could not be collected. Check loopback requests and page "
+"caching."
 
 #: includes/class-pandatranslate-repository.php:64
 msgid "Source content could not be prepared."
@@ -1311,7 +1372,10 @@ msgid ""
 "Standalone access uses a dedicated WordPress administrator application "
 "password. Royal MCP and WordPress Abilities transports use their own "
 "authenticated connections."
-msgstr "Standalone access uses a dedicated WordPress administrator application password. Royal MCP and WordPress Abilities transports use their own authenticated connections."
+msgstr ""
+"Standalone access uses a dedicated WordPress administrator application "
+"password. Royal MCP and WordPress Abilities transports use their own "
+"authenticated connections."
 
 #: includes/class-pandatranslate-plugin.php:385
 msgid "Standalone endpoint"
@@ -1361,7 +1425,9 @@ msgstr "System status"
 msgid ""
 "Technical checks for translation, background processing, URLs and SEO "
 "integrations."
-msgstr "Technical checks for translation, background processing, URLs and SEO integrations."
+msgstr ""
+"Technical checks for translation, background processing, URLs and SEO "
+"integrations."
 
 #: includes/class-pandatranslate-plugin.php:418
 #: includes/class-pandatranslate-plugin.php:424
@@ -1424,7 +1490,9 @@ msgstr "The active theme has not registered a menu location."
 msgid ""
 "The connection was interrupted. Reload the editor and check the saved "
 "translation before retrying."
-msgstr "The connection was interrupted. Reload the editor and check the saved translation before retrying."
+msgstr ""
+"The connection was interrupted. Reload the editor and check the saved "
+"translation before retrying."
 
 #: includes/class-pandatranslate-text-admin.php:41
 msgid "The content cannot be collected."
@@ -1434,7 +1502,9 @@ msgstr "The content cannot be collected."
 msgid ""
 "The editor and API addresses use different domains. Check the WordPress "
 "website addresses."
-msgstr "The editor and API addresses use different domains. Check the WordPress website addresses."
+msgstr ""
+"The editor and API addresses use different domains. Check the WordPress "
+"website addresses."
 
 #: includes/class-pandatranslate-plugin.php:256
 msgid "The entry could not be saved."
@@ -1495,20 +1565,28 @@ msgid ""
 "The stored translation source differs from WordPress. Confirm the WordPress "
 "source language on the Dashboard before importing. Existing imports are "
 "retained."
-msgstr "The stored translation source differs from WordPress. Confirm the WordPress source language on the Dashboard before importing. Existing imports are retained."
+msgstr ""
+"The stored translation source differs from WordPress. Confirm the WordPress "
+"source language on the Dashboard before importing. Existing imports are "
+"retained."
 
 #: includes/class-pandatranslate-plugin.php:469
 msgid ""
 "The stored translation source differs from the WordPress website language. "
 "Changing it affects language assignments and URLs. Existing translations are "
 "retained and are not reversed automatically."
-msgstr "The stored translation source differs from the WordPress website language. Changing it affects language assignments and URLs. Existing translations are retained and are not reversed automatically."
+msgstr ""
+"The stored translation source differs from the WordPress website language. "
+"Changing it affects language assignments and URLs. Existing translations are "
+"retained and are not reversed automatically."
 
 #: includes/class-pandatranslate-static-inventory.php:46
 msgid ""
 "The text collection session expired. Restarting preserves existing "
 "translations."
-msgstr "The text collection session expired. Restarting preserves existing translations."
+msgstr ""
+"The text collection session expired. Restarting preserves existing "
+"translations."
 
 #: includes/class-pandatranslate-plugin.php:707
 #: includes/class-pandatranslate-text-admin.php:26
@@ -1584,7 +1662,9 @@ msgstr "The update source is invalid."
 msgid ""
 "The website returned an unexpected API response. Check the connection and "
 "server logs."
-msgstr "The website returned an unexpected API response. Check the connection and server logs."
+msgstr ""
+"The website returned an unexpected API response. Check the connection and "
+"server logs."
 
 #: includes/class-pandatranslate-family-ui.php:12
 msgid "Theme and template colors"
@@ -1666,7 +1746,9 @@ msgstr "TranslatePress migration"
 msgid ""
 "TranslatePress source %1$s differs from WordPress source %2$s. Import "
 "stopped to prevent incorrect language assignments."
-msgstr "TranslatePress source %1$s differs from WordPress source %2$s. Import stopped to prevent incorrect language assignments."
+msgstr ""
+"TranslatePress source %1$s differs from WordPress source %2$s. Import "
+"stopped to prevent incorrect language assignments."
 
 #: includes/class-pandatranslate-plugin.php:672
 msgid "Translating current page"
@@ -1753,8 +1835,8 @@ msgid "URL parameters (?pt_lang=en)"
 msgstr "URL parameters (?pt_lang=en)"
 
 #: includes/class-pandatranslate-mcp.php:146
-msgid "Unknown PandaTranslate tool."
-msgstr "Unknown PandaTranslate tool."
+msgid "Unknown Panda Translate tool."
+msgstr "Unknown Panda Translate tool."
 
 #: includes/class-pandatranslate-family-ui.php:13
 msgid "Uploading image…"
@@ -1772,7 +1854,9 @@ msgstr "Use reviewed or published status."
 msgid ""
 "Use the same switcher in navigation menus, as a shortcode, or as a floating "
 "control."
-msgstr "Use the same switcher in navigation menus, as a shortcode, or as a floating control."
+msgstr ""
+"Use the same switcher in navigation menus, as a shortcode, or as a floating "
+"control."
 
 #: includes/class-pandatranslate-plugin.php:256
 msgid "View entry"
@@ -1786,7 +1870,9 @@ msgstr "Visitor language behavior"
 msgid ""
 "When ContactPanda is active, the same tools are also registered on its "
 "central MCP endpoint."
-msgstr "When ContactPanda is active, the same tools are also registered on its central MCP endpoint."
+msgstr ""
+"When ContactPanda is active, the same tools are also registered on its "
+"central MCP endpoint."
 
 #: includes/class-pandatranslate-glossary-admin.php:33
 msgid "Whole words only"
@@ -1798,10 +1884,13 @@ msgstr "Width (px, %, em, rem or auto)"
 
 #: includes/class-pandatranslate-plugin.php:386
 msgid ""
-"With Royal MCP 1.5.11 or later active, PandaTranslate tools appear on the "
+"With Royal MCP 1.5.11 or later active, Panda Translate tools appear on the "
 "existing Royal connection. Royal permissions and read-only restrictions also "
 "apply."
-msgstr "With Royal MCP 1.5.11 or later active, PandaTranslate tools appear on the existing Royal connection. Royal permissions and read-only restrictions also apply."
+msgstr ""
+"With Royal MCP 1.5.11 or later active, Panda Translate tools appear on the "
+"existing Royal connection. Royal permissions and read-only restrictions also "
+"apply."
 
 #: includes/class-pandatranslate-plugin.php:458
 msgid "WordPress Cron"
@@ -1814,11 +1903,12 @@ msgstr "WordPress metadata"
 #: includes/class-pandatranslate-plugin.php:220
 msgid ""
 "WordPress security keys and OpenSSL are required to store the API key safely."
-msgstr "WordPress security keys and OpenSSL are required to store the API key safely."
+msgstr ""
+"WordPress security keys and OpenSSL are required to store the API key safely."
 
 #: includes/class-pandatranslate-plugin.php:428
-msgid "Words (PandaTranslate count)"
-msgstr "Words (PandaTranslate count)"
+msgid "Words (Panda Translate count)"
+msgstr "Words (Panda Translate count)"
 
 #: includes/class-pandatranslate-plugin.php:415
 #: includes/class-pandatranslate-plugin.php:424

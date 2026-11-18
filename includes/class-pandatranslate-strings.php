@@ -22,8 +22,9 @@ final class PandaTranslate_Strings {
 	private static function published( $language ) {
 		if ( ! isset( self::$published[$language] ) ) {
 			global $wpdb; self::$published[$language] = array();
-			if ( 3 !== (int) get_option( 'pandatranslate_schema' ) ) return array();
-			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT unit_key,translated_html,status FROM ' . PandaTranslate_Repository::table() . " WHERE target_language = %s AND source_kind = 'gettext' AND status = 'published' AND translated_html <> '' LIMIT 10000", $language ), ARRAY_A );
+			if ( PandaTranslate_Repository::SCHEMA_VERSION !== (int) get_option( 'pandatranslate_schema' ) ) return array();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Published rows from plugin-owned tables only; freshness and current public-post visibility are required. Gettext rows are cached per language for this request.
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT unit_key,translated_html,status FROM %i WHERE target_language = %s AND source_kind = 'gettext' AND status = 'published' AND translated_html <> '' LIMIT 10000", PandaTranslate_Repository::table(), $language ), ARRAY_A );
 			foreach ( $rows as $row ) self::$published[$language][$row['unit_key']] = $row;
 		}
 		return self::$published[$language];
@@ -45,7 +46,8 @@ final class PandaTranslate_Strings {
 		$key = hash( 'sha256', 'gettext|' . $domain . '|' . $context . '|' . $original ); $cache_key = $key . '|' . $language;
 		if ( array_key_exists( $cache_key, self::$cache ) ) return self::$cache[$cache_key] ?? $translated;
 			$repo = new PandaTranslate_Repository();
-			$collect = ! self::$email_language && current_user_can( 'manage_options' ) && isset( $_GET['pandatranslate'] ) && 'edit' === $_GET['pandatranslate'];
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The isset check is only a selector; editing_request() separately verifies capability and the user-bound editor nonce before collecting any strings.
+			$collect = ! self::$email_language && current_user_can( 'manage_options' ) && isset( $_GET['pandatranslate'] ) && PandaTranslate_Plugin::editing_request();
 			$row = $collect ? $repo->find( $key, $language ) : ( self::published( $language )[$key] ?? null );
 			if ( $collect && ! $row ) { $source = self::$native_locale ? $original : $translated; $native = self::$native_locale && $translated !== $original; $repo->save( array( 'key' => $key, 'source_hash' => hash( 'sha256', $source ), 'source_html' => $source, 'source_kind' => 'gettext', 'source_domain' => $domain ), $language, $native ? $translated : '', $native ? 'published' : 'untranslated', $native ? 'native-locale' : '' ); }
 			$value = $row && 'published' === $row['status'] && '' !== $row['translated_html'] ? $row['translated_html'] : null;
@@ -62,14 +64,14 @@ final class PandaTranslate_Strings {
 		return $a[0] === $b[0] && $c[0] === $d[0];
 	}
 	public static function dictionary( $language ) {
-		if ( 3 !== (int) get_option( 'pandatranslate_schema' ) ) return array();
+		if ( PandaTranslate_Repository::SCHEMA_VERSION !== (int) get_option( 'pandatranslate_schema' ) ) return array();
 		global $wpdb;
-		$sql = 'SELECT source_html,translated_html FROM ' . PandaTranslate_Repository::table() . " WHERE target_language = %s AND status = 'published' AND source_kind <> 'gettext' AND translated_html <> '' AND unit_key IN (SELECT c.unit_key FROM " . $wpdb->prefix . 'pandatranslate_contexts c INNER JOIN ' . $wpdb->posts . " p ON p.ID = c.post_id WHERE p.post_status = 'publish' AND p.post_password = '') ORDER BY id LIMIT 10000";
-		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $language ), ARRAY_A );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Published rows from plugin-owned tables only; freshness and current public-post visibility are required. Gettext rows are cached per language for this request.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT source_html,translated_html FROM %i WHERE target_language = %s AND status = 'published' AND source_kind <> 'gettext' AND translated_html <> '' AND unit_key IN (SELECT c.unit_key FROM %i c INNER JOIN %i p ON p.ID = c.post_id WHERE p.post_status = 'publish' AND p.post_password = '') ORDER BY id LIMIT 10000", PandaTranslate_Repository::table(), $language, $wpdb->prefix . 'pandatranslate_contexts', $wpdb->posts ), ARRAY_A );
 		$dictionary = array(); $ambiguous = array();
 		foreach ( $rows as $row ) {
 			// Text-only replacement avoids executing HTML or destroying builder event handlers.
-			if ( $row['source_html'] !== strip_tags( $row['source_html'] ) || $row['translated_html'] !== strip_tags( $row['translated_html'] ) ) continue;
+			if ( $row['source_html'] !== wp_strip_all_tags( $row['source_html'] ) || $row['translated_html'] !== wp_strip_all_tags( $row['translated_html'] ) ) continue;
 			$key = html_entity_decode( trim( $row['source_html'] ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ); $value = html_entity_decode( $row['translated_html'], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 			if ( isset( $dictionary[$key] ) && $dictionary[$key] !== $value ) $ambiguous[$key] = true;
 			$dictionary[$key] = $value;

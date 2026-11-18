@@ -1,0 +1,417 @@
+[
+  {
+    "file": "includes/class-pandatranslate-static-inventory.php",
+    "line": 39,
+    "rules": [
+      "WordPress.WP.I18n"
+    ],
+    "reason": "Resolve collected third-party gettext entries in their original domain/context; these are not Panda Translate source labels."
+  },
+  {
+    "file": "includes/class-pandatranslate-routing.php",
+    "line": 75,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value."
+  },
+  {
+    "file": "includes/class-pandatranslate-routing.php",
+    "line": 83,
+    "rules": [
+      "WordPress.DB.SlowDBQuery.slow_db_query_meta_key",
+      "WordPress.DB.SlowDBQuery.slow_db_query_meta_value"
+    ],
+    "reason": "Read-only translated-slug lookup is bounded to two published posts; standard postmeta API is needed for existing stored slug assignments."
+  },
+  {
+    "file": "includes/class-pandatranslate-bricks-element.php",
+    "line": 8,
+    "rules": [
+      "WordPress.Security.EscapeOutput.OutputNotEscaped"
+    ],
+    "reason": "Bricks renders and escapes attribute names and values in render_attributes()."
+  },
+  {
+    "file": "includes/class-pandatranslate-strings.php",
+    "line": 26,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Published rows from plugin-owned tables only; freshness and current public-post visibility are required. Gettext rows are cached per language for this request."
+  },
+  {
+    "file": "includes/class-pandatranslate-strings.php",
+    "line": 49,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "The isset check is only a selector; editing_request() separately verifies capability and the user-bound editor nonce before collecting any strings."
+  },
+  {
+    "file": "includes/class-pandatranslate-strings.php",
+    "line": 69,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Published rows from plugin-owned tables only; freshness and current public-post visibility are required. Gettext rows are cached per language for this request."
+  },
+  {
+    "file": "includes/class-pandatranslate-frontend.php",
+    "line": 17,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value."
+  },
+  {
+    "file": "includes/class-pandatranslate-translation-jobs.php",
+    "line": 18,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist."
+  },
+  {
+    "file": "includes/class-pandatranslate-translation-jobs.php",
+    "line": 58,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist."
+  },
+  {
+    "file": "includes/class-pandatranslate-translation-jobs.php",
+    "line": 86,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist."
+  },
+  {
+    "file": "includes/class-pandatranslate-translation-jobs.php",
+    "line": 89,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "WordPress.DB.PreparedSQL.InterpolatedNotPrepared"
+    ],
+    "reason": "Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist."
+  },
+  {
+    "file": "includes/class-pandatranslate-translation-jobs.php",
+    "line": 92,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "WordPress.DB.PreparedSQL.InterpolatedNotPrepared"
+    ],
+    "reason": "Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 48,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 57,
+    "rules": [
+      "PluginCheck.Security.DirectDB.UnescapedDBParameter",
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "WordPress.DB.PreparedSQL.NotPrepared"
+    ],
+    "reason": "SQL is assembled only from fixed clauses and generated placeholder lists; table names use %i and all values are bound below. Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 65,
+    "rules": [
+      "PluginCheck.Security.DirectDB.UnescapedDBParameter",
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "WordPress.DB.PreparedSQL.NotPrepared"
+    ],
+    "reason": "SQL is assembled only from fixed clauses and generated placeholder lists; table names use %i and all values are bound below. Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 74,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 78,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 86,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 102,
+    "rules": [
+      "PluginCheck.Security.DirectDB.UnescapedDBParameter",
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "WordPress.DB.PreparedSQL.NotPrepared"
+    ],
+    "reason": "SQL is assembled only from fixed clauses and generated placeholder lists; table names use %i and all values are bound below. Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 121,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 135,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 144,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-repository.php",
+    "line": 161,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache."
+  },
+  {
+    "file": "includes/class-pandatranslate-migration.php",
+    "line": 32,
+    "rules": [
+      "PluginCheck.Security.DirectDB.UnescapedDBParameter",
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "WordPress.DB.PreparedSQL.NotPrepared"
+    ],
+    "reason": "The fixed UPDATE statement above binds both table identifiers with %i and all comparison values with %s. Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair."
+  },
+  {
+    "file": "includes/class-pandatranslate-migration.php",
+    "line": 57,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair."
+  },
+  {
+    "file": "includes/class-pandatranslate-migration.php",
+    "line": 63,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair."
+  },
+  {
+    "file": "includes/class-pandatranslate-migration.php",
+    "line": 74,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair."
+  },
+  {
+    "file": "includes/class-pandatranslate-migration.php",
+    "line": 96,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair."
+  },
+  {
+    "file": "includes/class-pandatranslate-migration.php",
+    "line": 130,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair."
+  },
+  {
+    "file": "includes/class-pandatranslate-migration.php",
+    "line": 154,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair."
+  },
+  {
+    "file": "includes/class-pandatranslate-site-progress.php",
+    "line": 38,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read at most three current published source IDs for this fixed job snapshot; post types and values are sanitized and bound. Persistent caching would stale the resume cursor."
+  },
+  {
+    "file": "includes/class-pandatranslate-features.php",
+    "line": 119,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value."
+  },
+  {
+    "file": "includes/class-pandatranslate-bricks-menu-element.php",
+    "line": 8,
+    "rules": [
+      "WordPress.Security.EscapeOutput.OutputNotEscaped"
+    ],
+    "reason": "Bricks renders and escapes attribute names and values in render_attributes()."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 283,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 286,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 345,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value. */ if ( isset( $_GET['queued'] ) ) : ?><p class=\"is-ok\"><?php echo esc_html( sprintf( /* translators: %d: number of queued content items."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 346,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value. */ endif; ?>"
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 351,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value. */ if ( isset( $_GET['imported'] ) ) : ?><div class=\"notice notice-success inline\"><p><?php echo esc_html( sprintf( /* translators: %1$d: imported translations, %2$d: skipped entries."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 352,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value. */ endif; ?><?php PandaTranslate_Migration_Sources::render(); ?>"
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 447,
+    "rules": [
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "WordPress.DB.DirectDatabaseQuery.NoCaching"
+    ],
+    "reason": "Read-only schema existence check against the fixed plugin-owned table, bound through wpdb; schema changes must be visible immediately."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 537,
+    "rules": [
+      "WordPress.Security.EscapeOutput.OutputNotEscaped"
+    ],
+    "reason": "switcher_markup escapes every dynamic URL, attribute and label before returning the complete control."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 555,
+    "rules": [
+      "WordPress.Security.EscapeOutput.OutputNotEscaped"
+    ],
+    "reason": "Captured settings markup is escaped at each field; only a fixed internal field prefix is replaced."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 623,
+    "rules": [
+      "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound",
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Authenticated internal loopback uses a cryptographic one-time transient token; validate and consume it before collecting. A visitor selector alone cannot authorize writes. DONOTCACHEPAGE is the intentional WordPress/cache-plugin interoperability constant, not a new plugin-global name."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 828,
+    "rules": [
+      "WordPress.Security.EscapeOutput.OutputNotEscaped"
+    ],
+    "reason": "Complete switcher markup escapes dynamic values in switcher_markup; the position class is escaped here."
+  },
+  {
+    "file": "includes/class-pandatranslate-plugin.php",
+    "line": 919,
+    "rules": [
+      "WordPress.Security.NonceVerification.Recommended"
+    ],
+    "reason": "Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value."
+  },
+  {
+    "file": "includes/class-panda-number-format.php",
+    "line": 4,
+    "rules": [
+      "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound"
+    ],
+    "reason": "Shared Panda-family API with a class_exists guard; the Panda prefix is intentional and stable for companion plugins."
+  }
+]

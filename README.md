@@ -1,5 +1,5 @@
 # pandatranslate
-PandaTranslate — visual WordPress translation, language paths, switchers and builder elements.
+Panda Translate — visual WordPress translation, language paths, switchers and builder elements.
 
 ## Version 0.6.0
 

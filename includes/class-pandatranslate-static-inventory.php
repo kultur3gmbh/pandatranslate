@@ -36,6 +36,7 @@ final class PandaTranslate_Static_Inventory {
 	public static function store( $entry, $language, $native_locale = false ) {
 		$unit = array( 'key' => hash( 'sha256', 'gettext|' . $entry['domain'] . '|' . $entry['context'] . '|' . $entry['text'] ), 'source_hash' => hash( 'sha256', $entry['text'] ), 'source_html' => $entry['text'], 'source_kind' => 'gettext', 'source_domain' => $entry['domain'] );
 		$repo = new PandaTranslate_Repository(); if ( $repo->find( $unit['key'], $language ) ) return false;
+		// phpcs:ignore WordPress.WP.I18n -- Resolve collected third-party gettext entries in their original domain/context; these are not Panda Translate source labels.
 		$translated = $entry['context'] ? translate_with_gettext_context( $entry['text'], $entry['context'], $entry['domain'] ) : translate( $entry['text'], $entry['domain'] ); $native = $native_locale && $translated !== $entry['text'] && PandaTranslate_Strings::same_placeholders( $entry['text'], $translated );
 		$saved = $repo->save( $unit, $language, $native ? $translated : '', $native ? 'published' : 'untranslated', $native ? 'native-locale' : '' ); return is_wp_error( $saved ) ? $saved : true;
 	}

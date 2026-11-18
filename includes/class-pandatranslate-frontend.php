@@ -14,6 +14,7 @@ final class PandaTranslate_Frontend {
 		// Gettext also runs during plugin loading, before WordPress creates its query.
 		global $wp_query;
 		$query_language = is_object( $wp_query ) && is_callable( array( $wp_query, 'get' ) ) ? $wp_query->get( 'pt_lang' ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value.
 		$requested = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : sanitize_key( $query_language );
 		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] === $requested ) return $requested;
 		return '';
@@ -70,7 +71,7 @@ final class PandaTranslate_Frontend {
 		$home = wp_parse_url( home_url( '/' ) );
 		if ( isset( $parts['host'] ) && ( strtolower( $parts['host'] ) !== strtolower( $home['host'] ) || ( $parts['port'] ?? null ) !== ( $home['port'] ?? null ) ) ) return $url;
 		if ( ! isset( $parts['host'] ) && isset( $parts['scheme'] ) ) return $url;
-		$base = $base_url ?: ( ( $home['scheme'] ?? 'https' ) . '://' . $home['host'] . ( isset( $home['port'] ) ? ':' . $home['port'] : '' ) . ( $_SERVER['REQUEST_URI'] ?? self::home_path() . '/' ) );
+		$base = $base_url ?: ( ( $home['scheme'] ?? 'https' ) . '://' . $home['host'] . ( isset( $home['port'] ) ? ':' . $home['port'] : '' ) . esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? self::home_path() . '/' ) ) );
 		$base_parts = wp_parse_url( $base );
 		$path = $parts['path'] ?? ( isset( $parts['host'] ) ? '/' : '' );
 		if ( '' === $path || '/' !== substr( $path, 0, 1 ) ) {

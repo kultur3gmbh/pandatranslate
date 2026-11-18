@@ -1,15 +1,35 @@
-=== PandaTranslate ===
-Contributors: panda
+=== Panda Translate ===
+Contributors: kultur3gmbh
 Requires at least: 6.4
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.0
-License: Proprietary prototype
+Stable tag: 0.7.5
+License: GPL-3.0-only
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-PandaTranslate: visual WordPress translation with two languages, language paths, switchers, menus and page-builder elements.
+Panda Translate: visual WordPress translation with two languages, language paths, switchers, menus and page-builder elements.
 
-== Prototype usage ==
+== External services and project ownership ==
 
-Configure languages on PandaTranslate > Dashboard. Automatic translation has its own Translation menu, and Glossary has its own menu. The remaining settings are tabs under Settings. URL format is in Language switcher. Then use “Translate page” in the upper admin bar while viewing the desired page.
+Panda Translate is developed by Kultur3 GmbH as part of the PandaCosmo product family. Manual translation and the two-language base workflow require no PandaCosmo license or translation-provider account.
+
+Automatic translation and explicit connection tests use only the configured provider. Google Cloud Translation v2/v3 receives selected source text or protected markup, source/target language identifiers and authentication data; v3 also uses the configured project/location and Google OAuth service-account token exchange. Endpoints are translation.googleapis.com and oauth2.googleapis.com. See https://cloud.google.com/terms and https://policies.google.com/privacy .
+
+DeepL receives selected source text or protected markup, source/target language and requested formality through api-free.deepl.com or api.deepl.com, authenticated with the configured API key. See https://www.deepl.com/pro-license and https://www.deepl.com/privacy . Provider charges may apply. Saved translations are displayed locally without requesting another external translation for every visitor. Personalized customer and order values are excluded from automatic source collection.
+
+Collecting source pages can make requests to the current website. Browser-language recognition uses browser hints; country recognition uses available local server or WooCommerce geolocation data, without a separate external IP-lookup service initiated by Panda Translate. Explicit product-information links open only when followed. The separate GitHub distribution checks api.github.com and downloads authorized public assets from GitHub; this updater is excluded from the WordPress.org package. Standard WordPress plugin and translation update requests remain available.
+
+== Source code and translations ==
+
+The plugin source is included in this package. PHP, JavaScript and CSS are maintained directly; no compilation or minification step is required to run the plugin. The sources/ directory provides expanded readable copies of compact JavaScript helpers, including the shared Panda controls. sources/manifest.json maps each copy to its runtime file and records the runtime SHA-256. These copies are formatting-only equivalents, verified by comparing JavaScript syntax trees.
+
+To reproduce an expanded copy, use Prettier 3.6.2 with parser babel, singleQuote true, useTabs true and printWidth 100 on the corresponding assets/ file. No external source download is required to inspect or modify the included plugin. Shared controls retain the same runtime implementation across Panda products.
+
+The WordPress.org distribution is prepared for community translations through translate.wordpress.org. Existing PO/MO catalogs remain maintained for separate distributions and are omitted only from the WordPress.org package. Before a WordPress language pack is available, untranslated strings fall back to English.
+
+== Usage ==
+
+Configure languages on Panda Translate > Dashboard. Automatic translation has its own Translation menu, and Glossary has its own menu. The remaining settings are tabs under Settings. URL format is in Language switcher. Then use “Translate page” in the upper admin bar while viewing the desired page.
 
 The editor can also be opened manually by appending:
 
@@ -31,21 +51,41 @@ Translations use the selected API. Publication follows the Automatic translation
 
 The language switcher can be added to registered navigation locations, displayed as a floating menu, or inserted with `[pandatranslate_switcher]`.
 
-Settings > System status shows the authenticated Streamable HTTP endpoint. Use a dedicated WordPress administrator application password. Write and paid tools require `confirm=true`. When ContactPanda is active, PandaTranslate tools are also added to its central MCP endpoint. Royal MCP 1.5.11 or later automatically lists the same tools on its existing connection via royal_mcp_tools and royal_mcp_execute_tool_external. Royal authentication, read-only mode, drafts-only mode and connection restrictions remain in force; PandaTranslate additionally requires manage_options for every call. No additional connector or Royal dependency is required.
+Settings > System status shows the authenticated Streamable HTTP endpoint. Use a dedicated WordPress administrator application password. Write and paid tools require `confirm=true`. When ContactPanda is active, Panda Translate tools are also added to its central MCP endpoint. Royal MCP 1.5.11 or later automatically lists the same tools on its existing connection via royal_mcp_tools and royal_mcp_execute_tool_external. Royal authentication, read-only mode, drafts-only mode and connection restrictions remain in force; Panda Translate additionally requires manage_options for every call. No additional connector or Royal dependency is required.
 
 Editorial MCP workflow: discover pandatranslate_settings_get, search pandatranslate_translations_list with language/query/limit/offset, then read pandatranslate_translation_get. Keep the complete source unit and all [[PT:...]] inline placeholders. Send translated_text, language, unit_key, reviewed/published status, expected_revision from that read, and confirm=true to pandatranslate_translation_save. Stale revisions and concurrent changes fail instead of overwriting; successful writes return verified=true and a freshly read translation. API keys and credential files are never returned. Collected units only are searchable; use the visual editor or automatic collection to capture new source pages. Pagination uses next_offset; one final empty page can occur at an exact page boundary.
 
 Imported units have source_dictionary scope: publishing their correction can update identical source text across multiple pages. Existing page-specific manual translations take precedence. Conflicting dictionary translations are not chosen silently. Ordinary page units have unit scope. Drafts are not public. Menus are translated through collected text units, without changing their structure. pandatranslate_seo_get reads language-specific slug, SEO and social overrides and source Rank Math/Yoast values; editing those overrides remains available in the SEO metabox, not through MCP. Royal does not supply undo snapshots for external tools; retain the preceding read if a manual reversal is needed.
 
-Existing 0.4.x data and options are retained. Free enables the source language and one target language. Additional stored languages remain available after enabling licensed PandaTranslate Multilingual. SEO and WooCommerce integration are provided by that extension. No other Panda plugin is required. Existing imports are repaired on the next administrator backend visit when the original TranslatePress tables are still present. Only unchanged imported entries previously published in TranslatePress are restored to published status.
+Existing 0.4.x data and options are retained. Free enables the source language and one target language. Additional stored languages remain available after enabling licensed Panda Translate Multilingual. SEO and WooCommerce integration are provided by that extension. No other Panda plugin is required. Existing imports are repaired on the next administrator backend visit when the original TranslatePress tables are still present. Only unchanged imported entries previously published in TranslatePress are restored to published status.
 
 == Distribution and migration adapters ==
 
-Free updates use the public kultur3gmbh/pandatranslate GitHub releases and a checksum manifest. WordPress provides manual update checks and optional per-plugin automatic updates. Free requires no paid license. PandaTranslate Multilingual is included in the All-in bundle and requires only this base plugin.
+The WordPress.org distribution uses the standard WordPress.org update system. Separately distributed GitHub packages include their own public-release updater and checksum manifest. WordPress provides manual update checks and optional per-plugin automatic updates. Free requires no paid license. Panda Translate Multilingual is included in the All-in bundle and requires only this base plugin.
 
 The pandatranslate_migration_sources filter allows verified future import adapters to register label, detected and render callbacks. Adapters must enforce administrative capabilities, nonces, bounded batches and existing manual-translation protection. TranslatePress is the only supported built-in source in 0.5.0; no other importer is advertised as working. The Migration tab appears only for detected registered sources.
 
 == Changelog ==
+
+= 0.7.5 =
+* Shared compact checkbox and radio controls preserve inline labels, keyboard focus and responsive layout.
+
+
+= 0.7.4 =
+* Shared action alignment preserves readable labels and consistent icons in lists and dialogs.
+
+= 0.7.3 =
+* Unified PandaCosmo product presentation and shared controls.
+* Shared account and family integration improvements.
+
+
+= 0.7.2 =
+* Consistent PandaCosmo product names and cross-references; existing technical identifiers and saved data are retained.
+
+
+= 0.7.1 =
+* Prepare source documentation, internationalization and WordPress.org review compatibility.
+
 
 = 0.7.0 =
 * Separate manual, suggestion and automatic visitor language behavior from the detection source.

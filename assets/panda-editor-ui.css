@@ -16,3 +16,8 @@
 .panda-sequence-dragging .is-drop-before,.panda-sequence-dragging .is-drop-after{outline:0!important;border-top-color:inherit;border-bottom-color:inherit}
 .contactpanda-form-preview-field.is-drop-before:not(.is-drop-together){margin-top:48px!important;position:relative}.contactpanda-form-preview-field.is-drop-after:not(.is-drop-together){margin-bottom:48px!important;position:relative}
 .contactpanda-form-preview-field.is-drop-before:not(.is-drop-together)::before,.contactpanda-form-preview-field.is-drop-after:not(.is-drop-together)::after{content:"";position:absolute;left:0;right:0;height:38px;border:2px dashed #4253b5;background:rgba(66,83,181,.07);border-radius:5px;box-sizing:border-box}.contactpanda-form-preview-field.is-drop-before:not(.is-drop-together)::before{top:-46px}.contactpanda-form-preview-field.is-drop-after:not(.is-drop-together)::after{bottom:-46px}
+
+.panda-editor__devices { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.panda-editor__devices .button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; }
+.panda-editor__devices .button.is-active { color: #fff; background: #5c5c5c; border-color: #5c5c5c; }
+.panda-editor__devices .button:focus-visible { outline: 2px solid #5c5c5c; outline-offset: 2px; }

@@ -1,6 +1,11 @@
 (function () {
 	'use strict';
 	window.PandaTranslateRequest = {
+		query: function (value, parameters) {
+			var url = new URL(value, window.location.href);
+			Object.keys(parameters).forEach(function (key) { url.searchParams.set(key, parameters[key]); });
+			return url.href;
+		},
 		create: function (config) {
 			var refreshing = null;
 			function failure(code, label, status) {

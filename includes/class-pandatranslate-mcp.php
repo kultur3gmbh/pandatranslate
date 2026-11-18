@@ -18,7 +18,7 @@ final class PandaTranslate_MCP {
 
 	/** Native registry used by miniOrange and other WordPress Abilities transports. */
 	public static function register_ability_category() {
-		if ( function_exists( 'wp_register_ability_category' ) ) wp_register_ability_category( 'pandatranslate', array( 'label' => 'PandaTranslate', 'description' => 'Stored website translations and translation provider status.' ) );
+		if ( function_exists( 'wp_register_ability_category' ) ) wp_register_ability_category( 'pandatranslate', array( 'label' => 'Panda Translate', 'description' => 'Stored website translations and translation provider status.' ) );
 	}
 
 	public static function register_abilities() {
@@ -27,7 +27,7 @@ final class PandaTranslate_MCP {
 			$name = $tool['name'];
 			$read = ! empty( $tool['annotations']['readOnlyHint'] );
 			wp_register_ability( 'pandatranslate/' . str_replace( '_', '-', substr( $name, strlen( 'pandatranslate_' ) ) ) , array(
-				'label' => 'PandaTranslate: ' . str_replace( '_', ' ', substr( $name, strlen( 'pandatranslate_' ) ) ),
+				'label' => 'Panda Translate: ' . str_replace( '_', ' ', substr( $name, strlen( 'pandatranslate_' ) ) ),
 				'description' => $tool['description'], 'category' => 'pandatranslate', 'input_schema' => $tool['inputSchema'],
 				'permission_callback' => array( __CLASS__, 'allowed' ),
 				'execute_callback' => static function ( $input = array() ) use ( $name ) {
@@ -52,7 +52,7 @@ final class PandaTranslate_MCP {
 		$payload = $request->get_json_params();
 		if ( ! is_array( $payload ) ) return self::error( null, -32700, 'Parse error' );
 		$id = $payload['id'] ?? null; $method = sanitize_text_field( $payload['method'] ?? '' );
-		if ( 'initialize' === $method ) return self::result( $id, array( 'protocolVersion' => '2025-03-26', 'capabilities' => array( 'tools' => (object) array( 'listChanged' => false ) ), 'serverInfo' => array( 'name' => 'PandaTranslate', 'version' => PANDATRANSLATE_VERSION ), 'instructions' => __( 'Read tools are safe. Translation writes and paid Google requests require confirm=true.', 'pandatranslate' ) ) );
+		if ( 'initialize' === $method ) return self::result( $id, array( 'protocolVersion' => '2025-03-26', 'capabilities' => array( 'tools' => (object) array( 'listChanged' => false ) ), 'serverInfo' => array( 'name' => 'Panda Translate', 'version' => PANDATRANSLATE_VERSION ), 'instructions' => __( 'Read tools are safe. Translation writes and paid Google requests require confirm=true.', 'pandatranslate' ) ) );
 		if ( 'ping' === $method ) return self::result( $id, (object) array() );
 		if ( 'notifications/initialized' === $method ) return new WP_REST_Response( null, 202 );
 		if ( 'tools/list' === $method ) return self::result( $id, array( 'tools' => self::tools() ) );
@@ -95,13 +95,13 @@ final class PandaTranslate_MCP {
 		}
 		unset( $tool );
 		$tools[] = array( 'name' => 'pandatranslate_translation_get', 'description' => 'Read one complete source paragraph, existing translation, formatting placeholders and revision for a subsequent manual save. Use unit_key and language from translations_list.', 'inputSchema' => array( 'type' => 'object', 'required' => array( 'unit_key', 'language' ), 'properties' => array( 'unit_key' => array( 'type' => 'string' ), 'language' => array( 'type' => 'string' ) ) ), 'annotations' => array( 'readOnlyHint' => true ) );
-		$tools[] = array( 'name' => 'pandatranslate_seo_get', 'description' => 'Read language-specific PandaTranslate slug, SEO and social overrides for a post, with Rank Math/Yoast source values. Read only; change SEO overrides in the PandaTranslate SEO metabox.', 'inputSchema' => array( 'type' => 'object', 'required' => array( 'post_id', 'language' ), 'properties' => array( 'post_id' => array( 'type' => 'integer', 'minimum' => 1 ), 'language' => array( 'type' => 'string' ) ) ), 'annotations' => array( 'readOnlyHint' => true ) );
+		$tools[] = array( 'name' => 'pandatranslate_seo_get', 'description' => 'Read language-specific Panda Translate slug, SEO and social overrides for a post, with Rank Math/Yoast source values. Read only; change SEO overrides in the Panda Translate SEO metabox.', 'inputSchema' => array( 'type' => 'object', 'required' => array( 'post_id', 'language' ), 'properties' => array( 'post_id' => array( 'type' => 'integer', 'minimum' => 1 ), 'language' => array( 'type' => 'string' ) ) ), 'annotations' => array( 'readOnlyHint' => true ) );
 		if ( class_exists( 'PandaTranslate_Edition' ) && ! PandaTranslate_Edition::multilingual() ) $tools = array_values( array_filter( $tools, function ( $tool ) { return 'pandatranslate_seo_get' !== $tool['name']; } ) );
 		return $tools;
 	}
 
 	public static function call( $name, array $args ) {
-		if ( ! self::allowed() ) return new WP_Error( 'pandatranslate_forbidden', 'PandaTranslate requires manage_options permission.', array( 'status' => 403 ) );
+		if ( ! self::allowed() ) return new WP_Error( 'pandatranslate_forbidden', 'Panda Translate requires manage_options permission.', array( 'status' => 403 ) );
 		$repository = new PandaTranslate_Repository();
 		if ( 'pandatranslate_settings_get' === $name ) {
 			$s = PandaTranslate_Plugin::get_settings();
@@ -116,7 +116,7 @@ final class PandaTranslate_MCP {
 			$limit = min( 200, max( 1, absint( $args['limit'] ?? 50 ) ) ); $offset = min( 10000000, absint( $args['offset'] ?? 0 ) );
 			return array( 'translations' => $rows, 'offset' => $offset, 'next_offset' => count( $rows ) === $limit ? $offset + $limit : null );
 		}
-		if ( 'pandatranslate_seo_get' === $name ) { if ( class_exists( 'PandaTranslate_Edition' ) && ! PandaTranslate_Edition::multilingual() ) return new WP_Error( 'pandatranslate_multilingual_required', 'SEO requires PandaTranslate Multilingual.' ); return self::seo_get( $args ); }
+		if ( 'pandatranslate_seo_get' === $name ) { if ( class_exists( 'PandaTranslate_Edition' ) && ! PandaTranslate_Edition::multilingual() ) return new WP_Error( 'pandatranslate_multilingual_required', 'SEO requires Panda Translate Multilingual.' ); return self::seo_get( $args ); }
 		if ( in_array( $name, array( 'pandatranslate_translation_get', 'pandatranslate_translation_save', 'pandatranslate_google_translate' ), true ) ) {
 			$language = sanitize_key( $args['language'] ?? '' );
 			if ( ! self::target_allowed( $language ) ) return new WP_Error( 'pandatranslate_language', 'Select an active target language.', array( 'status' => 400 ) );
@@ -143,7 +143,7 @@ final class PandaTranslate_MCP {
 			if ( true !== ( $args['confirm'] ?? false ) ) return new WP_Error( 'confirmation_required', __( 'Set confirm to true to start the paid Google request.', 'pandatranslate' ) );
 			return PandaTranslate_Plugin::auto_translate_known( sanitize_text_field( $args['unit_key'] ?? '' ), sanitize_key( $args['language'] ?? '' ), sanitize_key( $args['api'] ?? '' ) );
 		}
-		return new WP_Error( 'unknown_tool', __( 'Unknown PandaTranslate tool.', 'pandatranslate' ) );
+		return new WP_Error( 'unknown_tool', __( 'Unknown Panda Translate tool.', 'pandatranslate' ) );
 	}
 
 	private static function target_allowed( $language ) {

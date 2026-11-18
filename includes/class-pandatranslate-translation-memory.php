@@ -15,7 +15,7 @@ final class PandaTranslate_Translation_Memory {
 			foreach ( $node->childNodes as $child ) if ( XML_TEXT_NODE === $child->nodeType ) $sources[] = $child->nodeValue;
 			foreach ( self::attributes( $node ) as $attribute ) $sources[] = $node->getAttribute( $attribute );
 		}
-		$hashes = array(); foreach ( $sources as $source ) foreach ( self::variants( $source ) as $variant ) if ( '' !== trim( strip_tags( $variant ) ) ) $hashes[hash( 'sha256', $variant )] = true;
+		$hashes = array(); foreach ( $sources as $source ) foreach ( self::variants( $source ) as $variant ) if ( '' !== trim( wp_strip_all_tags( $variant ) ) ) $hashes[hash( 'sha256', $variant )] = true;
 		foreach ( $repository->published_imports( $language, array_keys( $hashes ) ) as $row ) {
 			$key = self::canonical( $row['source_html'] );
 			if ( 'manual-dictionary' === ( $row['provider'] ?? '' ) ) {
@@ -45,11 +45,11 @@ final class PandaTranslate_Translation_Memory {
 	private function walk( $node ) {
 		if ( XML_ELEMENT_NODE === $node->nodeType ) {
 			if ( self::excluded( $node ) || $node->hasAttribute( 'data-pandatranslate-resolved' ) ) return;
-			foreach ( self::attributes( $node ) as $attribute ) { $value = $this->lookup( $node->getAttribute( $attribute ) ); if ( null !== $value ) $node->setAttribute( $attribute, html_entity_decode( strip_tags( $value ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ); }
+			foreach ( self::attributes( $node ) as $attribute ) { $value = $this->lookup( $node->getAttribute( $attribute ) ); if ( null !== $value ) $node->setAttribute( $attribute, html_entity_decode( wp_strip_all_tags( $value ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ); }
 			if ( self::inline_content( $node ) ) { $value = $this->lookup( self::inner( $node ) ); if ( null !== $value ) { self::replace_inner( $node, wp_kses_post( $value ) ); return; } }
 		}
 		foreach ( iterator_to_array( $node->childNodes ) as $child ) {
-			if ( XML_TEXT_NODE === $child->nodeType ) { $value = $this->lookup( $child->nodeValue ); if ( null !== $value ) { preg_match( '/^\s*/u', $child->nodeValue, $before ); preg_match( '/\s*$/u', $child->nodeValue, $after ); $child->nodeValue = $before[0] . html_entity_decode( strip_tags( $value ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) . $after[0]; } }
+			if ( XML_TEXT_NODE === $child->nodeType ) { $value = $this->lookup( $child->nodeValue ); if ( null !== $value ) { preg_match( '/^\s*/u', $child->nodeValue, $before ); preg_match( '/\s*$/u', $child->nodeValue, $after ); $child->nodeValue = $before[0] . html_entity_decode( wp_strip_all_tags( $value ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) . $after[0]; } }
 			else $this->walk( $child );
 		}
 	}

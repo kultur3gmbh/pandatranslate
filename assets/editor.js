@@ -59,7 +59,7 @@
 		var prepared = protect(original);
 		source.value = prepared.text; translation.value = prepared.text; status.value = 'untranslated'; message.textContent = '';
 		form.hidden = false; shell.querySelector('.pandatranslate-empty').hidden = true;
-		request(config.restUrl + '?key=' + encodeURIComponent(node.dataset.pandatranslateUnit) + '&language=' + encodeURIComponent(config.language)).then(function (row) {
+		request(window.PandaTranslateRequest.query(config.restUrl, {key: node.dataset.pandatranslateUnit, language: config.language})).then(function (row) {
 				if (selected !== node || selectionVersion !== selectionGeneration) return;
 				selectedRevision = row.revision || '';
 				if (row.source_html) {

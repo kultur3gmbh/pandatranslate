@@ -18,7 +18,8 @@ final class PandaTranslate_Migration {
 		$tp = (array) get_option( 'trp_settings', array() ); $source = $tp['default-language'] ?? '';
 		if ( ! $source ) { global $wpdb; foreach ( self::tables() as $table ) if ( preg_match( '/^([a-z]{2,3}_[a-z0-9]{2,8}(?:_formal)?)_/i', substr( $table, strlen( $wpdb->prefix . 'trp_dictionary_' ) ), $match ) ) { $source = $match[1]; break; } }
 		$normalize = function ( $locale ) { return preg_replace( '/_formal$/', '', PandaTranslate_Source_Language::normalized( $locale ) ); };
-		if ( $source && $normalize( $source ) !== $normalize( PandaTranslate_Source_Language::wordpress_locale() ) ) return new WP_Error( 'pandatranslate_migration_source', sprintf( __( 'TranslatePress source %1$s differs from WordPress source %2$s. Import stopped to prevent incorrect language assignments.', 'pandatranslate' ), $source, PandaTranslate_Source_Language::wordpress_locale() ) );
+		if ( $source && $normalize( $source ) !== $normalize( PandaTranslate_Source_Language::wordpress_locale() ) ) return new WP_Error( 'pandatranslate_migration_source', sprintf( /* translators: %1$s: TranslatePress source language, %2$s: WordPress source language. */
+		__( 'TranslatePress source %1$s differs from WordPress source %2$s. Import stopped to prevent incorrect language assignments.', 'pandatranslate' ), $source, PandaTranslate_Source_Language::wordpress_locale() ) );
 		return true;
 	}
 	/** Restore only untouched legacy imports that were public in TranslatePress. */
@@ -27,8 +28,9 @@ final class PandaTranslate_Migration {
 		global $wpdb; $destination = PandaTranslate_Repository::table(); $tables = self::tables(); if ( ! $tables ) return;
 		foreach ( $tables as $source ) {
 			$language = self::table_language( $source ); if ( ! $language ) continue;
-			$sql = "UPDATE {$destination} p INNER JOIN `{$source}` s ON p.unit_key = SHA2(CONCAT(%s,s.id,'|',s.original),256) AND p.target_language = %s SET p.status = 'published' WHERE p.provider = 'translatepress-import' AND p.status = 'reviewed' AND BINARY p.source_html = BINARY s.original AND BINARY p.translated_html = BINARY s.translated AND s.status IN (1,2)";
-			if ( false === $wpdb->query( $wpdb->prepare( $sql, 'translatepress|' . $source . '|', $language ) ) ) return;
+			$sql = "UPDATE %i p INNER JOIN %i s ON p.unit_key = SHA2(CONCAT(%s,s.id,'|',s.original),256) AND p.target_language = %s SET p.status = 'published' WHERE p.provider = 'translatepress-import' AND p.status = 'reviewed' AND BINARY p.source_html = BINARY s.original AND BINARY p.translated_html = BINARY s.translated AND s.status IN (1,2)";
+			// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- The fixed UPDATE statement above binds both table identifiers with %i and all comparison values with %s. Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
+			if ( false === $wpdb->query( $wpdb->prepare( $sql, $destination, $source, 'translatepress|' . $source . '|', $language ) ) ) return;
 		}
 		update_option( 'pandatranslate_import_publication_v1', 1, false );
 	}
@@ -52,12 +54,14 @@ final class PandaTranslate_Migration {
 		$signature = md5( wp_json_encode( PandaTranslate_Plugin::language_rows() ) );
 		if ( get_option( 'pandatranslate_migration_language_repair' ) === $signature ) return;
 		global $wpdb; $table = PandaTranslate_Repository::table();
-		$legacy = $wpdb->get_col( "SELECT DISTINCT target_language FROM {$table} WHERE provider = 'translatepress-import'" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
+		$legacy = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT target_language FROM %i WHERE provider = 'translatepress-import'", $table ) );
 		if ( $wpdb->last_error ) return;
 		foreach ( $legacy as $old ) {
 			$target = self::target_language( $old ); if ( ! $target || $old === $target ) continue;
 			// Preserve an existing target entry on a unique-key collision; never delete translations.
-			$result = $wpdb->query( $wpdb->prepare( "UPDATE {$table} AS legacy LEFT JOIN {$table} AS existing ON existing.unit_key = legacy.unit_key AND existing.target_language = %s SET legacy.target_language = %s WHERE legacy.target_language = %s AND legacy.provider = 'translatepress-import' AND existing.id IS NULL", $target, $target, $old ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
+			$result = $wpdb->query( $wpdb->prepare( "UPDATE %i AS legacy LEFT JOIN %i AS existing ON existing.unit_key = legacy.unit_key AND existing.target_language = %s SET legacy.target_language = %s WHERE legacy.target_language = %s AND legacy.provider = 'translatepress-import' AND existing.id IS NULL", $table, $table, $target, $target, $old ) );
 			if ( false === $result ) return;
 		}
 		$report = (array) get_option( self::REPORT_OPTION, array() ); $languages = array();
@@ -67,6 +71,7 @@ final class PandaTranslate_Migration {
 	}
 	public static function tables() {
 		global $wpdb; $like = $wpdb->esc_like( $wpdb->prefix . 'trp_dictionary_' ) . '%';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
 		$tables = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $like ) );
 		return array_values( array_filter( $tables, function ( $table ) use ( $wpdb ) { return 0 === strpos( $table, $wpdb->prefix . 'trp_dictionary_' ) && preg_match( '/^[A-Za-z0-9_]+$/', $table ); } ) );
 	}
@@ -74,7 +79,7 @@ final class PandaTranslate_Migration {
 		$totals = self::source_totals(); $count = array_sum( $totals );
 		$preflight = self::preflight();
 		if ( is_wp_error( $preflight ) ) echo '<div class="notice notice-warning inline"><p>' . esc_html( $preflight->get_error_message() ) . '</p><a href="' . esc_url( admin_url( 'admin.php?page=pandatranslate' ) ) . '">' . esc_html__( 'Dashboard', 'pandatranslate' ) . '</a></div>';
-		echo '<h2>' . esc_html__( 'TranslatePress migration', 'pandatranslate' ) . '</h2><p>' . esc_html__( 'Imports existing TranslatePress dictionary entries and preserves their publication status. Existing PandaTranslate entries are preserved.', 'pandatranslate' ) . '</p>';
+		echo '<h2>' . esc_html__( 'TranslatePress migration', 'pandatranslate' ) . '</h2><p>' . esc_html__( 'Imports existing TranslatePress dictionary entries and preserves their publication status. Existing Panda Translate entries are preserved.', 'pandatranslate' ) . '</p>';
 		echo '<div class="pandatranslate-status-row"><span>' . esc_html__( 'Found translations', 'pandatranslate' ) . '</span><strong>' . esc_html( number_format_i18n( $count ) ) . '</strong></div>';
 		if ( $count && ! is_wp_error( $preflight ) ) {
 			echo '<div data-migration data-total="' . esc_attr( $count ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_migration_batch' ) ) . '">';
@@ -88,7 +93,8 @@ final class PandaTranslate_Migration {
 	}
 	private static function source_totals() {
 		global $wpdb; $totals = array();
-		foreach ( self::tables() as $table ) { $language = self::table_language( $table ); if ( ! $language ) continue; $totals[ $language ] = ( $totals[ $language ] ?? 0 ) + (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$table}` WHERE translated <> ''" ); }
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
+		foreach ( self::tables() as $table ) { $language = self::table_language( $table ); if ( ! $language ) continue; $totals[ $language ] = ( $totals[ $language ] ?? 0 ) + (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE translated <> ''", $table ) ); }
 		return $totals;
 	}
 	private static function report_language_label( $language ) {
@@ -103,7 +109,8 @@ final class PandaTranslate_Migration {
 	private static function render_language_report( $source_totals ) {
 		$report = (array) get_option( self::REPORT_OPTION, array() ); $languages = (array) ( $report['languages'] ?? array() ); if ( ! $source_totals && ! $languages ) return;
 		echo '<section class="pandatranslate-migration-report"><h3>' . esc_html__( 'Migration status by language', 'pandatranslate' ) . '</h3>';
-		if ( ! empty( $report['completed_at'] ) ) echo '<p><small>' . esc_html( sprintf( __( 'Last completed migration: %s', 'pandatranslate' ), $report['completed_at'] ) ) . '</small></p>';
+		if ( ! empty( $report['completed_at'] ) ) echo '<p><small>' . esc_html( sprintf( /* translators: %s: completion date and time. */
+		__( 'Last completed migration: %s', 'pandatranslate' ), $report['completed_at'] ) ) . '</small></p>';
 		foreach ( array_unique( array_merge( array_keys( $source_totals ), array_keys( $languages ) ) ) as $language ) { $stats = wp_parse_args( $languages[ $language ] ?? array(), array( 'total' => $source_totals[ $language ] ?? 0, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 ) ); $total = max( (int) $stats['total'], (int) ( $source_totals[ $language ] ?? 0 ) ); $percent = $total ? min( 100, round( (int) $stats['processed'] / $total * 100 ) ) : 0; $name = self::report_language_label( $language ); echo '<article class="pandatranslate-migration-language" data-migration-language="' . esc_attr( $language ) . '"><div><strong>' . esc_html( PandaTranslate_Features::flag( $language ) . ' ' . $name ) . '</strong><b data-language-percent>' . esc_html( $percent ) . '%</b></div><span class="pandatranslate-progress-track"><i data-language-bar style="width:' . esc_attr( $percent ) . '%"></i></span><p><span>' . esc_html__( 'Processed', 'pandatranslate' ) . ': <strong data-language-processed>' . esc_html( number_format_i18n( $stats['processed'] ) ) . '</strong> / ' . esc_html( number_format_i18n( $total ) ) . '</span><span>' . esc_html__( 'Imported', 'pandatranslate' ) . ': <strong data-language-imported>' . esc_html( number_format_i18n( $stats['imported'] ) ) . '</strong></span><span>' . esc_html__( 'Skipped', 'pandatranslate' ) . ': <strong data-language-skipped>' . esc_html( number_format_i18n( $stats['skipped'] ) ) . '</strong></span><span>' . esc_html__( 'Errors', 'pandatranslate' ) . ': <strong data-language-errors>' . esc_html( number_format_i18n( $stats['errors'] ) ) . '</strong></span></p></article>'; }
 		echo '</section>';
 	}
@@ -120,7 +127,8 @@ final class PandaTranslate_Migration {
 		$table = $tables[ $table_index ];
 		$language = self::table_language( $table );
 		if ( ! $language ) wp_send_json_error( array( 'message' => __( 'Invalid target language.', 'pandatranslate' ) ), 400 );
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,original,translated,status FROM `{$table}` WHERE translated <> '' AND id > %d ORDER BY id ASC LIMIT %d", $last_id, self::BATCH_SIZE ), ARRAY_A );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,original,translated,status FROM %i WHERE translated <> '' AND id > %d ORDER BY id ASC LIMIT %d", $table, $last_id, self::BATCH_SIZE ), ARRAY_A );
 		$repository = new PandaTranslate_Repository();
 		$imported = 0; $skipped = 0; $errors = 0;
 		foreach ( $rows as $row ) {
@@ -141,8 +149,14 @@ final class PandaTranslate_Migration {
 		$preflight = self::preflight(); if ( is_wp_error( $preflight ) ) wp_die( esc_html( $preflight->get_error_message() ) );
 		foreach ( self::tables() as $table ) {
 			$language = self::table_language( $table ); if ( ! $language ) continue;
-			$rows = $wpdb->get_results( "SELECT id,original,translated,status FROM `{$table}` WHERE translated <> ''", ARRAY_A );
-			foreach ( $rows as $row ) { $key = hash( 'sha256', 'translatepress|' . $table . '|' . $row['id'] . '|' . $row['original'] ); if ( $repository->find( $key, $language ) ) { ++$skipped; continue; } $unit = array( 'key' => $key, 'source_hash' => hash( 'sha256', $row['original'] ), 'source_html' => $row['original'] ); is_wp_error( $repository->save( $unit, $language, $row['translated'], self::imported_status( $row['status'] ), 'translatepress-import' ) ) ? ++$skipped : ++$imported; }
+			$last_id = 0;
+			do {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
+				$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,original,translated,status FROM %i WHERE translated <> '' AND id > %d ORDER BY id ASC LIMIT %d", $table, $last_id, self::BATCH_SIZE ), ARRAY_A );
+				if ( $wpdb->last_error ) wp_die( esc_html__( 'The translation could not be stored.', 'pandatranslate' ) );
+				foreach ( $rows as $row ) { $key = hash( 'sha256', 'translatepress|' . $table . '|' . $row['id'] . '|' . $row['original'] ); if ( $repository->find( $key, $language ) ) { ++$skipped; continue; } $unit = array( 'key' => $key, 'source_hash' => hash( 'sha256', $row['original'] ), 'source_html' => $row['original'] ); is_wp_error( $repository->save( $unit, $language, $row['translated'], self::imported_status( $row['status'] ), 'translatepress-import' ) ) ? ++$skipped : ++$imported; }
+				if ( $rows ) $last_id = (int) end( $rows )['id'];
+			} while ( count( $rows ) === self::BATCH_SIZE );
 		}
 		wp_safe_redirect( add_query_arg( array( 'page' => 'pandatranslate', 'tab' => 'migration', 'imported' => $imported, 'skipped' => $skipped ), admin_url( 'admin.php' ) ) ); exit;
 	}

@@ -178,7 +178,7 @@ msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:346
 msgid ""
-"Available with PandaTranslate Multilingual. Free requires no paid license."
+"Available with Panda Translate Multilingual. Free requires no paid license."
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:539
@@ -328,7 +328,7 @@ msgid ""
 "Country detection uses server GeoIP data or an existing local WooCommerce "
 "geolocation database. Without a country match, the combined mode uses the "
 "browser language. No external geolocation service is contacted by "
-"PandaTranslate."
+"Panda Translate."
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:371
@@ -655,7 +655,7 @@ msgstr ""
 #: includes/class-pandatranslate-migration.php:77
 msgid ""
 "Imports existing TranslatePress dictionary entries and preserves their "
-"publication status. Existing PandaTranslate entries are preserved."
+"publication status. Existing Panda Translate entries are preserved."
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:256
@@ -705,7 +705,7 @@ msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:376
 msgid ""
-"Language detection requires a valid PandaTranslate Multilingual license. The "
+"Language detection requires a valid Panda Translate Multilingual license. The "
 "selection is retained until activation."
 msgstr ""
 
@@ -958,7 +958,7 @@ msgstr ""
 #: includes/class-pandatranslate-features.php:109
 #: includes/class-pandatranslate-plugin.php:291
 #: includes/class-pandatranslate-plugin.php:672
-msgid "PandaTranslate"
+msgid "Panda Translate"
 msgstr ""
 
 #: includes/class-pandatranslate-beaver-menu-module.php:5
@@ -968,19 +968,19 @@ msgstr ""
 #: includes/class-pandatranslate-features.php:192
 #: includes/class-pandatranslate-features.php:193
 #: includes/class-pandatranslate-features.php:194
-msgid "PandaTranslate language menu"
+msgid "Panda Translate language menu"
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:293
-msgid "PandaTranslate needs attention."
+msgid "Panda Translate needs attention."
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:295
-msgid "PandaTranslate settings"
+msgid "Panda Translate settings"
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:364
-msgid "PandaTranslate — no license required."
+msgid "Panda Translate — no license required."
 msgstr ""
 
 #: includes/class-pandatranslate-text-admin.php:53
@@ -1769,7 +1769,7 @@ msgid "URL parameters (?pt_lang=en)"
 msgstr ""
 
 #: includes/class-pandatranslate-mcp.php:146
-msgid "Unknown PandaTranslate tool."
+msgid "Unknown Panda Translate tool."
 msgstr ""
 
 #: includes/class-pandatranslate-family-ui.php:13
@@ -1814,7 +1814,7 @@ msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:386
 msgid ""
-"With Royal MCP 1.5.11 or later active, PandaTranslate tools appear on the "
+"With Royal MCP 1.5.11 or later active, Panda Translate tools appear on the "
 "existing Royal connection. Royal permissions and read-only restrictions also "
 "apply."
 msgstr ""
@@ -1833,7 +1833,7 @@ msgid ""
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:428
-msgid "Words (PandaTranslate count)"
+msgid "Words (Panda Translate count)"
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:415
@@ -1851,4 +1851,78 @@ msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:672
 msgid "translated"
+msgstr ""
+
+
+msgid "Upgrade to All-in"
+msgstr ""
+
+msgid "All-in offer"
+msgstr ""
+
+msgid "Preview upgrade and credit"
+msgstr ""
+
+msgid "Review All-in upgrade"
+msgstr ""
+
+msgid "Annual price excluding tax"
+msgstr ""
+
+msgid "Unused paid period credit excluding tax"
+msgstr ""
+
+msgid "Amount due excluding tax"
+msgstr ""
+
+msgid "Taxes are calculated at payment. The existing key and website connections are retained. The new twelve-month period begins after successful payment. The previous subscription, if present, is replaced; future renewals use the full annual price."
+msgstr ""
+
+msgid "I confirm the upgrade, credit and new annual period."
+msgstr ""
+
+msgid "Continue to payment"
+msgstr ""
+
+msgid "The license changed after the upgrade was quoted. The paid upgrade requires review; no license was changed."
+msgstr ""
+
+msgid "This upgrade is unavailable or the quote has changed. Please request a new preview or contact support."
+msgstr ""
+
+msgid "This website is blocked for this key. Unblocking permits a new activation; it does not reserve a slot or reactivate the website."
+msgstr ""
+
+msgid "Blocking disconnects this website and frees its slot. A changed installation identifier cannot reactivate it until you unblock it. Other websites and licenses are unaffected."
+msgstr ""
+
+msgid "I confirm this website change for all products on this key."
+msgstr ""
+
+msgid "Unblock website"
+msgstr ""
+
+msgid "Block website"
+msgstr ""
+
+msgid "This website is blocked for this license key."
+msgstr ""
+
+msgid "This website is blocked for this key. Unblock it in the customer account before activating it again."
+msgstr ""
+
+msgid "Extended duplicate review"
+msgstr ""
+
+msgid "Same full name, including reordered names or academic titles — review required"
+msgstr ""
+
+msgid "Plus also compares complete names without requiring a postal code, including reordered words and leading academic titles. Identical names can belong to different people: review each candidate and every conflicting value before confirming a merge. The full inventory is scanned in bounded batches; nothing is merged automatically."
+msgstr ""
+
+msgid "The database upgrade could not be completed. Existing data has been retained."
+msgstr ""
+
+
+msgid "Website suspended; local data retained"
 msgstr ""
