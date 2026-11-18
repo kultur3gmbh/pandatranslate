@@ -15,7 +15,18 @@ final class PandaTranslate_Text_Admin {
 	public static function listing( $request ) {
 		$filters = array(); foreach ( array( 'language', 'status', 'query', 'source_kind', 'source_domain', 'offset' ) as $key ) $filters[$key] = $request[$key] ?? ''; $filters['limit'] = 50;
 		$rows = ( new PandaTranslate_Repository() )->list_rows( $filters );
-		foreach ( $rows as &$row ) { $row['revision'] = PandaTranslate_Repository::revision( $row ); $row['source_text'] = PandaTranslate_Inline_Protector::protect( $row['source_html'] )['text']; $row['translated_text'] = PandaTranslate_Inline_Protector::protect( $row['translated_html'] )['text']; }
+		$javascript = (array) get_option( PandaTranslate_JavaScript_Inventory::OPTION, array() );
+		foreach ( $rows as &$row ) { $entry = $javascript[$row['unit_key']] ?? null; $row['source_details'] = '';
+			if ( is_array( $entry ) ) {
+				$context = $entry['original_context'] ?? $entry['context'];
+				if ( $context ) $row['source_details'] = sprintf( __( 'Context: %s', 'pandatranslate' ), $context );
+				if ( isset( $entry['category'] ) ) {
+					$locale = $row['target_language']; foreach ( PandaTranslate_Plugin::language_rows() as $language ) if ( $language['code'] === $row['target_language'] ) $locale = $language['locale'];
+					$sample = PandaTranslate_JavaScript_Inventory::categories( $locale )[$entry['category']] ?? '';
+					$row['source_details'] .= ( $context ? ' · ' : '' ) . sprintf( __( 'Plural form: %1$s (example: %2$s)', 'pandatranslate' ), $entry['category'], $sample );
+				}
+			}
+			$row['revision'] = PandaTranslate_Repository::revision( $row ); $row['source_text'] = PandaTranslate_Inline_Protector::protect( $row['source_html'] )['text']; $row['translated_text'] = PandaTranslate_Inline_Protector::protect( $row['translated_html'] )['text']; }
 		return rest_ensure_response( $rows );
 	}
 	public static function save( $request ) {

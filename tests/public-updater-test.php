@@ -17,7 +17,7 @@ function wp_remote_retrieve_response_code($r) { return $r['code']; }
 function wp_remote_retrieve_header($r, $k) { return $r['headers'][$k] ?? ''; }
 function wp_parse_url($x) { return parse_url($x); }
 function wp_safe_remote_get($url, $args) { return array('code'=>200, 'body'=>json_encode($GLOBALS['responses'][$url] ?? array())); }
-require dirname( __DIR__ ) . '/includes/class-panda-public-updater.php';
+require dirname( __DIR__ ) . '/tools/github/class-panda-public-updater.php';
 function ensure($condition, $message) { if (!$condition) throw new RuntimeException($message); }
 function fixture($prefix, $version, $id, $draft = false) {
  return array('tag_name'=>$prefix.$version, 'draft'=>$draft, 'prerelease'=>false, 'assets'=>array(
@@ -28,7 +28,7 @@ function fixture($prefix, $version, $id, $draft = false) {
 $api = 'https://api.github.com/repos/kultur3gmbh/panda-seasons';
 $responses[$api.'/releases?per_page=100'] = array(fixture('v','0.9.3',1),fixture('free-v','9.0.0',3,true),fixture('free-v','0.3.0',5),fixture('free-v','0.3.1',7));
 $responses[$api.'/releases/assets/8'] = array('slug'=>'panda-seasons-free','version'=>'0.3.1','requires'=>'6.4','requires_php'=>'7.4','tested'=>'6.4','sha256'=>str_repeat('a',64));
-$updater = new Panda_Public_Updater('panda-seasons-free/panda-seasons-free.php','0.3.0',array('repository'=>'kultur3gmbh/panda-seasons','slug'=>'panda-seasons-free','tag_prefix'=>'free-v','name'=>'Panda Seasons Free','asset_prefix'=>'panda-seasons-free','manifest'=>'panda-seasons-free-update.json'));
+$updater = new Panda_Public_Updater('panda-seasons-free/panda-seasons-free.php','0.3.0',array('repository'=>'kultur3gmbh/panda-seasons','slug'=>'panda-seasons-free','tag_prefix'=>'free-v','name'=>'Panda Seasons Lite','asset_prefix'=>'panda-seasons-free','manifest'=>'panda-seasons-free-update.json'));
 $release = $updater->release(true);
 ensure(!is_wp_error($release) && $release['version']==='0.3.1','Free release must ignore Full, older versions and drafts');
 $result = $updater->updates((object)array('checked'=>array('panda-seasons-free/panda-seasons-free.php'=>'0.3.0')));
@@ -51,7 +51,7 @@ ensure($updater->source('/tmp/other-plugin/','/tmp/',null,array('plugin'=>'other
 $translateApi='https://api.github.com/repos/kultur3gmbh/pandatranslate';
 $responses[$translateApi.'/releases/latest']=array('tag_name'=>'v0.6.3','draft'=>false,'prerelease'=>false,'assets'=>array(array('id'=>21,'name'=>'pandatranslate-0.6.3.zip','size'=>100,'state'=>'uploaded'),array('id'=>22,'name'=>'pandatranslate-update.json','size'=>100,'state'=>'uploaded')));
 $responses[$translateApi.'/releases/assets/22']=array('slug'=>'pandatranslate','version'=>'0.6.3','requires'=>'6.4','requires_php'=>'7.4','sha256'=>str_repeat('c',64));
-$translate=new Panda_Public_Updater('pandatranslate/pandatranslate.php','0.6.2',array('repository'=>'kultur3gmbh/pandatranslate','slug'=>'pandatranslate','name'=>'PandaTranslate','asset_prefix'=>'pandatranslate','manifest'=>'pandatranslate-update.json'));
+$translate=new Panda_Public_Updater('pandatranslate/pandatranslate.php','0.6.2',array('repository'=>'kultur3gmbh/pandatranslate','slug'=>'pandatranslate','name'=>'Panda Translate','asset_prefix'=>'pandatranslate','manifest'=>'pandatranslate-update.json'));
 $result=$translate->updates((object)array('checked'=>array('pandatranslate/pandatranslate.php'=>'0.6.2')));
 ensure($result->response['pandatranslate/pandatranslate.php']->new_version==='0.6.3','Offer the correct newer Translate version alongside other products');
 $cacheKey='panda_public_release_'.md5('kultur3gmbh/pandatranslate:pandatranslate');

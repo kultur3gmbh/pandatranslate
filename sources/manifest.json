@@ -16,7 +16,7 @@
     {
       "runtime": "assets/editor.js",
       "readable": "sources/editor.js",
-      "sha256": "866b7c151c7f988be6a5b6039ce3cc7bba3c75c84e57a7f09c5afc58d8d47c79",
+      "sha256": "e9beb0965fd110a205d83b05ff5951808eca925d97a601f9b655e00a8a3f3389",
       "syntax_tree_matches": true
     },
     {
@@ -46,7 +46,7 @@
     {
       "runtime": "assets/texts.js",
       "readable": "sources/texts.js",
-      "sha256": "fb35a67a9c426d336bbbb7c1e81340cc28a537e595fa59c4d9a493add0d34a5a",
+      "sha256": "f3f30149e17be21cb883b3bc5379659e45d9a4b101b5858aa3159a36a412d700",
       "syntax_tree_matches": true
     }
   ]

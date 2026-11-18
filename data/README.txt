@@ -1,0 +1,1 @@
+Plural categories and representative numbers: Unicode CLDR 48 supplemental/plurals.xml. Runtime category selection uses Intl.PluralRules for the selected website locale; no formula is evaluated. Unicode License V3 in UNICODE-LICENSE.txt. Source: https://github.com/unicode-org/cldr/blob/release-48/common/supplemental/plurals.xml

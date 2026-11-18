@@ -627,7 +627,11 @@ final class PandaTranslate_Plugin {
 
 	public function transform_page( $html ) {
 		$language = $this->target_language();
-		if ( ! apply_filters( 'pandatranslate_capture_allowed', true ) ) return class_exists( 'PandaTranslate_Frontend' ) ? PandaTranslate_Frontend::transform( $html, $language ) : $html;
+		if ( ! apply_filters( 'pandatranslate_capture_allowed', true ) ) {
+			// Only already-published public header/footer text is displayed; never collect a transaction page.
+			if ( class_exists( 'PandaTranslate_Frontend' ) ) return PandaTranslate_Frontend::transform( PandaTranslate_Frontend::public_chrome( $html, $language ), $language );
+			return $html;
+		}
 		$editing  = $this->is_editing();
 		if ( ! $editing && ! $this->scan_mode && '' === $language ) return class_exists( 'PandaTranslate_Frontend' ) ? PandaTranslate_Frontend::transform( $html, '' ) : $html;
 		$request_path = is_singular() ? wp_parse_url( get_permalink( get_queried_object_id() ), PHP_URL_PATH ) : wp_parse_url( home_url( '/' . PandaTranslate_Routing::original_path( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ) ) ), PHP_URL_PATH );

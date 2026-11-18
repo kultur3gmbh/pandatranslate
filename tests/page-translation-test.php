@@ -12,6 +12,7 @@ function wp_strip_all_tags( $text ) { return strip_tags( $text ); }
 function wp_kses_post( $text ) { return $text; }
 function get_query_var( $key ) { return 'en'; }
 function current_user_can() { return true; }
+function wp_verify_nonce( $value, $action ) { return 'synthetic-editor-nonce' === $value && 'pandatranslate_editor' === $action; }
 function apply_filters( $hook, $value ) { return $value; }
 final class Page_Repository {
 	public $row = null; public $writes = array(); public $corrected = false;
@@ -37,6 +38,11 @@ $result = $plugin->transform_page( $html );
 check( false, false !== strpos( $result, 'Unpublished manual draft' ) );
 check( false, false !== strpos( $result, 'Hello world' ) );
 $repository->row = null; $_GET['pandatranslate'] = 'edit';
+$plugin->transform_page( $html );
+check( 0, count( $repository->writes ) );
+$_GET['_pt_editor_nonce'] = 'invalid'; $plugin->transform_page( $html );
+check( 0, count( $repository->writes ) );
+$_GET['_pt_editor_nonce'] = 'synthetic-editor-nonce';
 $plugin->transform_page( $html );
 check( 1, count( $repository->writes ) );
 check( 'Hello world', $repository->writes[0][2] );

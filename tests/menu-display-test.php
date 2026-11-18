@@ -1,4 +1,5 @@
 <?php
+function wp_strip_all_tags($text){return strip_tags($text);}
 // Model the initialized WordPress query used by normal frontend requests.
 $wp_query = new class { public function get($key) { return get_query_var($key); } };
 define( 'ABSPATH', __DIR__ );

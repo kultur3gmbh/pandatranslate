@@ -1,12 +1,13 @@
 <?php
+function wp_strip_all_tags($text){return strip_tags($text);}
 define('ABSPATH',__DIR__); define('ARRAY_A','ARRAY_A');
-function get_option($k){return 3;}
+function get_option($k){return 4;}
 class DB {public function prepare($q,...$args){return $q;}public function get_results($q,$format){global $rows;$result=array();foreach($rows as $key=>$row){$row['unit_key']=$key;$result[]=$row;}return $result;}} $wpdb=new DB();
 $admin=false;$rows=array();$saves=0;
 function is_admin(){global $admin;return $admin;}function current_user_can($cap){return true;}function __( $s,$d){return $s;}
 class PandaTranslate_Frontend{public static function current_language(){return 'de';}}
 class PandaTranslate_Edition{public static function allows_language($l){return $l==='de';}}
-class PandaTranslate_Repository{public static function table(){return 'wp_units';}public function find($key,$language){global $rows;return $rows[$key]??null;} public function save($unit,$language,$value,$status){global $saves;$saves++;}}
+class PandaTranslate_Repository{const SCHEMA_VERSION=4;public static function table(){return 'wp_units';}public function find($key,$language){global $rows;return $rows[$key]??null;} public function save($unit,$language,$value,$status){global $saves;$saves++;}}
 require_once __DIR__.'/../includes/class-pandatranslate-strings.php';
 $key=hash('sha256','gettext|woocommerce||Email: %s');$rows[$key]=array('status'=>'published','translated_html'=>'E-Mail: %d');$key=hash('sha256','gettext|theme|button|Send');$rows[$key]=array('status'=>'published','translated_html'=>'Senden');
 $key=hash('sha256','gettext|woocommerce||Order %s');$rows[$key]=array('status'=>'published','translated_html'=>'Bestellung %s');

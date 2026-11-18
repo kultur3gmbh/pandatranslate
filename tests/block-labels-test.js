@@ -1,0 +1,12 @@
+'use strict';
+const vm=require('vm'),fs=require('fs'),assert=require('assert').strict;
+const filters={},catalog={locale:'ru',plain:{woocommerce:{Cart:'Warenkorb'}},context:{woocommerce:{menu:{Cart:'Menü-Warenkorb'}}},plural:{woocommerce:[{context:'',singular:'%d item',plural:'%d items',forms:{one:'%d товар',few:'%d товара',many:'%d товаров',other:'%d товара'}},{context:'cart',singular:'One product',plural:'Many products',forms:{one:'ONE',few:'FEW',many:'MANY'}}]}};
+vm.runInNewContext(fs.readFileSync(__dirname+'/../assets/block-labels.js','utf8'),{Intl,window:{PandaTranslateBlockLabels:catalog,wp:{hooks:{addFilter(name,namespace,fn){filters[name]=fn;}}}}});
+assert.equal(filters['i18n.gettext']('Cart','Cart','woocommerce'),'Warenkorb');assert.equal(filters['i18n.gettext']('Cart','Cart','other'),'Cart');assert.equal(filters['i18n.gettext']('Private name','Private name','woocommerce'),'Private name');
+assert.equal(filters['i18n.gettext_with_context']('Cart','Cart','menu','woocommerce'),'Menü-Warenkorb');assert.equal(filters['i18n.gettext_with_context']('Cart','Cart','unknown','woocommerce'),'Cart');
+for(const [n,expected] of [[1,'%d товар'],[2,'%d товара'],[5,'%d товаров'],[21,'%d товар'],[1.5,'%d товара']])assert.equal(filters['i18n.ngettext']('NATIVE','%d item','%d items',n,'woocommerce'),expected);
+assert.equal(filters['i18n.ngettext_with_context']('NATIVE','One product','Many products',2,'cart','woocommerce'),'FEW');assert.equal(filters['i18n.ngettext_with_context']('NATIVE','One product','Many products',2,'other','woocommerce'),'NATIVE');
+assert.equal(filters['i18n.ngettext']('NATIVE','Unknown','Unknowns',2,'woocommerce'),'NATIVE');
+catalog.locale='ar';const arabic={};vm.runInNewContext(fs.readFileSync(__dirname+'/../assets/block-labels.js','utf8'),{Intl,window:{PandaTranslateBlockLabels:{locale:'ar',plain:{},context:{},plural:{woocommerce:[{context:'',singular:'item',plural:'items',forms:{zero:'ZERO',one:'ONE',two:'TWO',few:'FEW',many:'MANY',other:'OTHER'}}]}},wp:{hooks:{addFilter(k,n,f){arabic[k]=f;}}}}});
+for(const [n,v] of [[0,'ZERO'],[1,'ONE'],[2,'TWO'],[3,'FEW'],[11,'MANY'],[100,'OTHER']])assert.equal(arabic['i18n.ngettext']('NATIVE','item','items',n,'woocommerce'),v);
+console.log('JS gettext: exact domain/context, Russian/Arabic plural categories, decimal counts, native fallback and private values unchanged: ok');

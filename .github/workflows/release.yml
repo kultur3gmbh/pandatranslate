@@ -1,4 +1,4 @@
-name: Verify and build PandaTranslate
+name: Verify and build Panda Translate
 on:
   push:
     branches: [main]
@@ -23,6 +23,8 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y gettext
       - run: bash tools/check.sh
       - run: python3 tools/build-release.py
+        env:
+          PANDA_OUTPUT_DIR: dist
       - uses: actions/upload-artifact@v4
         with:
           name: pandatranslate-package
@@ -32,4 +34,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "PandaTranslate ${GITHUB_REF_NAME#v}" --notes-file readme.txt --latest
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "Panda Translate ${GITHUB_REF_NAME#v}" --notes-file readme.txt --latest

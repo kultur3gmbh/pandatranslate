@@ -6,3 +6,16 @@ for test in tests/*-test.php; do php -d zend.assertions=1 -d assert.exception=1 
 for file in assets/*.js; do node --check "$file"; done
 for test in tests/*-test.js; do node "$test"; done
 for file in languages/*.po; do msgfmt --check "$file" -o /dev/null; done
+
+if [[ "${PANDATRANSLATE_TEST_WARNING_REGRESSIONS:-}" == "1" ]]; then
+  php tests/warning-regressions-integration.php
+  php tests/migration-batches-integration.php
+fi
+
+if [[ "${PANDATRANSLATE_TEST_WOO_SYSTEM_PAGES:-}" == "1" ]]; then
+  php tests/woocommerce-system-pages-integration.php
+fi
+
+if [[ "${PANDATRANSLATE_TEST_WOO_SYSTEM_PAGES:-}" == "1" ]]; then
+  php tests/javascript-inventory-integration.php
+fi

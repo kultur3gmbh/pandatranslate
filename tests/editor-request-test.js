@@ -7,9 +7,15 @@ function fixture(replies) {
  const calls = [], config = {nonce:'oldnonce00',nonceUrl:'https://site.test/wp-admin/admin-ajax.php?action=rest-nonce',i18n:{requestNetworkError:'Reload and check saved results.',requestSessionError:'Sign in again.',requestOriginError:'Different origin.',requestResponseError:'Unexpected response.'}};
  const window = {location:{href:'https://site.test/fr/?pandatranslate=edit',origin:'https://site.test'}};
  vm.runInNewContext(fs.readFileSync(__dirname+'/../assets/editor-request.js','utf8'),{window,URL,fetch:async (url,options)=>{calls.push({url,options}); const reply=replies.shift();if(reply instanceof Error)throw reply;return reply;}});
- return {calls,config,request:window.PandaTranslateRequest.create(config)};
+ return {calls,config,query:window.PandaTranslateRequest.query,request:window.PandaTranslateRequest.create(config)};
 }
 (async () => {
+ const queryFixture=fixture([]);
+ for(const endpoint of ['https://site.test/?rest_route=/pandatranslate/v1/unit','https://site.test/index.php?rest_route=/pandatranslate/v1/unit','https://site.test/wp-json/pandatranslate/v1/unit']) {
+  const built=new URL(queryFixture.query(endpoint,{key:'synthetic-key',language:'de-formal'}));
+  assert.equal(built.searchParams.get('key'),'synthetic-key');assert.equal(built.searchParams.get('language'),'de-formal');
+  if(endpoint.includes('rest_route='))assert.equal(built.searchParams.get('rest_route'),'/pandatranslate/v1/unit');
+ }
  let f=fixture([response(403,{code:'rest_cookie_invalid_nonce',message:'Expired'}),response(200,'newnonce00'),response(200,{status:'published'})]);
  assert.equal((await f.request('/wp-json/pandatranslate/v1/unit/auto',{key:'unit'})).status,'published');
  assert.equal(f.calls.length,3);assert.equal(f.calls[1].options.method,undefined);assert.equal(f.calls[2].options.headers['X-WP-Nonce'],'newnonce00');assert.equal(f.calls[0].options.body,f.calls[2].options.body);

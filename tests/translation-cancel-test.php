@@ -7,7 +7,7 @@ function set_transient($key,$value,$ttl){global $flags;$flags[$key]=array($value
 class DB {
  public $options='wp_options';
  public function prepare($sql,...$args){return array($sql,$args);}
- public function get_var($q){global $flags;if(is_string($q))return 5;list($sql,$args)=$q;if(strpos($sql,'v.option_value')!==false){$key=substr($args[1],strlen('_transient_'));$entry=$flags[$key]??null;return $entry&&$entry[1]>time()?$entry[0]:null;}return 5;}
+ public function get_var($q){global $flags;if(is_string($q))return 5;list($sql,$args)=$q;if(strpos($sql,'v.option_value')!==false){$key=substr($args[3],strlen('_transient_'));$entry=$flags[$key]??null;return $entry&&$entry[1]>time()?$entry[0]:null;}return 5;}
  public function get_results($q,$format){return array_map(function($id){return array('id'=>$id,'unit_key'=>'unit-'.$id);},range(1,5));}
 }
 $wpdb=new DB();

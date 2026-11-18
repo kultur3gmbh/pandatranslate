@@ -2,7 +2,7 @@
     'use strict';
     var dictionary = window.PandaTranslateDynamic && window.PandaTranslateDynamic.dictionary;
     if (!dictionary) return;
-    var excluded = '#wpadminbar,.pandatranslate-panel,.pandatranslate-switcher,.pandatranslate-menu-link,[translate="no"],[data-no-translation],.notranslate,script,style,textarea,input,select,code,pre,[contenteditable="true"],.woocommerce-checkout,.woocommerce-cart,.woocommerce-MyAccount-content';
+    var excluded = '#wpadminbar,.pandatranslate-panel,.pandatranslate-switcher,.pandatranslate-menu-link,[translate="no"],[data-no-translation],.notranslate,.trp-no-translation,script,style,textarea,input,select,code,pre,[contenteditable="true"],.woocommerce-checkout,.woocommerce-cart,.woocommerce-MyAccount-content';
     var observer, queue = new Set(), scheduled = false;
     function translate(root) {
         if (!root || !root.isConnected || (root.nodeType === 1 && root.closest(excluded))) return;

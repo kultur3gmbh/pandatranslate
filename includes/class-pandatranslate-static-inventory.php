@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/class-pandatranslate-javascript-inventory.php';
 
 /** Parse literal gettext calls; never execute source files or inspect customer/order data. */
 final class PandaTranslate_Static_Inventory {
@@ -29,15 +30,19 @@ final class PandaTranslate_Static_Inventory {
 		$files = array(); foreach ( array_unique( $roots ) as $root ) {
 			if ( is_file( $root ) ) { $files[] = $root; continue; } if ( ! is_dir( $root ) ) continue;
 			$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS ) );
-			foreach ( $iterator as $file ) if ( $file->isFile() && ! $file->isLink() && 'php' === $file->getExtension() && $file->getSize() <= 512000 && ! preg_match( '#/(?:vendor|node_modules|tests|\.git)/#', $file->getPathname() ) ) $files[] = $file->getPathname();
+			foreach ( $iterator as $file ) if ( $file->isFile() && ! $file->isLink() && in_array( strtolower( $file->getExtension() ), array( 'php', 'js', 'mjs' ), true ) && $file->getSize() <= ( 'php' === $file->getExtension() ? 512000 : 2097152 ) && ! preg_match( '#/(?:vendor|node_modules|tests|\.git)/#', $file->getPathname() ) ) $files[] = $file->getPathname();
 		}
 		sort( $files ); return array_values( array_unique( $files ) );
 	}
 	public static function store( $entry, $language, $native_locale = false ) {
 		$unit = array( 'key' => hash( 'sha256', 'gettext|' . $entry['domain'] . '|' . $entry['context'] . '|' . $entry['text'] ), 'source_hash' => hash( 'sha256', $entry['text'] ), 'source_html' => $entry['text'], 'source_kind' => 'gettext', 'source_domain' => $entry['domain'] );
 		$repo = new PandaTranslate_Repository(); if ( $repo->find( $unit['key'], $language ) ) return false;
-		// phpcs:ignore WordPress.WP.I18n -- Resolve collected third-party gettext entries in their original domain/context; these are not Panda Translate source labels.
-		$translated = $entry['context'] ? translate_with_gettext_context( $entry['text'], $entry['context'], $entry['domain'] ) : translate( $entry['text'], $entry['domain'] ); $native = $native_locale && $translated !== $entry['text'] && PandaTranslate_Strings::same_placeholders( $entry['text'], $translated );
+		// phpcs:ignore WordPress.WP.I18n -- Third-party literal text/domain/context, not Panda source labels.
+		if ( isset( $entry['category'] ) ) {
+			$context = $entry['original_context'];
+			$translated = $context ? _nx( $entry['singular'], $entry['plural'], $entry['sample'], $context, $entry['domain'] ) : _n( $entry['singular'], $entry['plural'], $entry['sample'], $entry['domain'] );
+		} else $translated = $entry['context'] ? translate_with_gettext_context( $entry['text'], $entry['context'], $entry['domain'] ) : translate( $entry['text'], $entry['domain'] );
+		$native = $native_locale && ( ! isset( $entry['sample'] ) || is_int( $entry['sample'] ) ) && $translated !== $entry['text'] && PandaTranslate_Strings::same_placeholders( $entry['text'], $translated );
 		$saved = $repo->save( $unit, $language, $native ? $translated : '', $native ? 'published' : 'untranslated', $native ? 'native-locale' : '' ); return is_wp_error( $saved ) ? $saved : true;
 	}
 	public static function batch( $request ) {
@@ -49,10 +54,13 @@ final class PandaTranslate_Static_Inventory {
 		foreach ( $files as $file ) {
 			$source = is_readable( $file ) ? file_get_contents( $file ) : false;
 			if ( false === $source ) { $job['errors']++; $job['cursor']++; continue; }
-			$entries = self::literals( $source );
+			$javascript = in_array( strtolower( pathinfo( $file, PATHINFO_EXTENSION ) ), array( 'js', 'mjs' ), true );
+			$entries = $javascript ? PandaTranslate_JavaScript_Inventory::literals( $source ) : self::literals( $source );
 			foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] !== PandaTranslate_Plugin::get_settings()['source_language'] ) {
+				$localized_entries = $javascript ? PandaTranslate_JavaScript_Inventory::expand( $entries, $row['locale'] ) : $entries;
+				if ( $javascript ) PandaTranslate_JavaScript_Inventory::remember( $localized_entries );
 				$switched = switch_to_locale( $row['locale'] );
-				try { foreach ( $entries as $entry ) { $saved = self::store( $entry, $row['code'], $switched || get_locale() === $row['locale'] ); if ( is_wp_error( $saved ) ) $job['errors']++; elseif ( $saved ) $job['created']++; } } finally { if ( $switched ) restore_previous_locale(); }
+				try { foreach ( $localized_entries as $entry ) { $saved = self::store( $entry, $row['code'], $switched || get_locale() === $row['locale'] ); if ( is_wp_error( $saved ) ) $job['errors']++; elseif ( $saved ) $job['created']++; } } finally { if ( $switched ) restore_previous_locale(); }
 			}
 			$job['cursor']++;
 		}

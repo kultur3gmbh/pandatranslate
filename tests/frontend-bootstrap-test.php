@@ -11,7 +11,7 @@ class PandaTranslate_Plugin {
  }
 }
 class PandaTranslate_Edition {public static function allows_language($l){return true;}}
-class PandaTranslate_Repository {}
+class PandaTranslate_Repository {const SCHEMA_VERSION=4;}
 require __DIR__.'/../includes/class-pandatranslate-frontend.php';
 require __DIR__.'/../includes/class-pandatranslate-strings.php';
 assert(PandaTranslate_Frontend::current_language()==='');

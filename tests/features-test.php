@@ -1,4 +1,5 @@
 <?php
+function wp_strip_all_tags($text){return strip_tags($text);}
 class WP_Error { private $code; public function __construct($code){$this->code=$code;} public function get_error_code(){return $this->code;} }
 function __( $text ) { return $text; }
 function sanitize_key( $key ) { return preg_replace('/[^a-z0-9_-]/','',strtolower((string)$key)); }

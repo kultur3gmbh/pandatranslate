@@ -15,6 +15,8 @@ function get_permalink( $id ) { global $permalinks; return home_url( $permalinks
 function get_post_meta( $id, $key, $single ) { global $meta; return $meta[$key] ?? ''; }
 function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
 function wp_unslash( $text ) { return $text; }
+// Ordinary URI fixtures only; WordPress supplies URL sanitization in integration.
+function esc_url_raw( $text ) { return $text; }
 function home_url( $path = '' ) { global $home; return $home . $path; }
 function user_trailingslashit( $path ) { return rtrim( $path, '/' ) . '/'; }
 function add_query_arg( $args, $url ) { return $url . '?' . http_build_query( $args ); }
@@ -75,3 +77,18 @@ PandaTranslate_Routing::resolve_translated_slug( $wp ); check( false, isset( $wp
 echo "static homepage remains the same for language paths and query URLs; search, direct posts and blog home preserved: ok\n";
 
 check('flag_code', PandaTranslate_Plugin::defaults()['switcher_label_mode']);
+
+// Editor CSRF tokens stay out of public language-switcher URLs.
+$before_request = $_SERVER['REQUEST_URI']; $before_singular = $singular; $before_url_mode = $stored['url_mode'];
+$_SERVER['REQUEST_URI'] = '/?pandatranslate=edit&_pt_editor_nonce=syntheticnonce&category=music';
+$singular = false;
+foreach ( array( 'path', 'query' ) as $url_mode ) {
+ $stored['url_mode'] = $url_mode;
+ $url = PandaTranslate_Routing::url( 'en' );
+ check( false, strpos( $url, '_pt_editor_nonce' ) );
+ check( false, strpos( $url, 'pandatranslate=edit' ) );
+ check( true, false !== strpos( $url, 'category=music' ) );
+}
+echo "Public language links preserve search filters without forwarding editor tokens: ok\n";
+
+$_SERVER['REQUEST_URI'] = $before_request; $singular = $before_singular; $stored['url_mode'] = $before_url_mode;

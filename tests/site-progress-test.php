@@ -3,6 +3,8 @@ require __DIR__.'/bootstrap.php';
 $options=array();$scheduled=array();
 function get_option($key,$default=array()){global $options;return $options[$key]??$default;}
 function update_option($key,$value,$autoload=false){global $options;$options[$key]=$value;}
+function add_option($key,$value,$deprecated='', $autoload=false){global $options;if(array_key_exists($key,$options))return false;$options[$key]=$value;return true;}
+function delete_option($key){global $options;unset($options[$key]);return true;}
 function wp_generate_uuid4(){static $i=0;return 'fixture-job-'.++$i;}
 function wp_clear_scheduled_hook($hook,$args) {global $scheduled;$scheduled=array_values(array_filter($scheduled,function($event)use($hook,$args){return $event!==array($hook,$args);}));}
 function wp_schedule_single_event($time,$hook,$args){global $scheduled;$scheduled[]=array($hook,$args);}

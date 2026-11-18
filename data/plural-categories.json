@@ -1,0 +1,961 @@
+{
+  "af": {
+    "one": 1,
+    "other": 0
+  },
+  "ak": {
+    "one": 0,
+    "other": 2
+  },
+  "am": {
+    "one": 0,
+    "other": 2
+  },
+  "an": {
+    "one": 1,
+    "other": 0
+  },
+  "ar": {
+    "few": 3,
+    "many": 11,
+    "one": 1,
+    "other": 100,
+    "two": 2,
+    "zero": 0
+  },
+  "ars": {
+    "few": 3,
+    "many": 11,
+    "one": 1,
+    "other": 100,
+    "two": 2,
+    "zero": 0
+  },
+  "as": {
+    "one": 0,
+    "other": 2
+  },
+  "asa": {
+    "one": 1,
+    "other": 0
+  },
+  "ast": {
+    "one": 1,
+    "other": 0
+  },
+  "az": {
+    "one": 1,
+    "other": 0
+  },
+  "bal": {
+    "one": 1,
+    "other": 0
+  },
+  "be": {
+    "few": 2,
+    "many": 0,
+    "one": 1,
+    "other": 0.1
+  },
+  "bem": {
+    "one": 1,
+    "other": 0
+  },
+  "bez": {
+    "one": 1,
+    "other": 0
+  },
+  "bg": {
+    "one": 1,
+    "other": 0
+  },
+  "bho": {
+    "one": 0,
+    "other": 2
+  },
+  "blo": {
+    "one": 1,
+    "other": 2,
+    "zero": 0
+  },
+  "bm": {
+    "other": 0
+  },
+  "bn": {
+    "one": 0,
+    "other": 2
+  },
+  "bo": {
+    "other": 0
+  },
+  "br": {
+    "few": 3,
+    "many": 1000000,
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "brx": {
+    "one": 1,
+    "other": 0
+  },
+  "bs": {
+    "few": 2,
+    "one": 1,
+    "other": 0
+  },
+  "ca": {
+    "many": 1000000,
+    "one": 1,
+    "other": 0
+  },
+  "ce": {
+    "one": 1,
+    "other": 0
+  },
+  "ceb": {
+    "one": 0,
+    "other": 4
+  },
+  "cgg": {
+    "one": 1,
+    "other": 0
+  },
+  "chr": {
+    "one": 1,
+    "other": 0
+  },
+  "ckb": {
+    "one": 1,
+    "other": 0
+  },
+  "cs": {
+    "few": 2,
+    "many": 0.1,
+    "one": 1,
+    "other": 0
+  },
+  "csw": {
+    "one": 0,
+    "other": 2
+  },
+  "cv": {
+    "one": 1,
+    "other": 2,
+    "zero": 0
+  },
+  "cy": {
+    "few": 3,
+    "many": 6,
+    "one": 1,
+    "other": 4,
+    "two": 2,
+    "zero": 0
+  },
+  "da": {
+    "one": 1,
+    "other": 0
+  },
+  "de": {
+    "one": 1,
+    "other": 0
+  },
+  "doi": {
+    "one": 0,
+    "other": 2
+  },
+  "dsb": {
+    "few": 3,
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "dv": {
+    "one": 1,
+    "other": 0
+  },
+  "dz": {
+    "other": 0
+  },
+  "ee": {
+    "one": 1,
+    "other": 0
+  },
+  "el": {
+    "one": 1,
+    "other": 0
+  },
+  "en": {
+    "one": 1,
+    "other": 0
+  },
+  "eo": {
+    "one": 1,
+    "other": 0
+  },
+  "es": {
+    "many": 1000000,
+    "one": 1,
+    "other": 0
+  },
+  "et": {
+    "one": 1,
+    "other": 0
+  },
+  "eu": {
+    "one": 1,
+    "other": 0
+  },
+  "fa": {
+    "one": 0,
+    "other": 2
+  },
+  "ff": {
+    "one": 0,
+    "other": 2
+  },
+  "fi": {
+    "one": 1,
+    "other": 0
+  },
+  "fil": {
+    "one": 0,
+    "other": 4
+  },
+  "fo": {
+    "one": 1,
+    "other": 0
+  },
+  "fr": {
+    "many": 1000000,
+    "one": 0,
+    "other": 2
+  },
+  "fur": {
+    "one": 1,
+    "other": 0
+  },
+  "fy": {
+    "one": 1,
+    "other": 0
+  },
+  "ga": {
+    "few": 3,
+    "many": 7,
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "gd": {
+    "few": 3,
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "gl": {
+    "one": 1,
+    "other": 0
+  },
+  "gsw": {
+    "one": 1,
+    "other": 0
+  },
+  "gu": {
+    "one": 0,
+    "other": 2
+  },
+  "guw": {
+    "one": 0,
+    "other": 2
+  },
+  "gv": {
+    "few": 0,
+    "many": 0.1,
+    "one": 1,
+    "other": 3,
+    "two": 2
+  },
+  "ha": {
+    "one": 1,
+    "other": 0
+  },
+  "haw": {
+    "one": 1,
+    "other": 0
+  },
+  "he": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "hi": {
+    "one": 0,
+    "other": 2
+  },
+  "hnj": {
+    "other": 0
+  },
+  "hr": {
+    "few": 2,
+    "one": 1,
+    "other": 0
+  },
+  "hsb": {
+    "few": 3,
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "hu": {
+    "one": 1,
+    "other": 0
+  },
+  "hy": {
+    "one": 0,
+    "other": 2
+  },
+  "ia": {
+    "one": 1,
+    "other": 0
+  },
+  "id": {
+    "other": 0
+  },
+  "ie": {
+    "one": 1,
+    "other": 0
+  },
+  "ig": {
+    "other": 0
+  },
+  "ii": {
+    "other": 0
+  },
+  "in": {
+    "other": 0
+  },
+  "io": {
+    "one": 1,
+    "other": 0
+  },
+  "is": {
+    "one": 1,
+    "other": 0
+  },
+  "it": {
+    "many": 1000000,
+    "one": 1,
+    "other": 0
+  },
+  "iu": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "iw": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "ja": {
+    "other": 0
+  },
+  "jbo": {
+    "other": 0
+  },
+  "jgo": {
+    "one": 1,
+    "other": 0
+  },
+  "ji": {
+    "one": 1,
+    "other": 0
+  },
+  "jmc": {
+    "one": 1,
+    "other": 0
+  },
+  "jv": {
+    "other": 0
+  },
+  "jw": {
+    "other": 0
+  },
+  "ka": {
+    "one": 1,
+    "other": 0
+  },
+  "kab": {
+    "one": 0,
+    "other": 2
+  },
+  "kaj": {
+    "one": 1,
+    "other": 0
+  },
+  "kcg": {
+    "one": 1,
+    "other": 0
+  },
+  "kde": {
+    "other": 0
+  },
+  "kea": {
+    "other": 0
+  },
+  "kk": {
+    "one": 1,
+    "other": 0
+  },
+  "kkj": {
+    "one": 1,
+    "other": 0
+  },
+  "kl": {
+    "one": 1,
+    "other": 0
+  },
+  "km": {
+    "other": 0
+  },
+  "kn": {
+    "one": 0,
+    "other": 2
+  },
+  "ko": {
+    "other": 0
+  },
+  "kok": {
+    "one": 0,
+    "other": 2
+  },
+  "kok_Latn": {
+    "one": 0,
+    "other": 2
+  },
+  "ks": {
+    "one": 1,
+    "other": 0
+  },
+  "ksb": {
+    "one": 1,
+    "other": 0
+  },
+  "ksh": {
+    "one": 1,
+    "other": 2,
+    "zero": 0
+  },
+  "ku": {
+    "one": 1,
+    "other": 0
+  },
+  "kw": {
+    "few": 3,
+    "many": 21,
+    "one": 1,
+    "other": 4,
+    "two": 2,
+    "zero": 0
+  },
+  "ky": {
+    "one": 1,
+    "other": 0
+  },
+  "lag": {
+    "one": 1,
+    "other": 2,
+    "zero": 0
+  },
+  "lb": {
+    "one": 1,
+    "other": 0
+  },
+  "lg": {
+    "one": 1,
+    "other": 0
+  },
+  "lij": {
+    "one": 1,
+    "other": 0
+  },
+  "lkt": {
+    "other": 0
+  },
+  "lld": {
+    "many": 1000000,
+    "one": 1,
+    "other": 0
+  },
+  "ln": {
+    "one": 0,
+    "other": 2
+  },
+  "lo": {
+    "other": 0
+  },
+  "lt": {
+    "few": 2,
+    "many": 0.1,
+    "one": 1,
+    "other": 0
+  },
+  "lv": {
+    "one": 1,
+    "other": 2,
+    "zero": 0
+  },
+  "mas": {
+    "one": 1,
+    "other": 0
+  },
+  "mg": {
+    "one": 0,
+    "other": 2
+  },
+  "mgo": {
+    "one": 1,
+    "other": 0
+  },
+  "mk": {
+    "one": 1,
+    "other": 0
+  },
+  "ml": {
+    "one": 1,
+    "other": 0
+  },
+  "mn": {
+    "one": 1,
+    "other": 0
+  },
+  "mo": {
+    "few": 0,
+    "one": 1,
+    "other": 20
+  },
+  "mr": {
+    "one": 1,
+    "other": 0
+  },
+  "ms": {
+    "other": 0
+  },
+  "mt": {
+    "few": 0,
+    "many": 11,
+    "one": 1,
+    "other": 20,
+    "two": 2
+  },
+  "my": {
+    "other": 0
+  },
+  "nah": {
+    "one": 1,
+    "other": 0
+  },
+  "naq": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "nb": {
+    "one": 1,
+    "other": 0
+  },
+  "nd": {
+    "one": 1,
+    "other": 0
+  },
+  "ne": {
+    "one": 1,
+    "other": 0
+  },
+  "nl": {
+    "one": 1,
+    "other": 0
+  },
+  "nn": {
+    "one": 1,
+    "other": 0
+  },
+  "nnh": {
+    "one": 1,
+    "other": 0
+  },
+  "no": {
+    "one": 1,
+    "other": 0
+  },
+  "nqo": {
+    "other": 0
+  },
+  "nr": {
+    "one": 1,
+    "other": 0
+  },
+  "nso": {
+    "one": 0,
+    "other": 2
+  },
+  "ny": {
+    "one": 1,
+    "other": 0
+  },
+  "nyn": {
+    "one": 1,
+    "other": 0
+  },
+  "om": {
+    "one": 1,
+    "other": 0
+  },
+  "or": {
+    "one": 1,
+    "other": 0
+  },
+  "os": {
+    "one": 1,
+    "other": 0
+  },
+  "osa": {
+    "other": 0
+  },
+  "pa": {
+    "one": 0,
+    "other": 2
+  },
+  "pap": {
+    "one": 1,
+    "other": 0
+  },
+  "pcm": {
+    "one": 0,
+    "other": 2
+  },
+  "pl": {
+    "few": 2,
+    "many": 0,
+    "one": 1,
+    "other": 0.1
+  },
+  "prg": {
+    "one": 1,
+    "other": 2,
+    "zero": 0
+  },
+  "ps": {
+    "one": 1,
+    "other": 0
+  },
+  "pt": {
+    "many": 1000000,
+    "one": 0,
+    "other": 2
+  },
+  "pt_PT": {
+    "one": 1,
+    "many": 1000000,
+    "other": 0
+  },
+  "rm": {
+    "one": 1,
+    "other": 0
+  },
+  "ro": {
+    "few": 0,
+    "one": 1,
+    "other": 20
+  },
+  "rof": {
+    "one": 1,
+    "other": 0
+  },
+  "root": {
+    "other": 0
+  },
+  "ru": {
+    "few": 2,
+    "many": 0,
+    "one": 1,
+    "other": 0.1
+  },
+  "rwk": {
+    "one": 1,
+    "other": 0
+  },
+  "sah": {
+    "other": 0
+  },
+  "saq": {
+    "one": 1,
+    "other": 0
+  },
+  "sat": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "sc": {
+    "one": 1,
+    "other": 0
+  },
+  "scn": {
+    "many": 1000000,
+    "one": 1,
+    "other": 0
+  },
+  "sd": {
+    "one": 1,
+    "other": 0
+  },
+  "sdh": {
+    "one": 1,
+    "other": 0
+  },
+  "se": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "seh": {
+    "one": 1,
+    "other": 0
+  },
+  "ses": {
+    "other": 0
+  },
+  "sg": {
+    "other": 0
+  },
+  "sgs": {
+    "few": 3,
+    "many": 0.1,
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "sh": {
+    "few": 2,
+    "one": 1,
+    "other": 0
+  },
+  "shi": {
+    "few": 2,
+    "one": 0,
+    "other": 11
+  },
+  "si": {
+    "one": 0,
+    "other": 2
+  },
+  "sk": {
+    "few": 2,
+    "many": 0.1,
+    "one": 1,
+    "other": 0
+  },
+  "sl": {
+    "few": 3,
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "sma": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "smi": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "smj": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "smn": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "sms": {
+    "one": 1,
+    "other": 0,
+    "two": 2
+  },
+  "sn": {
+    "one": 1,
+    "other": 0
+  },
+  "so": {
+    "one": 1,
+    "other": 0
+  },
+  "sq": {
+    "one": 1,
+    "other": 0
+  },
+  "sr": {
+    "few": 2,
+    "one": 1,
+    "other": 0
+  },
+  "ss": {
+    "one": 1,
+    "other": 0
+  },
+  "ssy": {
+    "one": 1,
+    "other": 0
+  },
+  "st": {
+    "one": 1,
+    "other": 0
+  },
+  "su": {
+    "other": 0
+  },
+  "sv": {
+    "one": 1,
+    "other": 0
+  },
+  "sw": {
+    "one": 1,
+    "other": 0
+  },
+  "syr": {
+    "one": 1,
+    "other": 0
+  },
+  "ta": {
+    "one": 1,
+    "other": 0
+  },
+  "te": {
+    "one": 1,
+    "other": 0
+  },
+  "teo": {
+    "one": 1,
+    "other": 0
+  },
+  "th": {
+    "other": 0
+  },
+  "ti": {
+    "one": 0,
+    "other": 2
+  },
+  "tig": {
+    "one": 1,
+    "other": 0
+  },
+  "tk": {
+    "one": 1,
+    "other": 0
+  },
+  "tl": {
+    "one": 0,
+    "other": 4
+  },
+  "tn": {
+    "one": 1,
+    "other": 0
+  },
+  "to": {
+    "other": 0
+  },
+  "tpi": {
+    "other": 0
+  },
+  "tr": {
+    "one": 1,
+    "other": 0
+  },
+  "ts": {
+    "one": 1,
+    "other": 0
+  },
+  "tzm": {
+    "one": 0,
+    "other": 2
+  },
+  "ug": {
+    "one": 1,
+    "other": 0
+  },
+  "uk": {
+    "few": 2,
+    "many": 0,
+    "one": 1,
+    "other": 0.1
+  },
+  "ur": {
+    "one": 1,
+    "other": 0
+  },
+  "uz": {
+    "one": 1,
+    "other": 0
+  },
+  "ve": {
+    "one": 1,
+    "other": 0
+  },
+  "vec": {
+    "many": 1000000,
+    "one": 1,
+    "other": 0
+  },
+  "vi": {
+    "other": 0
+  },
+  "vo": {
+    "one": 1,
+    "other": 0
+  },
+  "vun": {
+    "one": 1,
+    "other": 0
+  },
+  "wa": {
+    "one": 0,
+    "other": 2
+  },
+  "wae": {
+    "one": 1,
+    "other": 0
+  },
+  "wo": {
+    "other": 0
+  },
+  "xh": {
+    "one": 1,
+    "other": 0
+  },
+  "xog": {
+    "one": 1,
+    "other": 0
+  },
+  "yi": {
+    "one": 1,
+    "other": 0
+  },
+  "yo": {
+    "other": 0
+  },
+  "yue": {
+    "other": 0
+  },
+  "zh": {
+    "other": 0
+  },
+  "zu": {
+    "one": 0,
+    "other": 2
+  }
+}

@@ -83,6 +83,7 @@ final class PandaTranslate_Media {
 		$doc = new DOMDocument(); $previous = libxml_use_internal_errors( true ); $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $masked['html'] ); libxml_clear_errors(); libxml_use_internal_errors( $previous );
 		$xpath = new DOMXPath( $doc ); $changed = false; $occurrences = array();
 		foreach ( $xpath->query( '//img[not(ancestor::*[@id="wpadminbar" or @translate="no" or @data-no-translation or contains(@class,"pandatranslate-") or contains(@class,"notranslate")])]' ) as $node ) {
+			if ( PandaTranslate_HTML::translation_excluded( $node ) ) continue;
 			$original = $node->getAttribute( 'data-src' ) ?: $node->getAttribute( 'data-lazy-src' ) ?: $node->getAttribute( 'src' );
 			$identity = preg_match( '/(?:^|\s)wp-image-([0-9]+)(?:\s|$)/', $node->getAttribute( 'class' ), $match ) ? 'attachment:' . $match[1] : $original;
 			$position = $occurrences[$identity] ?? 0; $occurrences[$identity] = $position + 1;

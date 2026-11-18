@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/class-pandatranslate-javascript-inventory.php';
 
 /** Static gettext strings and published dynamic text. No visitor data or on-render API calls. */
 final class PandaTranslate_Strings {
@@ -78,8 +79,39 @@ final class PandaTranslate_Strings {
 		}
 		return array_diff_key( $dictionary, $ambiguous );
 	}
+	/** Reconstruct JavaScript contexts/plural categories only from the authenticated static source registry. */
+	public static function script_catalog( $language ) {
+		$empty = array( 'plain'=>array(), 'context'=>array(), 'plural'=>array(), 'locale'=>'en' );
+		foreach ( class_exists( 'PandaTranslate_Plugin' ) ? PandaTranslate_Plugin::language_rows() : array() as $row ) if ( $row['code'] === $language ) $empty['locale'] = str_replace( '_', '-', preg_replace( '/_formal$/', '', $row['locale'] ) );
+		if ( PandaTranslate_Repository::SCHEMA_VERSION !== (int) get_option( 'pandatranslate_schema' ) ) return $empty;
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Published static gettext labels only, never cart/customer/order values.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT unit_key,source_html,source_domain,translated_html FROM %i WHERE target_language = %s AND source_kind = 'gettext' AND status = 'published' AND translated_html <> '' LIMIT 10000", PandaTranslate_Repository::table(), $language ), ARRAY_A );
+		$registry = (array) get_option( PandaTranslate_JavaScript_Inventory::OPTION, array() ); $catalog = $empty;
+		foreach ( $rows as $row ) {
+			$source = $row['source_html']; $value = $row['translated_html']; $domain = $row['source_domain'];
+			if ( $source !== wp_strip_all_tags( $source ) || $value !== wp_strip_all_tags( $value ) || ! self::same_placeholders( $source, $value ) ) continue;
+			if ( hash_equals( hash( 'sha256', 'gettext|' . $domain . '||' . $source ), $row['unit_key'] ) ) { $catalog['plain'][$domain][$source] = $value; continue; }
+			$entry = $registry[$row['unit_key']] ?? null;
+			if ( ! is_array( $entry ) || ( $entry['text'] ?? null ) !== $source || ( $entry['domain'] ?? null ) !== $domain || ! hash_equals( PandaTranslate_JavaScript_Inventory::key( $entry ), $row['unit_key'] ) ) continue;
+			if ( isset( $entry['category'], $entry['singular'], $entry['plural'], $entry['original_context'] ) ) {
+				$id = hash( 'sha256', json_encode( array( $entry['original_context'], $entry['singular'], $entry['plural'] ) ) );
+				if ( ! isset( $catalog['plural'][$domain][$id] ) ) $catalog['plural'][$domain][$id] = array( 'context'=>$entry['original_context'], 'singular'=>$entry['singular'], 'plural'=>$entry['plural'], 'forms'=>array() );
+				$catalog['plural'][$domain][$id]['forms'][$entry['category']] = $value;
+			} elseif ( '' !== $entry['context'] ) $catalog['context'][$domain][$entry['context']][$source] = $value;
+		}
+		foreach ( $catalog['plural'] as &$groups ) $groups = array_values( $groups ); unset( $groups );
+		return $catalog;
+	}
+	public static function block_labels( $language ) { return self::script_catalog( $language )['plain']; }
 	public static function assets() {
 		$language = PandaTranslate_Frontend::current_language(); if ( ! $language ) return;
+		$labels = self::script_catalog( $language );
+		if ( $labels['plain'] || $labels['context'] || $labels['plural'] ) {
+			// wp-hooks loads before wp-i18n and WooCommerce block bundles.
+			wp_enqueue_script( 'wp-hooks' );
+			wp_add_inline_script( 'wp-hooks', 'window.PandaTranslateBlockLabels=' . wp_json_encode( $labels, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';' . file_get_contents( __DIR__ . '/../assets/block-labels.js' ), 'after' );
+		}
 		wp_enqueue_script( 'pandatranslate-dynamic', PANDATRANSLATE_URL . 'assets/dynamic.js', array(), PANDATRANSLATE_VERSION, true );
 		wp_localize_script( 'pandatranslate-dynamic', 'PandaTranslateDynamic', array( 'dictionary' => self::dictionary( $language ) ) );
 	}

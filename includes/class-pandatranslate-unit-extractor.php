@@ -50,11 +50,11 @@ final class PandaTranslate_Unit_Extractor {
 	}
 
 	private function is_excluded( DOMNode $node ) {
+		if ( PandaTranslate_HTML::translation_excluded( $node ) ) return true;
 		$ids = array( 'wpadminbar', 'query-monitor-main', 'elementor-editor-wrapper', 'bricks-toolbar', 'wp-toolbar' );
 		$classes = array( 'ab-sub-wrapper', 'ab-item', 'elementor-editor-active', 'elementor-editor-preview', 'fusion-builder-live', 'fusion-builder-ui', 'awb-builder', 'bricks-is-frontend', 'et-fb', 'fl-builder-bar', 'pandatranslate-panel', 'pandatranslate-floating', 'pandatranslate-switcher', 'pandatranslate-menu-item', 'pandatranslate-menu-link', 'notranslate' );
 		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) {
-			if ( $current->hasAttribute( 'data-no-translation' ) ) return true;
-			if ( in_array( strtolower( $current->nodeName ), array( 'script', 'style', 'textarea', 'pre', 'code', 'svg' ), true ) || 'no' === $current->getAttribute( 'translate' ) ) return true;
+			if ( in_array( strtolower( $current->nodeName ), array( 'script', 'style', 'textarea', 'pre', 'code', 'svg' ), true ) ) return true;
 			if ( method_exists( $current, 'getAttribute' ) && in_array( $current->getAttribute( 'id' ), $ids, true ) ) return true;
 			if ( method_exists( $current, 'getAttribute' ) ) { $value = ' ' . $current->getAttribute( 'class' ) . ' '; foreach ( $classes as $class ) if ( false !== strpos( $value, ' ' . $class . ' ' ) ) return true; }
 		}

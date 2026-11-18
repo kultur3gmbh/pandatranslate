@@ -10,13 +10,20 @@ final class PandaTranslate_Language_Content {
 	private static function normalize( $value ) { return strtolower( str_replace( '-', '_', trim( $value ) ) ); }
 	private static function locale() {
 		$code = PandaTranslate_Frontend::current_language();
-		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( $row['code'] === $code ) return array( $code, $row['locale'] . ( 'formal' === ( $row['formality'] ?? '' ) ? '_formal' : '' ) );
+		// A nested Query block may temporarily replace the main query during shortcode rendering.
+		global $wp;
+		if ( '' === $code && is_object( $wp ) ) $code = $wp->query_vars['pt_lang'] ?? '';
+
+		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] === $code ) return array( $code, $row['locale'] . ( 'formal' === ( $row['formality'] ?? '' ) ? '_formal' : '' ) );
 		$locale = get_option( 'WPLANG', 'en_US' ) ?: 'en_US'; return array( str_replace( '_', '-', strtolower( $locale ) ), $locale );
 	}
 	public static function render( $attributes, $content = null, $tag = 'language-include' ) {
 		$attributes = is_array( $attributes ) ? $attributes : array();
 		list( $code, $locale ) = self::locale();
-		$aliases = array_unique( array( self::normalize( $code ), self::normalize( $locale ), explode( '_', self::normalize( $locale ) )[0] ) );
+		$normalized_locale = self::normalize( $locale );
+		// Formality is not a different country: de_DE includes de_DE_formal, but de_AT stays distinct.
+		$regional_locale = preg_replace( '/_formal$/', '', $normalized_locale );
+		$aliases = array_unique( array( self::normalize( $code ), $normalized_locale, $regional_locale, explode( '_', $regional_locale )[0] ) );
 		$specified = (string) ( $attributes[ 'trp_language' === $tag ? 'language' : 'lang' ] ?? '' );
 		$languages = array_filter( array_map( array( __CLASS__, 'normalize' ), explode( ',', $specified ) ) );
 		$matches = (bool) array_intersect( $aliases, $languages );

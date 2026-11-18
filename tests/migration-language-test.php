@@ -19,7 +19,7 @@ function update_option( $key, $value, $autoload = false ) { global $options; $op
 class Migration_DB {
 	public $last_error = ''; public $queries = array(); public $prefix = 'wp_';
 	public function esc_like( $text ) { return $text; }
-	public function get_col( $sql ) { return is_array( $sql ) ? array( 'wp_trp_dictionary_de_de_en_us', 'wp_trp_dictionary_de_de_fr_fr' ) : array( 'de-de-en-us', 'de-de-fr-fr', 'en' ); }
+	public function get_col( $sql ) { return is_array( $sql ) && strpos( $sql[0], 'SHOW TABLES' ) === 0 ? array( 'wp_trp_dictionary_de_de_en_us', 'wp_trp_dictionary_de_de_fr_fr' ) : array( 'de-de-en-us', 'de-de-fr-fr', 'en' ); }
 	public function prepare( $sql, ...$args ) { return array( $sql, $args ); }
 	public function query( $query ) { $this->queries[] = $query; return 1; }
 }
@@ -32,7 +32,7 @@ $label = new ReflectionMethod( 'PandaTranslate_Migration', 'report_language_labe
 if ( 'DE-DE → EN-US' !== $label->invoke( null, 'en' ) ) throw new RuntimeException( 'Incorrect source-target label.' );
 PandaTranslate_Migration::repair_language_assignments();
 if ( 2 !== count( $wpdb->queries ) ) throw new RuntimeException( 'Expected two legacy repairs.' );
-if ( array( 'en', 'en', 'de-de-en-us' ) !== $wpdb->queries[0][1] ) throw new RuntimeException( 'Incorrect repair arguments.' );
+if ( array( 'wp_pandatranslate_units', 'wp_pandatranslate_units', 'en', 'en', 'de-de-en-us' ) !== $wpdb->queries[0][1] ) throw new RuntimeException( 'Incorrect repair arguments.' );
 if ( false === strpos( $wpdb->queries[0][0], 'existing.id IS NULL' ) ) throw new RuntimeException( 'Missing collision protection.' );
 if ( 19345 !== $options['pandatranslate_migration_report']['languages']['en']['processed'] ) throw new RuntimeException( 'Report totals lost.' );
 if ( isset( $options['pandatranslate_migration_report']['languages']['de-de-en-us'] ) ) throw new RuntimeException( 'Legacy report key remains.' );

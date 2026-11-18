@@ -84,6 +84,7 @@ final class PandaTranslate_Frontend {
 		$args = array(); parse_str( $parts['query'] ?? '', $args );
 		foreach ( array( 'pt_lang', 'lang', 'rest_route', '_wpnonce', '_wp_http_referer', 'wc-ajax', 'wc-api', 'add-to-cart', 'download_file', 'key', 'action', 'preview', 'customize_changeset_uuid', 'elementor-preview', 'pandatranslate', 'pandatranslate_scan' ) as $key ) if ( array_key_exists( $key, $args ) ) return $url;
 		if ( self::technical_path( rawurldecode( $path ), $endpoints ) ) return $url;
+		if ( $endpoints && is_callable( array( 'PandaTranslate_Routing', 'system_url' ) ) ) { $system = PandaTranslate_Routing::system_url( $decoded, $language ); if ( null !== $system ) return $system; }
 		if ( ! $endpoints && 'path' === $settings['url_mode'] && ( ! class_exists( 'PandaTranslate_Edition' ) || PandaTranslate_Edition::multilingual() ) && function_exists( 'url_to_postid' ) ) {
 			$source = home_url( '/' . $path ) . ( isset( $parts['query'] ) ? '?' . $parts['query'] : '' );
 			if ( ! array_key_exists( $source, self::$post_ids ) ) self::$post_ids[$source] = url_to_postid( $source );
@@ -96,6 +97,45 @@ final class PandaTranslate_Frontend {
 		if ( 'query' === $settings['url_mode'] ) $query .= ( '' !== $query ? '&' : '' ) . 'pt_lang=' . rawurlencode( $language );
 		return $result . ( '' !== $query ? '?' . $query : '' ) . ( isset( $parts['fragment'] ) ? '#' . $parts['fragment'] : '' );
 	}
+	/** Translate approved public chrome only; transaction content never enters capture or the lookup source list. */
+	public static function public_chrome( $html, $language ) {
+		if ( ! $language || ! class_exists( 'PandaTranslate_Strings' ) || ! class_exists( 'DOMDocument' ) ) return $html;
+		$dictionary = PandaTranslate_Strings::dictionary( $language );
+		if ( is_callable( array( 'PandaTranslate_Strings', 'block_labels' ) ) ) {
+			$static = array(); $ambiguous = array();
+			foreach ( PandaTranslate_Strings::block_labels( $language ) as $catalog ) foreach ( $catalog as $source => $target ) { if ( isset( $static[$source] ) && $static[$source] !== $target ) $ambiguous[$source] = true; $static[$source] = $target; }
+			$dictionary += array_diff_key( $static, $ambiguous );
+		}
+		$raw = PandaTranslate_HTML::protect_raw( $html ); $previous = libxml_use_internal_errors( true ); $doc = new DOMDocument( '1.0', 'UTF-8' );
+		$ok = $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $raw['html'], LIBXML_HTML_NODEFDTD ); libxml_clear_errors(); libxml_use_internal_errors( $previous ); if ( ! $ok ) return $html;
+		$xpath = new DOMXPath( $doc ); $changed = false; $nodes = array();
+		$public_title = '';
+		if ( function_exists( 'wc_get_page_id' ) && is_singular() && in_array( (int) get_queried_object_id(), array( (int) wc_get_page_id( 'cart' ), (int) wc_get_page_id( 'checkout' ), (int) wc_get_page_id( 'myaccount' ) ), true ) ) $public_title = ' | //*[contains(concat(" ", normalize-space(@class), " "), " wp-block-post-title ")]';
+		foreach ( $xpath->query( '//header[not(ancestor::main or ancestor::form or ancestor::header)] | //footer[not(ancestor::main or ancestor::form or ancestor::footer)] | //nav[not(ancestor::main or ancestor::form or ancestor::header or ancestor::footer)]' . $public_title ) as $root ) {
+			foreach ( $xpath->query( './/text()', $root ) as $node ) {
+				$parent = $node->parentNode; if ( self::excluded( $parent ) || PandaTranslate_HTML::translation_excluded( $parent ) ) continue;
+				$private = false;
+				for ( $p = $parent; $p instanceof DOMElement; $p = $p->parentNode ) if ( in_array( $p->tagName, array( 'form', 'script', 'style', 'input', 'textarea', 'select' ), true ) || preg_match( '/(?:^|\s)(?:woocommerce-cart|woocommerce-checkout|woocommerce-MyAccount-content|wc-block-cart|wc-block-checkout)(?:\s|$)/', $p->getAttribute( 'class' ) ) ) { $private = true; break; }
+				if ( $private ) continue;
+				$text = trim( $node->nodeValue );
+				if ( '' !== $text ) $nodes[] = $node;
+			}
+		}
+		// Imported public dictionaries can lack page-context records. Query only the whitelisted chrome text,
+		// never the main transaction body; no source units are recorded and no translation API is invoked.
+		$memory = null;
+		if ( method_exists( 'PandaTranslate_Repository', 'published_imports' ) ) {
+			$source = ''; foreach ( $nodes as $node ) $source .= '<span>' . htmlspecialchars( trim( $node->nodeValue ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) . '</span>';
+			$memory = new PandaTranslate_Translation_Memory( '<div>' . $source . '</div>', $language, new PandaTranslate_Repository() );
+		}
+		foreach ( $nodes as $node ) {
+			$text = trim( $node->nodeValue ); $value = $dictionary[$text] ?? ( $memory ? $memory->lookup( $text ) : null );
+			if ( null !== $value && $value === wp_strip_all_tags( $value ) ) { $node->nodeValue = str_replace( $text, $value, $node->nodeValue ); $changed = true; }
+		}
+		if ( ! $changed ) return $html;
+		return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $doc->saveHTML() ), $raw );
+	}
+
 	/** Decode visible symbol entities without turning escaped markup or attribute syntax into HTML. */
 	public static function glyphs( $text ) {
 		return preg_replace_callback( '/&(?:amp;){0,3}(?:#[0-9]{1,8};|#x[0-9a-f]{1,6};|[a-z][a-z0-9]{1,31};)/i', function ( $match ) {

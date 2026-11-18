@@ -77,7 +77,7 @@
 		var unit = event.target.closest('[data-pandatranslate-unit]');
 		if (!unit) {
 			var candidate = event.target.closest('p,h1,h2,h3,h4,h5,h6,li,td,th,button,a[role=button]');
-			if (!config.captureAllowed || !config.postId || !candidate || candidate.closest('#wpadminbar,.pandatranslate-panel,.pandatranslate-switcher,form,[translate=no],[data-no-translation],.notranslate') || candidate.querySelector('p,li,td,th,div,img,input,textarea,select') || !candidate.textContent.trim()) return;
+			if (!config.captureAllowed || !config.postId || !candidate || candidate.closest('#wpadminbar,.pandatranslate-panel,.pandatranslate-switcher,form,[translate=no],[data-no-translation],.notranslate,.trp-no-translation') || candidate.querySelector('p,li,td,th,div,img,input,textarea,select') || !candidate.textContent.trim()) return;
 			event.preventDefault(); event.stopPropagation();
 			request(config.dynamicUrl, {post_id:config.postId,language:config.language,source_html:candidate.innerHTML}).then(function(data){candidate.dataset.pandatranslateUnit=data.key;candidate.dataset.pandatranslateSourceHash=data.source_hash;candidate.dataset.pandatranslateOriginal=data.source_html;openUnit(candidate);}).catch(function(e){message.textContent=e.message;}); return;
 		}

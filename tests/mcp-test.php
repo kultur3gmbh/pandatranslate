@@ -26,7 +26,13 @@ require dirname(__DIR__).'/includes/class-pandatranslate-repository.php';
 require dirname(__DIR__).'/includes/class-pandatranslate-mcp.php';
 class MCP_Test_DB {
  public $prefix='wp_', $rows=array(), $race=false, $last_sql='';
- function prepare($sql,...$args){return array($sql,count($args)===1&&is_array($args[0])?$args[0]:$args);}
+ function prepare($sql,...$args){
+  $args=count($args)===1&&is_array($args[0])?$args[0]:$args;
+  $values=array();$index=0;
+  $sql=preg_replace_callback('/%[isd]/',function($match)use(&$index,&$values,$args){$value=$args[$index++];if('%i'===$match[0])return '`'.str_replace('`','``',$value).'`';$values[]=$value;return $match[0];},$sql);
+  if(str_contains($sql,'LIMIT %d OFFSET %d')){$offset=array_pop($values);$limit=array_pop($values);$sql=str_replace('LIMIT %d OFFSET %d','LIMIT '.(int)$limit.' OFFSET '.(int)$offset,$sql);}
+  return array($sql,$values);
+ }
  function esc_like($text){return addcslashes($text,'_%\\');}
  function get_row($statement,$format){[$sql,$args]=$statement;foreach($this->rows as $row)if($row['unit_key']===$args[0]&&$row['target_language']===$args[1])return $row;return null;}
  function get_results($statement,$format){[$sql,$args]=is_array($statement)?$statement:array($statement,array());$this->last_sql=$sql;

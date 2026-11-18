@@ -142,7 +142,7 @@
 			error.textContent = config.labels.lastError + ': ' + row.last_error;
 			form.appendChild(error);
 		}
-		heading.textContent = config.labels.edit;
+		heading.textContent = config.labels.edit + (row.source_details ? ' · ' + row.source_details : '');
 		source.value = row.source_text;
 		source.readOnly = true;
 		target.value = row.translated_text;
@@ -203,7 +203,7 @@
 					var first = document.createElement('td');
 					first.appendChild(check);
 					tr.appendChild(first);
-					[row.source_text, row.translated_text, row.status].forEach(function (text) {
+					[row.source_text+(row.source_details?'\n'+row.source_details:''), row.translated_text, row.status].forEach(function (text) {
 						var td = document.createElement('td');
 						td.textContent = text;
 						td.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;max-width:30vw;';

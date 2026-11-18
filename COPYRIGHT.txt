@@ -9,3 +9,6 @@ The shared Panda UI assets are maintained by the same product family.
 The separately installed Panda Translate Multilingual product is not included
 in this license grant or this package. No third-party page-builder code is
 bundled; adapters use the APIs of the installed builder.
+
+Plural-category reference data derives from Unicode CLDR 48.
+See data/README.txt and data/UNICODE-LICENSE.txt.

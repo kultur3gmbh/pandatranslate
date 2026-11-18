@@ -56,9 +56,9 @@ final class PandaTranslate_Translation_Memory {
 	private static function attributes( $node ) { $attrs = array(); foreach ( array( 'alt', 'title', 'placeholder', 'aria-label' ) as $name ) if ( $node->hasAttribute( $name ) ) $attrs[] = $name; if ( 'input' === $node->nodeName && in_array( strtolower( $node->getAttribute( 'type' ) ), array( 'submit', 'button' ), true ) ) $attrs[] = 'value'; return $attrs; }
 	private static function inline_content( $node ) { foreach ( $node->childNodes as $child ) if ( XML_ELEMENT_NODE === $child->nodeType && ! in_array( strtolower( $child->nodeName ), array( 'a','span','strong','em','b','i','u','small','sup','sub','br','s','mark' ), true ) ) return false; return true; }
 	private static function excluded( $node ) {
+		if ( PandaTranslate_HTML::translation_excluded( $node ) ) return true;
 		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) {
-			if ( $current->hasAttribute( 'data-no-translation' ) ) return true;
-			if ( in_array( strtolower( $current->nodeName ), array( 'script','style','noscript','textarea','pre','code','svg' ), true ) || in_array( $current->getAttribute( 'id' ), array( 'wpadminbar','query-monitor-main','elementor-editor-wrapper','bricks-toolbar' ), true ) || 'no' === $current->getAttribute( 'translate' ) ) return true;
+			if ( in_array( strtolower( $current->nodeName ), array( 'script','style','noscript','textarea','pre','code','svg' ), true ) || in_array( $current->getAttribute( 'id' ), array( 'wpadminbar','query-monitor-main','elementor-editor-wrapper','bricks-toolbar' ), true ) ) return true;
 			if ( preg_match( '/(?:^|\s)(?:notranslate|ab-sub-wrapper|ab-item|fusion-builder-ui|awb-builder|fl-builder-bar|pandatranslate-panel|pandatranslate-floating|pandatranslate-switcher|pandatranslate-menu-item|pandatranslate-menu-link)(?:\s|$)/', $current->getAttribute( 'class' ) ) ) return true;
 		}
 		return false;
