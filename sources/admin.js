@@ -149,14 +149,45 @@
 			});
 		});
 	}
-	function cancelButton() {
-		var c = document.createElement('button');
-		c.type = 'button';
-		c.className = 'contactpanda-large-action';
-		c.dataset.contactpandaAction = 'cancel';
-		c.dataset.contactpandaActionMode = 'labelled';
-		c.textContent = config.cancelLabel;
-		return c;
+	var jobPollTimer = null;
+	function jobControls(running) {
+		document
+			.querySelectorAll('[data-language-translate],[data-language-translate-all]')
+			.forEach(function (button) {
+				if (!button.dataset.jobPrevious)
+					button.dataset.jobPrevious = button.disabled ? 'disabled' : 'enabled';
+				button.disabled = running || button.dataset.jobPrevious === 'disabled';
+			});
+		if (apiSelector) apiSelector.disabled = running;
+	}
+	function pollSiteJob() {
+		var host = document.querySelector('[data-site-job]');
+		if (!host) return;
+		clearTimeout(jobPollTimer);
+		fetch(window.ajaxurl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: new URLSearchParams({
+				action: 'pandatranslate_site_progress',
+				nonce: host.dataset.nonce,
+			}),
+		})
+			.then(function (response) {
+				return response.json().then(function (result) {
+					if (!response.ok || !result.success) throw new Error(config.cancelFailed);
+					return result.data;
+				});
+			})
+			.then(function (data) {
+				host.innerHTML = data.html;
+				jobControls(data.running);
+				if (window.ContactPandaAdminUI) window.ContactPandaAdminUI.enhance(host);
+				if (data.running) jobPollTimer = window.setTimeout(pollSiteJob, 4000);
+				else refreshOverview(host.dataset.nonce, '');
+			})
+			.catch(function () {
+				jobPollTimer = window.setTimeout(pollSiteJob, 10000);
+			});
 	}
 	function runTranslation(button, languages, mode) {
 		if (
@@ -165,14 +196,7 @@
 		)
 			return;
 		var host = button.closest('.pandatranslate-language-actions'),
-			output = host.querySelector('[data-language-run-status]'),
-			progress = host.querySelector('progress'),
-			index = 0,
-			api = selectedApi(),
-			succeeded = 0,
-			failed = 0,
-			stopping = false,
-			finished = false;
+			output = host.querySelector('[data-language-run-status]');
 		var runId =
 			'run-' +
 			Date.now().toString(36) +
@@ -182,137 +206,36 @@
 					return n.toString(36);
 				})
 				.join('-');
-		var controls = Array.from(
-				document.querySelectorAll('[data-language-translate],[data-language-translate-all]'),
-			).concat(apiSelector ? [apiSelector] : []),
-			previous = controls.map(function (c) {
-				return c.disabled;
+		jobControls(true);
+		fetch(window.ajaxurl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: new URLSearchParams({
+				action: 'pandatranslate_start_language_job',
+				nonce: button.dataset.nonce,
+				languages: JSON.stringify(languages),
+				mode: mode,
+				api: selectedApi(),
+				run_id: runId,
 			}),
-			cancel = cancelButton();
-		controls.forEach(function (c) {
-			c.disabled = true;
-		});
-		host.appendChild(cancel);
-		if (window.ContactPandaAdminUI) window.ContactPandaAdminUI.enhance(host);
-		if (progress) {
-			progress.hidden = false;
-			progress.removeAttribute('value');
-		}
-		function finish(message) {
-			if (finished) return;
-			finished = true;
-			controls.forEach(function (c, i) {
-				c.disabled = previous[i];
+		})
+			.then(function (response) {
+				return response.json().then(function (result) {
+					if (!response.ok || !result.success)
+						throw new Error((result.data && result.data.message) || 'Request failed');
+					return result.data;
+				});
+			})
+			.then(function (data) {
+				var job = document.querySelector('[data-site-job]');
+				if (job) job.innerHTML = data.html;
+				pollSiteJob();
+			})
+			.catch(function (error) {
+				output.textContent = error.message;
+				jobControls(false);
+				pollSiteJob();
 			});
-			cancel.remove();
-			output.textContent = message;
-			refreshOverview(button.dataset.nonce, message);
-		}
-		cancel.addEventListener('click', function () {
-			stopping = true;
-			cancel.disabled = true;
-			output.textContent = config.cancelling;
-			cancelRun(runId, button.dataset.nonce).catch(function (e) {
-				if (!finished) output.textContent = e.message;
-			});
-		});
-		function next() {
-			if (stopping) {
-				finish(config.cancelled);
-				return;
-			}
-			if (index >= languages.length) {
-				finish(
-					(config.batchSummary || '%1$d translated · %2$d failed')
-						.replace('%1$d', succeeded)
-						.replace('%2$d', failed),
-				);
-				return;
-			}
-			var language = languages[index],
-				state = {
-					phase: 'start',
-					cursor: 0,
-					limit_id: 0,
-					success: 0,
-					errors: 0,
-					api: api,
-					total_pages: 0,
-					total_units: 0,
-					prepared: 0,
-					run_id: runId,
-					consecutive_errors: 0,
-					last_error_code: '',
-					last_error_message: '',
-				};
-			function batch() {
-				if (stopping) {
-					finish(config.cancelled);
-					return;
-				}
-				fetch(window.ajaxurl, {
-					method: 'POST',
-					credentials: 'same-origin',
-					body: new URLSearchParams(
-						Object.assign(
-							{
-								action: 'pandatranslate_language_batch',
-								nonce: button.dataset.nonce,
-								language: language,
-								mode: mode,
-							},
-							state,
-						),
-					),
-				})
-					.then(function (r) {
-						return r.json().then(function (v) {
-							if (!r.ok || !v.success)
-								throw new Error((v.data && v.data.message) || 'Request failed');
-							return v.data;
-						});
-					})
-					.then(function (data) {
-						Object.keys(state).forEach(function (key) {
-							if (data[key] !== undefined) state[key] = data[key];
-						});
-						output.textContent =
-							language.toUpperCase() +
-							' (' +
-							(index + 1) +
-							' / ' +
-							languages.length +
-							') · ' +
-							data.message;
-						if (progress) {
-							if (data.total > 0) {
-								progress.max = data.total;
-								progress.value = Math.min(data.processed, data.total);
-							} else progress.removeAttribute('value');
-						}
-						if (data.failed) {
-							finish(output.textContent);
-							return;
-						}
-						if (stopping || data.cancelled) {
-							finish(data.cancelled ? data.message : config.cancelled + ' ' + data.message);
-							return;
-						}
-						if (data.done) {
-							succeeded += data.success || 0;
-							failed += data.errors || 0;
-							index++;
-							next();
-						} else batch();
-					})
-					.catch(function (error) {
-						if (progress) progress.hidden = true;
-						finish(language.toUpperCase() + ' · ' + error.message);
-					});
-			}
-			batch();
-		}
-		next();
 	}
 	function refreshOverview(nonce, message) {
 		fetch(window.ajaxurl, {
@@ -350,29 +273,7 @@
 	});
 
 	var siteJob = document.querySelector('[data-site-job]');
-	if (siteJob && siteJob.children.length) {
-		(function poll() {
-			fetch(window.ajaxurl, {
-				method: 'POST',
-				credentials: 'same-origin',
-				body: new URLSearchParams({
-					action: 'pandatranslate_site_progress',
-					nonce: siteJob.dataset.nonce,
-				}),
-			})
-				.then(function (response) {
-					return response.json();
-				})
-				.then(function (result) {
-					if (result.success) {
-						siteJob.innerHTML = result.data.html;
-						if (window.ContactPandaAdminUI) window.ContactPandaAdminUI.enhance(siteJob);
-						if (result.data.running) window.setTimeout(poll, 4000);
-					}
-				})
-				.catch(function () {});
-		})();
-	}
+	if (siteJob) pollSiteJob();
 	document.addEventListener('click', function (e) {
 		var b = e.target.closest('[data-site-job-cancel]');
 		if (!b) return;
@@ -380,6 +281,7 @@
 		cancelRun(b.dataset.siteJobCancel, b.dataset.nonce)
 			.then(function () {
 				b.textContent = config.cancelled;
+				pollSiteJob();
 			})
 			.catch(function (err) {
 				b.disabled = false;
