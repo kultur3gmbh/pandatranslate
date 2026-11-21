@@ -3,6 +3,7 @@ define( 'ABSPATH', __DIR__ );
 class PandaTranslate_Plugin {
 	public static function language_rows() { return array(
 		array( 'code' => 'de', 'locale' => 'de_DE', 'formality' => 'standard' ),
+		array( 'code' => 'de-formal', 'locale' => 'de_DE', 'formality' => 'formal' ),
 		array( 'code' => 'en', 'locale' => 'en_US', 'formality' => 'standard' ),
 		array( 'code' => 'fr', 'locale' => 'fr_FR', 'formality' => 'standard' ),
 		array( 'code' => 'it', 'locale' => 'it_IT', 'formality' => 'standard' ),
@@ -25,7 +26,7 @@ class Migration_DB {
 }
 $wpdb = new Migration_DB();
 require dirname(__DIR__) . '/includes/class-pandatranslate-migration.php';
-foreach ( array( 'de_de_en_us' => 'en', 'de-de-fr-fr' => 'fr', 'de_de_it_it' => 'it', 'de_de_ko_kr' => 'ko', 'de_de_zh_cn' => 'zh', 'en_us_pt_br' => 'pt-br', 'invalid_table' => '' ) as $pair => $expected ) {
+foreach ( array( 'de_de_formal_fr_fr' => 'fr', 'DE-DE-FORMAL-FR-FR' => 'fr', 'en_us_de_de_formal' => 'de-formal', 'de_de_formal_de_de_formal' => 'de-formal', 'de_de_formal_pt_br' => 'pt-br', 'de_de_formal_fr_fr_garbage' => '', 'de_de_en_us' => 'en', 'de-de-fr-fr' => 'fr', 'de_de_it_it' => 'it', 'de_de_ko_kr' => 'ko', 'de_de_zh_cn' => 'zh', 'en_us_pt_br' => 'pt-br', 'invalid_table' => '' ) as $pair => $expected ) {
 	if ( $expected !== PandaTranslate_Migration::target_language( $pair ) ) throw new RuntimeException( 'Incorrect mapping: ' . $pair );
 }
 $label = new ReflectionMethod( 'PandaTranslate_Migration', 'report_language_label' ); if ( PHP_VERSION_ID < 80100 ) $label->setAccessible( true );

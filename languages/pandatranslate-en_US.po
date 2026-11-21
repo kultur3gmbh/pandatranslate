@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: pandatranslate 0.7.6\n"
+"Project-Id-Version: pandatranslate 0.7.7\n"
 "PO-Revision-Date: 2026-11-11 01:00+0100\n"
 "Last-Translator: Panda\n"
 "Language-Team: en_US\n"
@@ -1944,3 +1944,11 @@ msgstr "failed"
 #: includes/class-pandatranslate-plugin.php:696
 msgid "translated"
 msgstr "translated"
+
+#: includes/class-pandatranslate-migration.php
+msgid "TranslatePress tables were found, but their language pairs could not be assigned. Check the configured languages."
+msgstr "TranslatePress tables were found, but their language pairs could not be assigned. Check the configured languages."
+
+#: includes/class-pandatranslate-migration.php
+msgid "No translated entries were found in the available TranslatePress dictionary tables."
+msgstr "No translated entries were found in the available TranslatePress dictionary tables."

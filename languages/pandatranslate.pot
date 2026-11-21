@@ -6,7 +6,7 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: pandatranslate 0.7.6\n"
+"Project-Id-Version: pandatranslate 0.7.7\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-18 21:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -1959,4 +1959,12 @@ msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:696
 msgid "translated"
+msgstr ""
+
+#: includes/class-pandatranslate-migration.php
+msgid "TranslatePress tables were found, but their language pairs could not be assigned. Check the configured languages."
+msgstr ""
+
+#: includes/class-pandatranslate-migration.php
+msgid "No translated entries were found in the available TranslatePress dictionary tables."
 msgstr ""

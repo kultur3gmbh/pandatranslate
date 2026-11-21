@@ -16,7 +16,7 @@ final class PandaTranslate_Migration {
 		$rows = PandaTranslate_Plugin::configured_language_rows();
 		if ( PandaTranslate_Source_Language::mismatch( $rows ) ) return new WP_Error( 'pandatranslate_migration_source', __( 'The stored translation source differs from WordPress. Confirm the WordPress source language on the Dashboard before importing. Existing imports are retained.', 'pandatranslate' ) );
 		$tp = (array) get_option( 'trp_settings', array() ); $source = $tp['default-language'] ?? '';
-		if ( ! $source ) { global $wpdb; foreach ( self::tables() as $table ) if ( preg_match( '/^([a-z]{2,3}_[a-z0-9]{2,8}(?:_formal)?)_/i', substr( $table, strlen( $wpdb->prefix . 'trp_dictionary_' ) ), $match ) ) { $source = $match[1]; break; } }
+		if ( ! $source ) { global $wpdb; foreach ( self::tables() as $table ) if ( $pair = self::language_pair( substr( $table, strlen( $wpdb->prefix . 'trp_dictionary_' ) ) ) ) { $source = $pair[0]; break; } }
 		$normalize = function ( $locale ) { return preg_replace( '/_formal$/', '', PandaTranslate_Source_Language::normalized( $locale ) ); };
 		if ( $source && $normalize( $source ) !== $normalize( PandaTranslate_Source_Language::wordpress_locale() ) ) return new WP_Error( 'pandatranslate_migration_source', sprintf( /* translators: %1$s: TranslatePress source language, %2$s: WordPress source language. */
 		__( 'TranslatePress source %1$s differs from WordPress source %2$s. Import stopped to prevent incorrect language assignments.', 'pandatranslate' ), $source, PandaTranslate_Source_Language::wordpress_locale() ) );
@@ -34,15 +34,24 @@ final class PandaTranslate_Migration {
 		}
 		update_option( 'pandatranslate_import_publication_v1', 1, false );
 	}
+	/** Preserve locale variants on either side; the source variant is not part of the target. */
+	private static function language_pair( $pair ) {
+		$pair = strtolower( str_replace( '-', '_', $pair ) );
+		$locale = '[a-z]{2,3}_[a-z0-9]{2,8}(?:_formal)?';
+		if ( ! preg_match( '/^(' . $locale . ')_(' . $locale . ')$/', $pair, $matches ) ) return array();
+		return array( $matches[1], $matches[2] );
+	}
 	/** TranslatePress dictionary suffixes contain source AND target locales. */
 	public static function target_language( $pair ) {
-		$pair = strtolower( str_replace( '-', '_', $pair ) );
-		if ( ! preg_match( '/^[a-z]{2,3}_[a-z]{2,3}_([a-z]{2,3}_[a-z]{2,3})$/', $pair, $matches ) ) return '';
-		$locale = $matches[1]; $code = str_replace( '_', '-', $locale );
+		$pair = self::language_pair( $pair ); if ( ! $pair ) return '';
+		$locale = $pair[1]; $code = str_replace( '_', '-', $locale );
 		$rows = PandaTranslate_Plugin::language_rows();
-		foreach ( $rows as $row ) if ( $row['code'] === $code ) return $code;
 		$candidates = array();
-		foreach ( $rows as $row ) if ( strtolower( $row['locale'] ) === $locale && 'formal' !== $row['formality'] ) $candidates[] = $row['code'];
+		foreach ( $rows as $row ) {
+			$row_locale = strtolower( str_replace( '-', '_', $row['locale'] ) );
+			if ( 'formal' === ( $row['formality'] ?? '' ) && ! preg_match( '/_formal$/', $row_locale ) ) $row_locale .= '_formal';
+			if ( $row_locale === $locale ) { if ( $row['code'] === $code ) return $code; $candidates[] = $row['code']; }
+		}
 		return 1 === count( $candidates ) ? $candidates[0] : $code;
 	}
 	private static function table_language( $table ) {
@@ -51,7 +60,7 @@ final class PandaTranslate_Migration {
 	}
 	public static function repair_language_assignments() {
 		if ( ! current_user_can( 'manage_options' ) ) return;
-		$signature = md5( wp_json_encode( PandaTranslate_Plugin::language_rows() ) );
+		$signature = md5( 'locale-pair-v2|' . wp_json_encode( PandaTranslate_Plugin::language_rows() ) );
 		if ( get_option( 'pandatranslate_migration_language_repair' ) === $signature ) return;
 		global $wpdb; $table = PandaTranslate_Repository::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
@@ -88,7 +97,11 @@ final class PandaTranslate_Migration {
 			echo '<div class="pandatranslate-migration-progress" data-migration-progress hidden aria-live="polite"><div class="pandatranslate-migration-progress-head"><strong>' . esc_html__( 'Migration progress', 'pandatranslate' ) . '</strong><b data-migration-percent>0%</b></div><span class="pandatranslate-progress-track"><i data-migration-bar style="width:0%"></i></span><p data-migration-status>' . esc_html__( 'Preparing migration…', 'pandatranslate' ) . '</p><div class="pandatranslate-migration-totals"><span>' . esc_html__( 'Processed', 'pandatranslate' ) . ': <strong data-migration-processed>0</strong> / ' . esc_html( number_format_i18n( $count ) ) . '</span><span>' . esc_html__( 'Imported', 'pandatranslate' ) . ': <strong data-migration-imported>0</strong></span><span>' . esc_html__( 'Skipped', 'pandatranslate' ) . ': <strong data-migration-skipped>0</strong></span><span>' . esc_html__( 'Errors', 'pandatranslate' ) . ': <strong data-migration-errors>0</strong></span></div></div>';
 			echo '</div>';
 		}
-		elseif ( ! $count ) echo '<p>' . esc_html__( 'No TranslatePress dictionary tables were found.', 'pandatranslate' ) . '</p>';
+		elseif ( ! $count ) {
+			$tables = self::tables();
+			$message = ! $tables ? __( 'No TranslatePress dictionary tables were found.', 'pandatranslate' ) : ( ! $totals ? __( 'TranslatePress tables were found, but their language pairs could not be assigned. Check the configured languages.', 'pandatranslate' ) : __( 'No translated entries were found in the available TranslatePress dictionary tables.', 'pandatranslate' ) );
+			echo '<p>' . esc_html( $message ) . '</p>';
+		}
 		self::render_language_report( $totals );
 	}
 	private static function source_totals() {
@@ -102,7 +115,7 @@ final class PandaTranslate_Migration {
 		foreach ( self::tables() as $table ) {
 			if ( self::table_language( $table ) !== $language ) continue;
 			$pair = substr( $table, strlen( $wpdb->prefix . 'trp_dictionary_' ) );
-			if ( preg_match( '/^([a-z]{2,3}_[a-z]{2,3})_([a-z]{2,3}_[a-z]{2,3})$/i', $pair, $matches ) ) return strtoupper( str_replace( '_', '-', $matches[1] ) ) . ' → ' . strtoupper( str_replace( '_', '-', $matches[2] ) );
+			if ( $locales = self::language_pair( $pair ) ) return strtoupper( str_replace( '_', '-', $locales[0] ) ) . ' → ' . strtoupper( str_replace( '_', '-', $locales[1] ) );
 		}
 		return PandaTranslate_Features::catalog()[ $language ]['name'] ?? strtoupper( $language );
 	}
