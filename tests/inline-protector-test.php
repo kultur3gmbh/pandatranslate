@@ -21,3 +21,8 @@ assert( is_wp_error( $invalid ) && 'pandatranslate_tokens_nested' === $invalid->
 assert(array() === PandaTranslate_Inline_Protector::protect('100% satisfaction')['tokens']);
 $variables = PandaTranslate_Inline_Protector::protect('Order %1$s costs %.2f {order_number}'); assert(3 === count($variables['tokens']));
 echo "inline protector: ok\n";
+
+$brand = PandaTranslate_Inline_Protector::protect('Panda Translate and Panda Translate Multilingual: <strong>translations</strong>.');
+assert(4 === count($brand['tokens']));
+assert(strpos($brand['text'], 'Panda Translate') === false);
+assert(PandaTranslate_Inline_Protector::restore($brand['text'], $brand['tokens']) === 'Panda Translate and Panda Translate Multilingual: <strong>translations</strong>.');

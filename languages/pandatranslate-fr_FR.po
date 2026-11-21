@@ -1350,7 +1350,7 @@ msgstr "Afficher le menu de langue flottant"
 #: includes/class-pandatranslate-plugin.php:315
 msgid "Show “Translate page” in the upper admin bar"
 msgstr ""
-"Afficher « Page de traduction » dans la barre d'administration supérieure"
+"Afficher « Traduction » dans la barre d'administration supérieure"
 
 #: includes/class-pandatranslate-plugin.php:540
 msgid "Side by side"
@@ -1760,7 +1760,7 @@ msgstr "Traduire les contenus manquants"
 
 #: includes/class-pandatranslate-plugin.php:274
 msgid "Translate page"
-msgstr "Page de traduction"
+msgstr "Traduction"
 
 #: includes/class-pandatranslate-plugin.php:577
 msgid "Translate untranslated content with the selected API?"

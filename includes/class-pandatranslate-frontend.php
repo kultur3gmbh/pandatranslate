@@ -16,6 +16,8 @@ final class PandaTranslate_Frontend {
 		$query_language = is_object( $wp_query ) && is_callable( array( $wp_query, 'get' ) ) ? $wp_query->get( 'pt_lang' ) : '';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing/display selector or escaped numeric notice. Values are sanitized/allowlisted; no state change is authorized by this GET value.
 		$requested = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : sanitize_key( $query_language );
+		// Source-page gettext runs thousands of times; no selector means no target to validate.
+		if ( '' === $requested ) return '';
 		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( ! empty( $row['active'] ) && $row['code'] === $requested ) return $requested;
 		return '';
 	}

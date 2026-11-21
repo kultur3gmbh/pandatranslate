@@ -4,8 +4,8 @@ function is_admin(){return false;} function sanitize_key($s){return strtolower((
 function get_query_var($k){throw new RuntimeException('The query is not initialized during plugins_loaded.');}
 function get_option($k){return 0;} function current_user_can($cap){return false;}
 class PandaTranslate_Plugin {
- public static $nested = false;
- public static function language_rows(){
+ public static $nested = false; public static $calls = 0;
+ public static function language_rows(){ self::$calls++;
   if (self::$nested) { self::$nested=false; assert(PandaTranslate_Strings::gettext('Nested label','Nested label','theme')==='Nested label'); }
   return array(array('code'=>'fr','active'=>1));
  }
@@ -16,6 +16,7 @@ require __DIR__.'/../includes/class-pandatranslate-frontend.php';
 require __DIR__.'/../includes/class-pandatranslate-strings.php';
 assert(PandaTranslate_Frontend::current_language()==='');
 assert(PandaTranslate_Strings::gettext('Early label','Early label','theme')==='Early label');
+assert(PandaTranslate_Plugin::$calls === 0);
 $_GET['pt_lang']='fr'; PandaTranslate_Plugin::$nested=true;
 assert(PandaTranslate_Strings::gettext('Outer label','Outer label','theme')==='Outer label');
 unset($_GET['pt_lang']);

@@ -92,24 +92,44 @@ final class PandaTranslate_Plugin {
 	}
 
 	public static function get_settings() {
+		static $previous = null, $cached = array();
 		$stored = (array) get_option( self::OPTION, array() );
+		$input = array( $stored, get_option( 'WPLANG', 'en_US' ) );
+		if ( $previous === $input ) return $cached;
+		$defaults = self::defaults();
 		if ( ! isset( $stored['switcher_border_color_hover'] ) && isset( $stored['switcher_border_color'] ) ) $stored['switcher_border_color_hover'] = $stored['switcher_border_color'];
 		if ( ! isset( $stored['menu_switcher_border_color_hover'] ) && isset( $stored['menu_switcher_border_color'] ) ) $stored['menu_switcher_border_color_hover'] = $stored['menu_switcher_border_color'];
 		if ( ! isset( $stored['switcher_label_mode'] ) && isset( $stored['switcher_show_names'] ) ) $stored['switcher_label_mode'] = ! empty( $stored['switcher_show_names'] ) ? 'native' : 'code';
-		$settings = wp_parse_args( $stored, self::defaults() );
+		$settings = wp_parse_args( $stored, $defaults );
 		if ( ! isset( $stored['language_detection_source'] ) && ! empty( $stored['language_suggestion'] ) ) $settings['language_detection_source'] = 'browser';
 		foreach ( array( 'v2', 'v3' ) as $edition ) if ( ! array_key_exists( 'google_' . $edition . '_enabled', $stored ) ) $settings['google_' . $edition . '_enabled'] = 'google-cloud-translation' === $settings['provider'] && $edition === $settings['google_api_version'] ? 1 : 0;
-		foreach ( self::defaults() as $key => $value ) if ( 0 === strpos( $key, 'switcher_' ) && ! isset( $settings['menu_' . $key] ) ) $settings['menu_' . $key] = $settings[$key];
+		foreach ( $defaults as $key => $value ) if ( 0 === strpos( $key, 'switcher_' ) && ! isset( $settings['menu_' . $key] ) ) $settings['menu_' . $key] = $settings[$key];
 		if ( ! isset( $stored['menu_switcher_label_mode'] ) && 'inherit' !== $settings['switcher_menu_label_mode'] ) $settings['menu_switcher_label_mode'] = $settings['switcher_menu_label_mode'];
 		if ( empty( $stored['switcher_display_schema'] ) ) foreach ( array( 'switcher', 'menu_switcher' ) as $prefix ) { $mode = $settings[$prefix . '_label_mode']; $hidden = 'hidden' === $settings[$prefix . '_flag_position']; if ( 'native' === $mode ) $settings[$prefix . '_label_mode'] = $hidden ? 'name' : 'flag_name'; elseif ( 'code' === $mode ) $settings[$prefix . '_label_mode'] = $hidden ? 'code' : 'flag_code'; }
 		foreach ( array( 'switcher', 'menu_switcher' ) as $prefix ) if ( 'native' === $settings[$prefix . '_label_mode'] ) $settings[$prefix . '_label_mode'] = 'flag_name';
+		$previous = $input; $cached = $settings;
 		return $settings;
 	}
 	public static function switcher_settings( $context ) { $s = self::get_settings(); if ( in_array( $context, array( 'menu', 'theme-menu' ), true ) ) foreach ( self::defaults() as $key => $value ) if ( 0 === strpos( $key, 'switcher_' ) ) $s[$key] = $s['menu_' . $key]; return $s; }
 	private function settings() { return self::get_settings(); }
 
 	public static function google_provider() { $s = self::get_settings(); return new PandaTranslate_Google_Provider( $s['google_project_id'], $s['google_location'], $s['google_api_version'] ); }
-	public static function configured_language_rows() { $s = self::get_settings(); if ( ! empty( $s['languages'] ) ) return PandaTranslate_Features::normalize_languages( $s['languages'], $s['source_language'] ); $codes = array_values( array_unique( array_merge( array( $s['source_language'] ), preg_split( '/\s*,\s*/', $s['target_languages'], -1, PREG_SPLIT_NO_EMPTY ) ) ) ); return PandaTranslate_Features::normalize_languages( array_map( function ( $code ) { return array( 'code' => $code, 'slug' => $code, 'active' => 1 ); }, $codes ), $s['source_language'] ); }
+	public static function configured_language_rows() {
+		static $previous = null, $normalized = array();
+		$s = self::get_settings();
+		$input = array( $s['languages'], $s['source_language'], $s['target_languages'] );
+		// Cache only normalization, never entitlement or effective activation. Option changes
+		// are visible immediately, including during imports and source-language adoption.
+		if ( $previous === $input ) return $normalized;
+		$rows = $s['languages'];
+		if ( empty( $rows ) ) {
+			$codes = array_values( array_unique( array_merge( array( $s['source_language'] ), preg_split( '/\s*,\s*/', $s['target_languages'], -1, PREG_SPLIT_NO_EMPTY ) ) ) );
+			$rows = array_map( function ( $code ) { return array( 'code' => $code, 'slug' => $code, 'active' => 1 ); }, $codes );
+		}
+		$normalized = PandaTranslate_Features::normalize_languages( $rows, $s['source_language'] );
+		$previous = $input;
+		return $normalized;
+	}
 	public static function language_rows() { $rows = self::configured_language_rows(); return class_exists( 'PandaTranslate_Edition' ) ? PandaTranslate_Edition::effective_languages( $rows ) : $rows; }
 	public static function language_url( $code ) { return apply_filters( 'pandatranslate_language_url', PandaTranslate_Routing::url( $code ), $code ); }
 	public static function visible_language_rows() {
