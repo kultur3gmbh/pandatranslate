@@ -657,9 +657,16 @@ final class PandaTranslate_Plugin {
 		$request_path = is_singular() ? wp_parse_url( get_permalink( get_queried_object_id() ), PHP_URL_PATH ) : wp_parse_url( home_url( '/' . PandaTranslate_Routing::original_path( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) ) ) ), PHP_URL_PATH );
 		$context = (string) get_queried_object_id() . '|' . (string) $request_path;
 		$memory = new PandaTranslate_Translation_Memory( $html, $language, $this->repository );
-		$result = $this->extractor->transform( $html, function ( $unit ) use ( $language, $editing, $memory ) {
+		$public_rows = null;
+		if ( $language && ! $editing && ! $this->scan_mode && method_exists( $this->repository, 'find_many' ) ) {
+			$keys = array();
+			$this->extractor->transform( $html, function ( $unit ) use ( &$keys ) { $keys[] = $unit['key']; return null; }, $context );
+			$public_rows = $this->repository->find_many( $keys, $language );
+		}
+		$result = $this->extractor->transform( $html, function ( $unit ) use ( $language, $editing, $memory, $public_rows ) {
 			if ( ( $editing || $this->scan_mode ) && method_exists( $this->repository, 'record_context' ) ) $this->repository->record_context( $unit['key'], get_queried_object_id() );
-			$row = $language ? $this->repository->find( $unit['key'], $language, $unit['source_hash'] ) : null;
+			$row = null !== $public_rows ? ( $public_rows[$unit['key']] ?? null ) : ( $language ? $this->repository->find( $unit['key'], $language, $unit['source_hash'] ) : null );
+			if ( null !== $public_rows && $row && $row['source_hash'] !== $unit['source_hash'] ) $row = null;
 			// A corrected dictionary entry supersedes stale imported copies, never page-specific manual text.
 			if ( $row && 'translatepress-import' === ( $row['provider'] ?? '' ) ) { $corrected = $memory->manual_lookup( $unit['source_html'] ); if ( null !== $corrected ) return $corrected; }
 			$imported = ! $row || ( 'untranslated' === $row['status'] && '' === $row['translated_html'] ) ? $memory->lookup( $unit['source_html'] ) : null;

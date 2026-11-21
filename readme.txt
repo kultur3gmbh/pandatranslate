@@ -3,7 +3,7 @@ Contributors: kultur3gmbh
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.9
+Stable tag: 0.7.10
 License: GPL-3.0-only
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -66,6 +66,9 @@ The WordPress.org distribution uses the standard WordPress.org update system. Se
 The pandatranslate_migration_sources filter allows verified future import adapters to register label, detected and render callbacks. Adapters must enforce administrative capabilities, nonces, bounded batches and existing manual-translation protection. TranslatePress is the only supported built-in source in 0.5.0; no other importer is advertised as working. The Migration tab appears only for detected registered sources.
 
 == Changelog ==
+
+= 0.7.10 =
+* Load public-page translation units in bounded batches instead of one database query per text. Keep editor/job reads fresh and preserve manual/draft precedence.
 
 = 0.7.9 =
 * Avoid unnecessary paid-entitlement processing when only the two included languages are active. Additional-language permissions remain checked.

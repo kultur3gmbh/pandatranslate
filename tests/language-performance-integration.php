@@ -39,3 +39,20 @@ try {
 	remove_filter('sanitize_title',$slug,999);
 	remove_filter('pandatranslate_multilingual_available',$edition,PHP_INT_MAX);
 }
+// Public page lookup performs bounded bulk queries, without cross-language or persistent caches.
+global $wpdb;
+$repo = new PandaTranslate_Repository();
+$wpdb->query('START TRANSACTION');
+try {
+ $keys=array();
+ for($i=0;$i<301;$i++) {
+  $source='Synthetic bulk '.wp_generate_uuid4();$key=hash('sha256',$source);$keys[]=$key;
+  $repo->save(array('key'=>$key,'source_hash'=>hash('sha256',$source),'source_html'=>$source),'zz-bulk','Translated '.$source,'published','manual');
+ }
+ $q=$wpdb->num_queries;$rows=$repo->find_many($keys,'zz-bulk');
+ pt_performance_expect(count($rows)===301 && $wpdb->num_queries-$q===2,'301 page units use two bounded queries');
+ pt_performance_expect($repo->find_many($keys,'zz-other')===array(),'Bulk lookup remains isolated by target language');
+ $first=$rows[$keys[0]];
+ $repo->save(array('key'=>$first['unit_key'],'source_hash'=>$first['source_hash'],'source_html'=>$first['source_html']),'zz-bulk','Corrected now','published','manual');
+ pt_performance_expect($repo->find_many(array($keys[0]),'zz-bulk')[$keys[0]]['translated_html']==='Corrected now','Next render reads fresh edited translation');
+} finally {$wpdb->query('ROLLBACK');}

@@ -15,9 +15,10 @@ function current_user_can() { return true; }
 function wp_verify_nonce( $value, $action ) { return 'synthetic-editor-nonce' === $value && 'pandatranslate_editor' === $action; }
 function apply_filters( $hook, $value ) { return $value; }
 final class Page_Repository {
-	public $row = null; public $writes = array(); public $corrected = false;
+	public $bulk_reads = 0; public $single_reads = 0; public $row = null; public $writes = array(); public $corrected = false;
 	public function published_imports( $language, $hashes ) { $rows = array( array( 'source_html'=>'Hallo Welt', 'translated_html'=>'Hello world' ) ); if ( $this->corrected ) $rows[] = array( 'source_html'=>'Hallo Welt', 'translated_html'=>'Corrected dictionary', 'provider'=>'manual-dictionary' ); return $rows; }
-	public function find( $key, $language, $hash = null ) { return $this->row; }
+	public function find( $key, $language, $hash = null ) { $this->single_reads++; return $this->row; }
+	public function find_many( $keys, $language ) { $this->bulk_reads++; $rows=array(); if($this->row) foreach($keys as $key) $rows[$key]=array_merge($this->row,array('source_hash'=>hash('sha256','Hallo Welt'))); return $rows; }
 	public function save( ...$args ) { $this->writes[] = $args; return true; }
 }
 $repository = new Page_Repository();
@@ -68,3 +69,6 @@ foreach ( array( false, true ) as $source_page ) {
 }
 unset($_GET['pt_lang']);
 echo "Unicode script/style/JSON and CSP-relevant script bytes preserved on source and translated pages: ok\n";
+
+check(true, $repository->bulk_reads > 0);
+check(true, $repository->single_reads > 0);

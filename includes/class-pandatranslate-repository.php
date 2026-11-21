@@ -58,6 +58,17 @@ final class PandaTranslate_Repository {
 		return $wpdb->get_row( $wpdb->prepare( $sql, $args ), ARRAY_A );
 	}
 
+	/** Snapshot for one public render only; editor and job reads remain uncached. */
+	public function find_many( array $keys, $language ) {
+		global $wpdb; $rows = array();
+		foreach ( array_chunk( array_values( array_unique( $keys ) ), 250 ) as $chunk ) {
+			$sql = 'SELECT * FROM %i WHERE target_language = %s AND unit_key IN (' . implode( ',', array_fill( 0, count( $chunk ), '%s' ) ) . ')';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Bound identifiers/keys; request-local public-render snapshot only.
+			foreach ( $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( self::table(), $language ), $chunk ) ), ARRAY_A ) as $row ) $rows[$row['unit_key']] = $row;
+		}
+		return $rows;
+	}
+
 	public function published_imports( $language, array $hashes ) {
 		global $wpdb; $rows = array();
 		foreach ( array_chunk( $hashes, 250 ) as $chunk ) {
