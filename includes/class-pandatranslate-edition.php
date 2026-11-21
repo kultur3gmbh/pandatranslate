@@ -11,7 +11,10 @@ final class PandaTranslate_Edition {
 	}
 	public static function multilingual() { return (bool) apply_filters( 'pandatranslate_multilingual_available', false ); }
 	public static function effective_languages( array $rows ) {
-		if ( self::multilingual() ) return $rows;
+		// Two active languages are included in Free; no paid entitlement lookup is
+		// needed for that result on every gettext call. Additional languages still
+		// evaluate the current entitlement without caching it.
+		if ( count( array_filter( $rows, function ( $row ) { return ! empty( $row['active'] ); } ) ) <= 2 || self::multilingual() ) return $rows;
 		$active = 0;
 		foreach ( $rows as &$row ) if ( ! empty( $row['active'] ) && ++$active > 2 ) $row['active'] = 0;
 		unset( $row ); return $rows;
