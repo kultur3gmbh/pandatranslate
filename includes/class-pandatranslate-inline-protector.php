@@ -43,9 +43,9 @@ final class PandaTranslate_Inline_Protector {
 		$stack = array();
 		foreach ( $found as $token ) {
 			preg_match( self::TOKEN_PATTERN, $token, $parts );
-			if ( 'OPEN' === $parts[2] ) $stack[] = strtolower( preg_replace( '/^<([a-z0-9]+).*$/i', '$1', $tokens[ $token ] ) );
+			if ( 'OPEN' === $parts[2] ) { preg_match( '/^<([a-z0-9]+)/i', $tokens[ $token ], $name ); $stack[] = strtolower( $name[1] ?? '' ); }
 			if ( 'CLOSE' === $parts[2] ) {
-				$tag = strtolower( preg_replace( '/^<\/([a-z0-9]+).*$/i', '$1', $tokens[ $token ] ) );
+				preg_match( '/^<\/([a-z0-9]+)/i', $tokens[ $token ], $name ); $tag = strtolower( $name[1] ?? '' );
 				if ( ! $stack || array_pop( $stack ) !== $tag ) return new WP_Error( 'pandatranslate_tokens_nested', __( 'Formatting placeholders are not validly nested.', 'pandatranslate' ) );
 			}
 		}

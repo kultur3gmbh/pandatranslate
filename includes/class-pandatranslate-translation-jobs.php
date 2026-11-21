@@ -90,10 +90,19 @@ final class PandaTranslate_Translation_Jobs {
 		if ( ! $result['total_units'] ) $result['total_units'] = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE target_language = %s AND id <= %d {$condition}", $table, $language, $limit ) );
 		if ( ! $limit ) return new WP_Error( 'pandatranslate_no_sources', __( 'No source content was collected. Check published content types and source-page collection.', 'pandatranslate' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
-		$units = $wpdb->get_results( $wpdb->prepare( "SELECT id,unit_key FROM %i WHERE target_language = %s AND id > %d AND id <= %d {$condition} ORDER BY id ASC LIMIT 5", $table, $language, $cursor, $limit ), ARRAY_A );
+		$batch_size = 'google-v2' === $api_id && method_exists( 'PandaTranslate_Plugin', 'auto_translate_many' ) ? 25 : 5;
+		$units = $wpdb->get_results( $wpdb->prepare( "SELECT id,unit_key,source_html FROM %i WHERE target_language = %s AND id > %d AND id <= %d {$condition} ORDER BY id ASC LIMIT %d", $table, $language, $cursor, $limit, $batch_size ), ARRAY_A );
+		$truncated = false;
+		if ( $batch_size > 5 ) {
+			$bounded = array(); $bytes = 0;
+			foreach ( $units as $unit ) { $size = strlen( $unit['source_html'] ?? '' ); if ( $bounded && $bytes + $size > 5000 ) { $truncated = true; break; } $bounded[] = $unit; $bytes += $size; }
+			$units = $bounded;
+		}
+
+		$batch_results = $batch_size > 5 ? PandaTranslate_Plugin::auto_translate_many( array_column( $units, 'unit_key' ), $language, $api_id, $input['mode'] ?? 'missing' ) : null;
 		foreach ( $units as $unit ) {
 			if ( self::is_cancelled() ) { $result['cancelled'] = true; break; }
-			$translated = PandaTranslate_Plugin::auto_translate_known( $unit['unit_key'], $language, $api_id );
+			$translated = null !== $batch_results ? $batch_results[$unit['unit_key']] : PandaTranslate_Plugin::auto_translate_known( $unit['unit_key'], $language, $api_id );
 			if ( is_wp_error( $translated ) ) {
 				if ( 'pandatranslate_cancelled' === $translated->get_error_code() ) { $result['cancelled'] = true; break; }
 				++$result['errors']; $code = sanitize_key( $translated->get_error_code() );
@@ -103,10 +112,10 @@ final class PandaTranslate_Translation_Jobs {
 				if ( $result['consecutive_errors'] >= 3 ) $result['failed'] = true;
 			} else { ++$result['success']; $result['consecutive_errors'] = 0; }
 			$result['cursor'] = (int) $unit['id'];
-			if ( ! empty( $result['failed'] ) ) break;
+			if ( ! empty( $result['failed'] ) && null === $batch_results ) break;
 		}
 		if ( self::is_cancelled() ) $result['cancelled'] = true;
-		$result['limit_id'] = $limit; $result['done'] = count( $units ) < 5 || ! empty( $result['failed'] ) || ! empty( $result['cancelled'] );
+		$result['limit_id'] = $limit; $result['done'] = ( count( $units ) < $batch_size && ! $truncated ) || ! empty( $result['failed'] ) || ! empty( $result['cancelled'] );
 		$result['message'] = sprintf( /* translators: %1$d: translated items, %2$d: failed items. */
 		__( '%1$d translated · %2$d failed', 'pandatranslate' ), $result['success'], $result['errors'] ) . ' · ' . PandaTranslate_Providers::label( $api_id );
 		$result['processed'] = $result['success'] + $result['errors']; $result['total'] = $result['total_units'];

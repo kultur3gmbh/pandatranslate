@@ -1968,3 +1968,19 @@ msgstr ""
 #: includes/class-pandatranslate-migration.php
 msgid "No translated entries were found in the available TranslatePress dictionary tables."
 msgstr ""
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "Invalid translation mode."
+msgstr ""
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "A translation is already running."
+msgstr ""
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "Translation queued. The tab can be closed."
+msgstr ""
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "Overall progress"
+msgstr ""

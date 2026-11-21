@@ -39,6 +39,7 @@ final class PandaTranslate_Plugin {
 		add_action( 'pandatranslate_process_post', array( $this, 'process_post' ), 10, 4 );
 		add_action( 'admin_post_pandatranslate_translate_site', array( $this, 'queue_site' ) );
 		add_action( 'wp_ajax_pandatranslate_cancel_translation', array( $this, 'cancel_translation' ) );
+		add_action( 'wp_ajax_pandatranslate_start_language_job', array( $this, 'start_language_job' ) );
 		add_action( 'wp_ajax_pandatranslate_language_batch', array( $this, 'language_translation_batch' ) );
 		add_action( 'wp_ajax_pandatranslate_site_progress', array( $this, 'site_progress' ) );
 		add_action( 'wp_ajax_pandatranslate_translation_overview', array( $this, 'translation_overview' ) );
@@ -618,6 +619,18 @@ final class PandaTranslate_Plugin {
 		wp_send_json_success( array( 'cancelled' => true ) );
 	}
 
+	public function start_language_job() {
+		if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( array( 'message' => __( 'Access denied.', 'pandatranslate' ) ), 403 );
+		check_ajax_referer( 'pandatranslate_language_batch', 'nonce' );
+		$raw_languages = wp_unslash( $_POST['languages'] ?? '[]' );
+		$languages = is_string( $raw_languages ) ? json_decode( $raw_languages, true ) : null;
+		if ( ! is_array( $languages ) || count( $languages ) > 100 || array_filter( $languages, function ( $value ) { return ! is_string( $value ); } ) ) wp_send_json_error( array( 'message' => __( 'Invalid target language.', 'pandatranslate' ) ), 400 );
+		$job = PandaTranslate_Site_Progress::start_languages( array_map( 'sanitize_key', $languages ), sanitize_key( wp_unslash( $_POST['api'] ?? '' ) ), sanitize_key( wp_unslash( $_POST['mode'] ?? '' ) ), sanitize_key( wp_unslash( $_POST['run_id'] ?? '' ) ) );
+		if ( is_wp_error( $job ) ) wp_send_json_error( array( 'message' => $job->get_error_message() ), 409 );
+		ob_start(); PandaTranslate_Site_Progress::render(); $html = ob_get_clean();
+		wp_send_json_success( array( 'id' => $job['id'], 'html' => $html, 'running' => PandaTranslate_Site_Progress::running( $job ) ) );
+	}
+
 	public function language_translation_batch() {
 		if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( array( 'message' => __( 'Access denied.', 'pandatranslate' ) ), 403 );
 		check_ajax_referer( 'pandatranslate_language_batch', 'nonce' );
@@ -641,7 +654,7 @@ final class PandaTranslate_Plugin {
 	public function start_buffer() {
 		if ( is_admin() || wp_doing_ajax() || is_feed() || is_robots() || is_trackback() ) return;
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound,WordPress.Security.NonceVerification.Recommended -- Authenticated internal loopback uses a cryptographic one-time transient token; validate and consume it before collecting. A visitor selector alone cannot authorize writes. DONOTCACHEPAGE is the intentional WordPress/cache-plugin interoperability constant, not a new plugin-global name.
-		if ( isset( $_GET['pandatranslate_scan'] ) ) { $token = sanitize_text_field( wp_unslash( $_GET['pandatranslate_scan'] ) ); $job = get_transient( 'pandatranslate_scan_' . $token ); if ( $job && ( ! is_array( $job ) || ( $job['language'] ?? '' ) === $this->target_language() ) ) { $this->scan_mode = true; $this->scan_job = is_array( $job ) ? $job : array(); PandaTranslate_Translation_Jobs::set_run( $this->scan_job['run_id'] ?? '' ); delete_transient( 'pandatranslate_scan_' . $token ); if ( ! defined( 'DONOTCACHEPAGE' ) ) define( 'DONOTCACHEPAGE', true ); nocache_headers(); header( 'X-Panda Translate-Scan: 1' ); } }
+		if ( isset( $_GET['pandatranslate_scan'] ) ) { $token = sanitize_text_field( wp_unslash( $_GET['pandatranslate_scan'] ) ); $job = get_transient( 'pandatranslate_scan_' . $token ); if ( $job && ( ! is_array( $job ) || ( $job['language'] ?? '' ) === $this->target_language() ) ) { $this->scan_mode = true; $this->scan_job = is_array( $job ) ? $job : array(); PandaTranslate_Translation_Jobs::set_run( $this->scan_job['run_id'] ?? '' ); delete_transient( 'pandatranslate_scan_' . $token ); if ( ! defined( 'DONOTCACHEPAGE' ) ) define( 'DONOTCACHEPAGE', true ); nocache_headers(); header( 'X-PandaTranslate-Scan: 1' ); } }
 		ob_start( array( $this, 'transform_page' ) );
 	}
 
@@ -816,6 +829,12 @@ final class PandaTranslate_Plugin {
 		$provider_source = 'gettext' === ( $row['source_kind'] ?? '' ) ? '' : self::provider_language( $s['source_language'] );
 		$translated = $provider->translate( $glossary['text'], $provider_source, self::provider_language( $language ), array( 'unit_key' => $key, 'requested_language' => $language, 'api' => $api_id ) );
 		if ( is_wp_error( $translated ) ) return $translated;
+		return self::finish_automatic_translation( $row, $translated, $protected, $glossary, $s, $language, $api_id );
+	}
+
+	private static function finish_automatic_translation( $row, $translated, $protected, $glossary, $s, $language, $api_id ) {
+		if ( class_exists( 'PandaTranslate_Translation_Jobs' ) && PandaTranslate_Translation_Jobs::is_cancelled() ) return new WP_Error( 'pandatranslate_cancelled', __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ) );
+		$repository = new PandaTranslate_Repository();
 		$translated = PandaTranslate_Features::restore_glossary( $translated, $glossary['tokens'] );
 		if ( is_wp_error( $translated ) ) return $translated;
 		$restored = PandaTranslate_Inline_Protector::restore( $translated, $protected['tokens'] );
@@ -827,6 +846,31 @@ final class PandaTranslate_Plugin {
 		if ( method_exists( $repository, 'save_automatic_revision' ) ) $saved = $repository->save_automatic_revision( $row, $restored, $status, $provider_id );
 		else $saved = $repository->save( $unit, $language, $restored, $status, $provider_id );
 		return is_wp_error( $saved ) ? $saved : array( 'translated_html' => $restored, 'status' => $status, 'provider' => $provider_id, 'api' => $api_id, 'revision' => method_exists( $repository, 'save_automatic_revision' ) && is_array( $saved ) ? PandaTranslate_Repository::revision( $saved ) : '' );
+	}
+
+	public static function auto_translate_many( array $keys, $language, $api_id, $mode = 'missing' ) {
+		if ( ! PandaTranslate_Edition::allows_language( $language ) ) return array_fill_keys( $keys, new WP_Error( 'pandatranslate_language', __( 'Invalid target language.', 'pandatranslate' ) ) );
+		$provider = PandaTranslate_Providers::get( $api_id );
+		if ( is_wp_error( $provider ) || ! method_exists( $provider, 'translate_many' ) ) { $out = array(); foreach ( $keys as $key ) $out[$key] = is_wp_error( $provider ) ? $provider : self::auto_translate_known( $key, $language, $api_id ); return $out; }
+		$s = self::get_settings(); $repository = new PandaTranslate_Repository(); $rows = $repository->find_many( $keys, $language ); $groups = array(); $items = array(); $out = array();
+		foreach ( $keys as $key ) {
+			$row = $rows[$key] ?? null;
+			if ( ! $row ) { $out[$key] = new WP_Error( 'pandatranslate_unit_missing', __( 'Open the page in the visual editor before translating this unit.', 'pandatranslate' ) ); continue; }
+			if ( 'missing' === $mode && 'untranslated' !== $row['status'] && '' !== trim( $row['translated_html'] ) ) { $out[$key] = array( 'skipped' => true ); continue; }
+			$protected = PandaTranslate_Inline_Protector::protect( $row['source_html'] ); $glossary = PandaTranslate_Features::protect_glossary( $protected['text'], $language );
+			$source = 'gettext' === ( $row['source_kind'] ?? '' ) ? '' : self::provider_language( $s['source_language'] );
+			$groups[$source][$key] = $glossary['text']; $items[$key] = array( $row, $protected, $glossary );
+		}
+		foreach ( $groups as $source => $texts ) {
+			$values = $provider->translate_many( $texts, $source, self::provider_language( $language ) );
+			foreach ( $texts as $key => $text ) {
+				$value = is_wp_error( $values ) ? $values : ( $values[$key] ?? new WP_Error( 'pandatranslate_google_v2_response', __( 'Google v2 did not return a translation.', 'pandatranslate' ) ) );
+				list( $row, $protected, $glossary ) = $items[$key];
+				$out[$key] = is_wp_error( $value ) ? $value : self::finish_automatic_translation( $row, $value, $protected, $glossary, $s, $language, $api_id );
+				$repository->record_error( $key, $language, is_wp_error( $out[$key] ) ? $out[$key]->get_error_code() . ': ' . PandaTranslate_Translation_Jobs::safe_error( $out[$key] ) : '' );
+			}
+		}
+		return $out;
 	}
 
 	public static function save_known_translation( $key, $language, $translated_text, $status ) {
@@ -917,15 +961,15 @@ final class PandaTranslate_Plugin {
     public function process_post( $post_id, $api_id = '', $language = '', $job_id = '' ) {
         PandaTranslate_Translation_Jobs::set_run( $job_id ); $job = $job_id ? PandaTranslate_Site_Progress::state( true ) : array();
         if ( PandaTranslate_Translation_Jobs::is_cancelled() || ( $job_id && ( ( $job['id'] ?? '' ) !== $job_id || ! empty( $job['cancelled'] ) ) ) ) return;
-        $api_id = $api_id ?: PandaTranslate_Providers::default_id(); $failed = false; $ran = false;
+        $api_id = $api_id ?: PandaTranslate_Providers::default_id(); $failed = false; $ran = false; $failed_detail = '';
         if ( is_wp_error( PandaTranslate_Providers::get( $api_id ) ) ) $failed = true;
         else foreach ( self::language_rows() as $row ) {
             if ( empty( $row['active'] ) || $row['code'] === self::get_settings()['source_language'] || ( $language && $language !== $row['code'] ) ) continue;
             if ( PandaTranslate_Translation_Jobs::is_cancelled() ) return;
-            $ran = true; $result = PandaTranslate_Translation_Jobs::scan( $post_id, $row['code'], $api_id, (bool) $job_id, $job_id ); $failed = $failed || is_wp_error( $result );
+            $ran = true; $result = PandaTranslate_Translation_Jobs::scan( $post_id, $row['code'], $api_id, (bool) $job_id, $job_id ); $failed = $failed || is_wp_error( $result ); if ( is_wp_error( $result ) ) $failed_detail = PandaTranslate_Translation_Jobs::safe_error( $result );
             if ( ! is_wp_error( $result ) && class_exists( 'PandaTranslate_SEO' ) && ( ! class_exists( 'PandaTranslate_Edition' ) || PandaTranslate_Edition::multilingual() ) ) PandaTranslate_SEO::auto_translate( $post_id, $row['code'], $api_id );
         }
-        if ( class_exists( 'PandaTranslate_Site_Progress' ) ) PandaTranslate_Site_Progress::finish( $job_id, $post_id, $language, $failed || ! $ran );
+        if ( class_exists( 'PandaTranslate_Site_Progress' ) ) PandaTranslate_Site_Progress::finish( $job_id, $post_id, $language, $failed || ! $ran, $failed_detail );
     }
     public function translation_overview() {
         if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( array(), 403 );

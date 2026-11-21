@@ -24,32 +24,25 @@
 	var picker = document.querySelector('[data-language-picker]'), rows = document.querySelector('[data-language-rows]');
 	if(rows)rows.addEventListener('change',function(e){if(rows.dataset.languageLimit!=='2'||!e.target.matches('input[type="checkbox"][name$="[active]"]')||!e.target.checked)return;rows.querySelectorAll('[data-language-row]:not(.is-source-language) input[type="checkbox"][name$="[active]"]').forEach(function(input){if(input!==e.target)input.checked=false;});});
     function cancelRun(id,nonce){return fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_cancel_translation',nonce:nonce,run_id:id})}).then(function(r){return r.json().then(function(v){if(!r.ok||!v.success)throw new Error(config.cancelFailed);return v.data;});});}
-    function cancelButton(){var c=document.createElement('button');c.type='button';c.className='contactpanda-large-action';c.dataset.contactpandaAction='cancel';c.dataset.contactpandaActionMode='labelled';c.textContent=config.cancelLabel;return c;}
+    var jobPollTimer=null;
+    function jobControls(running){document.querySelectorAll('[data-language-translate],[data-language-translate-all]').forEach(function(button){if(!button.dataset.jobPrevious)button.dataset.jobPrevious=button.disabled?'disabled':'enabled';button.disabled=running||button.dataset.jobPrevious==='disabled';});if(apiSelector)apiSelector.disabled=running;}
+    function pollSiteJob(){
+        var host=document.querySelector('[data-site-job]');if(!host)return;
+        clearTimeout(jobPollTimer);
+        fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_site_progress',nonce:host.dataset.nonce})}).then(function(response){return response.json().then(function(result){if(!response.ok||!result.success)throw new Error(config.cancelFailed);return result.data;});}).then(function(data){
+            host.innerHTML=data.html;jobControls(data.running);if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(host);
+            if(data.running)jobPollTimer=window.setTimeout(pollSiteJob,4000);else refreshOverview(host.dataset.nonce,'');
+        }).catch(function(){jobPollTimer=window.setTimeout(pollSiteJob,10000);});
+    }
     function runTranslation(button,languages,mode){
         if(!selectedApi()||((mode==='all'||mode==='failed')&&!window.confirm(button.dataset.confirm)))return;
-        var host=button.closest('.pandatranslate-language-actions'),output=host.querySelector('[data-language-run-status]'),progress=host.querySelector('progress'),index=0,api=selectedApi(),succeeded=0,failed=0,stopping=false,finished=false;
+        var host=button.closest('.pandatranslate-language-actions'),output=host.querySelector('[data-language-run-status]');
         var runId='run-'+Date.now().toString(36)+'-'+Array.from(crypto.getRandomValues(new Uint32Array(2))).map(function(n){return n.toString(36);}).join('-');
-        var controls=Array.from(document.querySelectorAll('[data-language-translate],[data-language-translate-all]')).concat(apiSelector?[apiSelector]:[]),previous=controls.map(function(c){return c.disabled;}),cancel=cancelButton();
-        controls.forEach(function(c){c.disabled=true;});host.appendChild(cancel);if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(host);
-        if(progress){progress.hidden=false;progress.removeAttribute('value');}
-        function finish(message){if(finished)return;finished=true;controls.forEach(function(c,i){c.disabled=previous[i];});cancel.remove();output.textContent=message;refreshOverview(button.dataset.nonce,message);}
-        cancel.addEventListener('click',function(){stopping=true;cancel.disabled=true;output.textContent=config.cancelling;cancelRun(runId,button.dataset.nonce).catch(function(e){if(!finished)output.textContent=e.message;});});
-        function next(){
-            if(stopping){finish(config.cancelled);return;}
-            if(index>=languages.length){finish((config.batchSummary||'%1$d translated · %2$d failed').replace('%1$d',succeeded).replace('%2$d',failed));return;}
-            var language=languages[index],state={phase:'start',cursor:0,limit_id:0,success:0,errors:0,api:api,total_pages:0,total_units:0,prepared:0,run_id:runId,consecutive_errors:0,last_error_code:'',last_error_message:''};
-            function batch(){
-                if(stopping){finish(config.cancelled);return;}
-                fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams(Object.assign({action:'pandatranslate_language_batch',nonce:button.dataset.nonce,language:language,mode:mode},state))}).then(function(r){return r.json().then(function(v){if(!r.ok||!v.success)throw new Error(v.data&&v.data.message||'Request failed');return v.data;});}).then(function(data){
-                    Object.keys(state).forEach(function(key){if(data[key]!==undefined)state[key]=data[key];});
-                    output.textContent=language.toUpperCase()+' ('+(index+1)+' / '+languages.length+') · '+data.message;
-                    if(progress){if(data.total>0){progress.max=data.total;progress.value=Math.min(data.processed,data.total);}else progress.removeAttribute('value');}
-                    if(data.failed){finish(output.textContent);return;}
-                    if(stopping||data.cancelled){finish(data.cancelled?data.message:config.cancelled+' '+data.message);return;}
-                    if(data.done){succeeded+=data.success||0;failed+=data.errors||0;index++;next();}else batch();
-                }).catch(function(error){if(progress)progress.hidden=true;finish(language.toUpperCase()+' · '+error.message);});
-            }batch();
-        }next();
+        jobControls(true);
+        fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_start_language_job',nonce:button.dataset.nonce,languages:JSON.stringify(languages),mode:mode,api:selectedApi(),run_id:runId})}).then(function(response){return response.json().then(function(result){if(!response.ok||!result.success)throw new Error(result.data&&result.data.message||'Request failed');return result.data;});}).then(function(data){
+            var job=document.querySelector('[data-site-job]');if(job)job.innerHTML=data.html;
+            pollSiteJob();
+        }).catch(function(error){output.textContent=error.message;jobControls(false);pollSiteJob();});
     }
     function refreshOverview(nonce,message){
         fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_translation_overview',nonce:nonce})}).then(function(response){return response.json();}).then(function(result){var old=document.querySelector('[data-translation-overview]');if(!result.success||!result.data.html||!old)return;var container=document.createElement('div');container.innerHTML=result.data.html;old.replaceWith(container);var summary=document.querySelector('[data-last-run-status]');if(!summary){summary=document.createElement('p');summary.dataset.lastRunStatus='';summary.setAttribute('role','status');container.before(summary);}summary.textContent=message;if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(container);}).catch(function(){});
@@ -57,8 +50,8 @@
     document.addEventListener('click',function(event){var button=event.target.closest('[data-language-translate],[data-language-translate-all]');if(!button)return;if(button.hasAttribute('data-language-translate-all'))runTranslation(button,JSON.parse(button.dataset.languages),'missing');else runTranslation(button,[button.dataset.languageTranslate],button.dataset.mode);});
 
 	var siteJob=document.querySelector('[data-site-job]');
-    if(siteJob&&siteJob.children.length){(function poll(){fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_site_progress',nonce:siteJob.dataset.nonce})}).then(function(response){return response.json();}).then(function(result){if(result.success){siteJob.innerHTML=result.data.html;if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(siteJob);if(result.data.running)window.setTimeout(poll,4000);}}).catch(function(){});})();}
-    document.addEventListener('click',function(e){var b=e.target.closest('[data-site-job-cancel]');if(!b)return;b.disabled=true;cancelRun(b.dataset.siteJobCancel,b.dataset.nonce).then(function(){b.textContent=config.cancelled;}).catch(function(err){b.disabled=false;b.textContent=err.message;});});
+    if(siteJob)pollSiteJob();
+    document.addEventListener('click',function(e){var b=e.target.closest('[data-site-job-cancel]');if(!b)return;b.disabled=true;cancelRun(b.dataset.siteJobCancel,b.dataset.nonce).then(function(){b.textContent=config.cancelled;pollSiteJob();}).catch(function(err){b.disabled=false;b.textContent=err.message;});});
 	var combobox=document.querySelector('[data-language-combobox]'),languageSearch=document.querySelector('[data-language-search]'),trigger=document.querySelector('[data-language-trigger]'),popup=document.querySelector('[data-language-popup]'),selection=document.querySelector('[data-language-selection]'),empty=document.querySelector('[data-language-empty]'),options=document.querySelectorAll('[data-language-option]');
 	function closeLanguages(){if(!popup)return;popup.hidden=true;trigger.setAttribute('aria-expanded','false');}
 	function availableOptions(){var found=0,q=languageSearch?languageSearch.value.trim().toLowerCase():'';options.forEach(function(option){var used=rows&&rows.querySelector('input[type="hidden"][value="'+option.dataset.code+'"]'),match=!q||(option.dataset.code+' '+option.dataset.name+' '+option.dataset.localName).toLowerCase().indexOf(q)!==-1;option.hidden=!!used||!match;if(!option.hidden)found++;});if(empty)empty.hidden=found!==0;}

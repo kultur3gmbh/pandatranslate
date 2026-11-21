@@ -26,3 +26,9 @@ $brand = PandaTranslate_Inline_Protector::protect('Panda Translate and Panda Tra
 assert(4 === count($brand['tokens']));
 assert(strpos($brand['text'], 'Panda Translate') === false);
 assert(PandaTranslate_Inline_Protector::restore($brand['text'], $brand['tokens']) === 'Panda Translate and Panda Translate Multilingual: <strong>translations</strong>.');
+
+$multiline = "Read <a\n href=\"https://example.test\"><strong\n class=\"label\">more</strong></a>.";
+$protected = PandaTranslate_Inline_Protector::protect($multiline);
+assert(PandaTranslate_Inline_Protector::restore($protected['text'], $protected['tokens']) === $multiline);
+assert(is_wp_error(PandaTranslate_Inline_Protector::restore('[[PT:0:OPEN]][[PT:1:OPEN]]wrong[[PT:3:CLOSE]][[PT:2:CLOSE]]', $protected['tokens'])));
+echo "Multiline builder tags retain nesting; actually crossed tags remain rejected: ok\n";

@@ -1970,3 +1970,19 @@ msgstr "Sono state trovate tabelle TranslatePress, ma non è stato possibile ass
 #: includes/class-pandatranslate-migration.php
 msgid "No translated entries were found in the available TranslatePress dictionary tables."
 msgstr "Nessuna voce tradotta trovata nelle tabelle del dizionario TranslatePress disponibili."
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "Invalid translation mode."
+msgstr "Modalità di traduzione non valida."
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "A translation is already running."
+msgstr "Una traduzione è già in corso."
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "Translation queued. The tab can be closed."
+msgstr "Traduzione in coda. La scheda può essere chiusa."
+
+#: includes/class-pandatranslate-site-progress.php
+msgid "Overall progress"
+msgstr "Avanzamento complessivo"
