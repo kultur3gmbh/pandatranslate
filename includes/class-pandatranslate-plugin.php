@@ -659,6 +659,15 @@ final class PandaTranslate_Plugin {
 	}
 
 	public function transform_page( $html ) {
+		$started = microtime( true );
+		try { return $this->render_page( $html ); }
+		finally {
+			// Standard, content-free timing metric separates our HTML work from
+			// WordPress/theme generation when investigating slow translated pages.
+			if ( ! headers_sent() ) header( 'Server-Timing: pandatranslate;dur=' . round( ( microtime( true ) - $started ) * 1000, 2 ), false );
+		}
+	}
+	private function render_page( $html ) {
 		$language = $this->target_language();
 		if ( ! apply_filters( 'pandatranslate_capture_allowed', true ) ) {
 			// Only already-published public header/footer text is displayed; never collect a transaction page.

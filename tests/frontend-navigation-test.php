@@ -5,6 +5,7 @@ if (!function_exists('apply_filters')) { function apply_filters($hook,$value,...
 require __DIR__ . '/routing-test.php';
 require dirname( __DIR__ ) . '/includes/class-pandatranslate-frontend.php';
 function is_admin() { global $admin; return ! empty( $admin ); }
+function has_filter( $hook ) { return false; }
 function get_query_var( $key ) { global $query_language; return 'pt_lang' === $key ? $query_language : ''; }
 function esc_attr( $value ) { return htmlspecialchars( $value, ENT_QUOTES, 'UTF-8' ); }
 function url_to_postid( $url ) { return false !== strpos( $url, '/about/' ) ? 10 : 0; }

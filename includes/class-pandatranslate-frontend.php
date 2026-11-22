@@ -5,9 +5,27 @@ require_once __DIR__ . '/class-pandatranslate-html.php';
 /** Language presentation and internal navigation, without filtering global home/admin URLs. */
 final class PandaTranslate_Frontend {
 	private static $post_ids = array();
+	private static $slug_languages = array();
 	public static function boot() {
 		add_filter( 'language_attributes', array( __CLASS__, 'language_attributes' ), 99, 2 );
 		add_filter( 'nav_menu_link_attributes', array( __CLASS__, 'menu_attributes' ), 99, 2 );
+		foreach ( array( 'added_post_meta', 'updated_post_meta', 'deleted_post_meta' ) as $hook ) add_action( $hook, array( __CLASS__, 'invalidate_slugs' ), 10, 3 );
+		add_action( 'switch_blog', array( __CLASS__, 'invalidate_slugs' ) );
+	}
+	public static function invalidate_slugs( $unused = null, $post_id = null, $key = null ) {
+		if ( null === $key || 0 === strpos( $key, '_pandatranslate_slug_' ) ) { self::$slug_languages = array(); self::$post_ids = array(); }
+	}
+	/** Avoid WordPress's full rewrite-rule scan for every link when no translated post slug exists. */
+	private static function has_post_slugs( $language ) {
+		global $wpdb;
+		// Virtual metadata providers may supply slugs without storing post meta.
+		if ( has_filter( 'get_post_metadata' ) || ! isset( $wpdb->postmeta ) ) return true;
+		$key = get_current_blog_id() . '|' . $language;
+		if ( ! array_key_exists( $key, self::$slug_languages ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Request-local existence guard, invalidated by metadata writes and blog switches.
+			self::$slug_languages[$key] = (bool) $wpdb->get_var( $wpdb->prepare( "SELECT meta_id FROM %i WHERE meta_key = %s AND meta_value <> '' LIMIT 1", $wpdb->postmeta, '_pandatranslate_slug_' . $language ) );
+		}
+		return self::$slug_languages[$key];
 	}
 	public static function current_language() {
 		if ( is_admin() ) return '';
@@ -87,7 +105,7 @@ final class PandaTranslate_Frontend {
 		foreach ( array( 'pt_lang', 'lang', 'rest_route', '_wpnonce', '_wp_http_referer', 'wc-ajax', 'wc-api', 'add-to-cart', 'download_file', 'key', 'action', 'preview', 'customize_changeset_uuid', 'elementor-preview', 'pandatranslate', 'pandatranslate_scan' ) as $key ) if ( array_key_exists( $key, $args ) ) return $url;
 		if ( self::technical_path( rawurldecode( $path ), $endpoints ) ) return $url;
 		if ( $endpoints && is_callable( array( 'PandaTranslate_Routing', 'system_url' ) ) ) { $system = PandaTranslate_Routing::system_url( $decoded, $language ); if ( null !== $system ) return $system; }
-		if ( ! $endpoints && 'path' === $settings['url_mode'] && ( ! class_exists( 'PandaTranslate_Edition' ) || PandaTranslate_Edition::multilingual() ) && function_exists( 'url_to_postid' ) ) {
+		if ( ! $endpoints && 'path' === $settings['url_mode'] && ( ! class_exists( 'PandaTranslate_Edition' ) || PandaTranslate_Edition::multilingual() ) && function_exists( 'url_to_postid' ) && self::has_post_slugs( $language ) ) {
 			$source = home_url( '/' . $path ) . ( isset( $parts['query'] ) ? '?' . $parts['query'] : '' );
 			if ( ! array_key_exists( $source, self::$post_ids ) ) self::$post_ids[$source] = url_to_postid( $source );
 			$id = self::$post_ids[$source]; $slug = $id ? get_post_meta( $id, '_pandatranslate_slug_' . $language, true ) : '';
