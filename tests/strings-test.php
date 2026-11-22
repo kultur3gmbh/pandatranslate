@@ -18,4 +18,9 @@ assert('Private visitor text'===PandaTranslate_Strings::gettext('Private visitor
 $admin=true;assert('Order %s'===PandaTranslate_Strings::gettext('Order %s','Order %s','woocommerce'));
 PandaTranslate_Strings::$email_language='de';assert('Bestellung %s'===PandaTranslate_Strings::gettext('Order %s','Order %s','woocommerce'));
 assert(!PandaTranslate_Strings::same_placeholders('%s %d','%d %s'));assert(PandaTranslate_Strings::same_placeholders('%1$s %2$d','%1$s %2$d'));
+assert( ! PandaTranslate_Strings::same_placeholders( 'Ranges up to 100 percent. Use %s.', 'Jusqu’à 100 %. Extension : %s.' ) );
+assert( PandaTranslate_Strings::same_placeholders( '100%%. Use %s.', '100 %%. Extension : %s.' ) );
+assert( PandaTranslate_Strings::same_placeholders( '0 to 100 percent', '0 à 100 %' ) );
+$source_format = 'Ranges up to 100 percent. Use %s.';
+assert( 'Ranges up to 100 percent. Use the plugin.' === sprintf( PandaTranslate_Strings::gettext( 'Jusqu’à 100 %. Extension : %s.', $source_format, 'theme' ), 'the plugin' ) );
 echo "Static strings: domain/context lookup, published-only dictionary, printf types/order retained, no visitor collection or external calls, admin untouched except explicit mail locale: ok\n";

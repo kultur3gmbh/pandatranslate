@@ -88,6 +88,8 @@ final class PandaTranslate_Strings {
 		try {
 		$language = self::$email_language ? ( PandaTranslate_Edition::allows_language( self::$email_language ) ? self::$email_language : '' ) : self::frontend_language();
 		if ( ! $language ) return $translated;
+		// Native language packs can contain the same malformed sprintf strings.
+		if ( false !== strpos( $original, '%' ) && ! self::valid_format_translation( $original, $translated ) ) $translated = $original;
 		$key = hash( 'sha256', 'gettext|' . $domain . '|' . $context . '|' . $original ); $cache_key = $key . '|' . $language;
 		if ( array_key_exists( $cache_key, self::$cache ) ) return self::$cache[$cache_key] ?? $translated;
 			$repo = new PandaTranslate_Repository();
@@ -103,10 +105,22 @@ final class PandaTranslate_Strings {
 		} finally { self::$lookup_seconds += microtime( true ) - $started; self::$busy = false; }
 	}
 	public static function same_placeholders( $source, $target ) {
-		preg_match_all( '/(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]/', $source, $a ); preg_match_all( '/(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]/', $target, $b );
+		$format = '/%(?:%|(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX])/';
+		preg_match_all( $format, $source, $a ); preg_match_all( $format, $target, $b );
+		// A bare percentage mark can survive the token comparison yet cause PHP
+		// sprintf() to throw (for example, "0 à 100 %" before a preserved %s).
+		if ( ! self::valid_format_translation( $source, $target ) ) return false;
 		// Conservatively preserve unnumbered argument order as well as types.
 		preg_match_all( '/\{[a-z_][a-z0-9_]*\}/i', $source, $c ); preg_match_all( '/\{[a-z_][a-z0-9_]*\}/i', $target, $d ); sort( $c[0] ); sort( $d[0] );
 		return $a[0] === $b[0] && $c[0] === $d[0];
+	}
+	private static function valid_format_translation( $source, $target ) {
+		if ( false === strpos( $source, '%' ) || $source === $target ) return true;
+		$format = '/%(?:%|(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX])/';
+		preg_match_all( $format, $source, $source_tokens );
+		if ( ! array_diff( $source_tokens[0], array( '%%' ) ) || false !== strpos( preg_replace( $format, '', $source ), '%' ) ) return true;
+		preg_match_all( $format, $target, $target_tokens );
+		return false === strpos( preg_replace( $format, '', $target ), '%' ) && $source_tokens[0] === $target_tokens[0];
 	}
 	public static function dictionary( $language ) {
 		if ( PandaTranslate_Repository::SCHEMA_VERSION !== (int) get_option( 'pandatranslate_schema' ) ) return array();
