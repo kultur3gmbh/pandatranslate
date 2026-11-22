@@ -65,10 +65,10 @@ final class PandaTranslate_Features {
 	}
 	public static function flag( $code ) { $flags = array( 'de' => '🇩🇪', 'de-de' => '🇩🇪', 'de-de-formal' => '🇩🇪', 'de-at' => '🇦🇹', 'de-ch' => '🇨🇭', 'en' => '🇬🇧', 'en-us' => '🇺🇸', 'en-gb' => '🇬🇧', 'fr' => '🇫🇷', 'fr-ca' => '🇨🇦', 'it' => '🇮🇹', 'es' => '🇪🇸', 'es-mx' => '🇲🇽', 'es-ar' => '🇦🇷', 'pt' => '🇵🇹', 'pt-br' => '🇧🇷', 'nl' => '🇳🇱', 'pl' => '🇵🇱', 'cs' => '🇨🇿', 'sk' => '🇸🇰', 'sl' => '🇸🇮', 'hu' => '🇭🇺', 'hr' => '🇭🇷', 'ro' => '🇷🇴', 'bg' => '🇧🇬', 'el' => '🇬🇷', 'tr' => '🇹🇷', 'uk' => '🇺🇦', 'ru' => '🇷🇺', 'ar' => '🇸🇦', 'he' => '🇮🇱', 'zh' => '🇨🇳', 'zh-tw' => '🇹🇼', 'ja' => '🇯🇵', 'ko' => '🇰🇷', 'hi' => '🇮🇳', 'bn' => '🇧🇩', 'ur' => '🇵🇰', 'fa' => '🇮🇷', 'id' => '🇮🇩', 'ms' => '🇲🇾', 'th' => '🇹🇭', 'vi' => '🇻🇳', 'tl' => '🇵🇭', 'sw' => '🇰🇪', 'af' => '🇿🇦', 'am' => '🇪🇹', 'zu' => '🇿🇦', 'xh' => '🇿🇦', 'ha' => '🇳🇬', 'yo' => '🇳🇬', 'qu' => '🇵🇪', 'mn' => '🇲🇳', 'ne' => '🇳🇵', 'si' => '🇱🇰' ); return $flags[ $code ] ?? ( $flags[ strtok( $code, '-' ) ] ?? '🌐' ); }
 
-	public static function language_name( $code, $native = true ) {
+	public static function language_name( $code, $native = true, $display_locale = null ) {
 		$entry = self::catalog()[$code] ?? array( 'name' => strtoupper( $code ), 'locale' => $code );
 		if ( $native ) return $entry['name'];
-		$locale = function_exists( 'get_locale' ) ? get_locale() : 'en_US';
+		$locale = $display_locale ?? ( function_exists( 'get_locale' ) ? get_locale() : 'en_US' );
 		if ( class_exists( 'Locale' ) ) { $name = Locale::getDisplayName( $entry['locale'], $locale ); if ( $name && $name !== $entry['locale'] ) return $name; }
 		$names = array(
 			'en' => array( 'de' => 'German', 'en' => 'English', 'fr' => 'French', 'it' => 'Italian', 'es' => 'Spanish', 'pt' => 'Portuguese', 'nl' => 'Dutch', 'pl' => 'Polish', 'cs' => 'Czech', 'sk' => 'Slovak', 'sl' => 'Slovenian', 'hu' => 'Hungarian', 'hr' => 'Croatian', 'ro' => 'Romanian', 'bg' => 'Bulgarian', 'el' => 'Greek', 'tr' => 'Turkish', 'uk' => 'Ukrainian', 'ru' => 'Russian', 'ar' => 'Arabic', 'he' => 'Hebrew', 'zh' => 'Chinese', 'ja' => 'Japanese', 'ko' => 'Korean', 'hi' => 'Hindi', 'bn' => 'Bengali', 'ur' => 'Urdu', 'fa' => 'Persian', 'id' => 'Indonesian', 'ms' => 'Malay', 'th' => 'Thai', 'vi' => 'Vietnamese', 'tl' => 'Filipino', 'sw' => 'Swahili', 'af' => 'Afrikaans', 'am' => 'Amharic', 'zu' => 'Zulu', 'xh' => 'Xhosa', 'ha' => 'Hausa', 'yo' => 'Yoruba', 'qu' => 'Quechua', 'mn' => 'Mongolian', 'ne' => 'Nepali', 'si' => 'Sinhala' ),

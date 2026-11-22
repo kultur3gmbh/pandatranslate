@@ -43,9 +43,12 @@ final class PandaTranslate_Migration {
 	}
 	/** TranslatePress dictionary suffixes contain source AND target locales. */
 	public static function target_language( $pair ) {
-		$pair = self::language_pair( $pair ); if ( ! $pair ) return '';
-		$locale = $pair[1]; $code = str_replace( '_', '-', $locale );
-		$rows = PandaTranslate_Plugin::language_rows();
+		$pair = self::language_pair( $pair );
+		return $pair ? self::target_for_locale( $pair[1] ) : '';
+	}
+	private static function target_for_locale( $locale ) {
+		$code = str_replace( '_', '-', $locale );
+		$rows = PandaTranslate_Plugin::configured_language_rows();
 		$candidates = array();
 		foreach ( $rows as $row ) {
 			$row_locale = strtolower( str_replace( '-', '_', $row['locale'] ) );
@@ -54,28 +57,54 @@ final class PandaTranslate_Migration {
 		}
 		return 1 === count( $candidates ) ? $candidates[0] : $code;
 	}
+	private static function normalize_target( $code ) {
+		foreach ( PandaTranslate_Plugin::configured_language_rows() as $row ) {
+			if ( $row['code'] === $code ) return $code;
+		}
+		$locale = strtolower( str_replace( '-', '_', $code ) );
+		return self::target_language( $code ) ?: self::target_for_locale( $locale );
+	}
+	private static function normalize_report_languages( $languages ) {
+		$result = array();
+		foreach ( $languages as $code => $stats ) {
+			$target = self::normalize_target( $code );
+			$previous = $result[ $target ] ?? null;
+			$processed = (int) ( $stats['processed'] ?? 0 );
+			$previous_processed = (int) ( $previous['processed'] ?? 0 );
+			// Older reports could contain the same run under both short and regional codes.
+			if ( null === $previous || $processed > $previous_processed || ( $processed === $previous_processed && $target === $code ) ) {
+				$result[ $target ] = $stats;
+			}
+		}
+		return $result;
+	}
 	private static function table_language( $table ) {
 		global $wpdb;
 		return self::target_language( substr( $table, strlen( $wpdb->prefix . 'trp_dictionary_' ) ) );
 	}
 	public static function repair_language_assignments() {
 		if ( ! current_user_can( 'manage_options' ) ) return;
-		$signature = md5( 'locale-pair-v2|' . wp_json_encode( PandaTranslate_Plugin::language_rows() ) );
+		$signature = md5( 'locale-pair-v3|' . wp_json_encode( PandaTranslate_Plugin::configured_language_rows() ) );
 		if ( get_option( 'pandatranslate_migration_language_repair' ) === $signature ) return;
 		global $wpdb; $table = PandaTranslate_Repository::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
 		$legacy = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT target_language FROM %i WHERE provider = 'translatepress-import'", $table ) );
 		if ( $wpdb->last_error ) return;
 		foreach ( $legacy as $old ) {
-			$target = self::target_language( $old ); if ( ! $target || $old === $target ) continue;
+			$target = self::normalize_target( $old ); if ( ! $target || $old === $target ) continue;
 			// Preserve an existing target entry on a unique-key collision; never delete translations.
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
 			$result = $wpdb->query( $wpdb->prepare( "UPDATE %i AS legacy LEFT JOIN %i AS existing ON existing.unit_key = legacy.unit_key AND existing.target_language = %s SET legacy.target_language = %s WHERE legacy.target_language = %s AND legacy.provider = 'translatepress-import' AND existing.id IS NULL", $table, $table, $target, $target, $old ) );
 			if ( false === $result ) return;
 		}
-		$report = (array) get_option( self::REPORT_OPTION, array() ); $languages = array();
-		foreach ( (array) ( $report['languages'] ?? array() ) as $old => $stats ) { $target = self::target_language( $old ) ?: $old; if ( ! isset( $languages[ $target ] ) ) $languages[ $target ] = array(); foreach ( $stats as $key => $value ) $languages[ $target ][ $key ] = (int) ( $languages[ $target ][ $key ] ?? 0 ) + (int) $value; }
-		if ( isset( $report['languages'] ) ) { $report['languages'] = $languages; update_option( self::REPORT_OPTION, $report, false ); }
+		$report = (array) get_option( self::REPORT_OPTION, array() );
+		if ( isset( $report['languages'] ) ) {
+			$normalized = self::normalize_report_languages( $report['languages'] );
+			if ( $normalized !== $report['languages'] ) {
+				$report['languages'] = $normalized;
+				update_option( self::REPORT_OPTION, $report, false );
+			}
+		}
 		update_option( 'pandatranslate_migration_language_repair', $signature, false );
 	}
 	public static function tables() {
@@ -121,13 +150,18 @@ final class PandaTranslate_Migration {
 		return PandaTranslate_Features::catalog()[ $language ]['name'] ?? strtoupper( $language );
 	}
 	private static function render_language_report( $source_totals ) {
-		$report = (array) get_option( self::REPORT_OPTION, array() ); $languages = (array) ( $report['languages'] ?? array() ); if ( ! $source_totals && ! $languages ) return;
+		$report = (array) get_option( self::REPORT_OPTION, array() ); $languages = self::normalize_report_languages( (array) ( $report['languages'] ?? array() ) ); if ( ! $source_totals && ! $languages ) return;
 		echo '<section class="pandatranslate-migration-report"><h3>' . esc_html__( 'Migration status by language', 'pandatranslate' ) . '</h3>';
-		if ( ! empty( $report['completed_at'] ) ) echo '<p><small>' . esc_html( sprintf( /* translators: %s: completion date and time. */
-		__( 'Last completed migration: %s', 'pandatranslate' ), $report['completed_at'] ) ) . '</small></p>';
+		echo '<p data-migration-completed-at' . ( empty( $report['completed_at'] ) ? ' hidden' : '' ) . '><small>' . esc_html( self::completed_label( $report ) ) . '</small></p>';
 		foreach ( array_unique( array_merge( array_keys( $source_totals ), array_keys( $languages ) ) ) as $language ) { $stats = wp_parse_args( $languages[ $language ] ?? array(), array( 'total' => $source_totals[ $language ] ?? 0, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 ) ); $total = isset( $languages[ $language ] ) && ! empty( $report['missing_only'] ) ? (int) $stats['total'] : max( (int) $stats['total'], (int) ( $source_totals[ $language ] ?? 0 ) ); $percent = $total ? min( 100, round( (int) $stats['processed'] / $total * 100 ) ) : ( isset( $languages[ $language ] ) && ! empty( $report['missing_only'] ) ? 100 : 0 ); $name = self::report_language_label( $language ); echo '<article class="pandatranslate-migration-language" data-migration-language="' . esc_attr( $language ) . '"><div><strong>' . esc_html( PandaTranslate_Features::flag( $language ) . ' ' . $name ) . '</strong><b data-language-percent>' . esc_html( $percent ) . '%</b></div><span class="pandatranslate-progress-track"><i data-language-bar style="width:' . esc_attr( $percent ) . '%"></i></span><p><span>' . esc_html__( 'Processed', 'pandatranslate' ) . ': <strong data-language-processed>' . esc_html( number_format_i18n( $stats['processed'] ) ) . '</strong> / <strong data-language-total>' . esc_html( number_format_i18n( $total ) ) . '</strong></span><span>' . esc_html__( 'Imported', 'pandatranslate' ) . ': <strong data-language-imported>' . esc_html( number_format_i18n( $stats['imported'] ) ) . '</strong></span><span>' . esc_html__( 'Skipped', 'pandatranslate' ) . ': <strong data-language-skipped>' . esc_html( number_format_i18n( $stats['skipped'] ) ) . '</strong></span><span>' . esc_html__( 'Errors', 'pandatranslate' ) . ': <strong data-language-errors>' . esc_html( number_format_i18n( $stats['errors'] ) ) . '</strong></span></p></article>'; }
 		echo '</section>';
 	}
+	private static function completed_label( $report ) {
+		if ( empty( $report['completed_at'] ) ) return '';
+		return sprintf( /* translators: %s: completion date and time. */
+			__( 'Last completed migration: %s', 'pandatranslate' ), $report['completed_at'] );
+	}
+
 	private static function source_key( $table, $row ) {
 		return hash( 'sha256', 'translatepress|' . $table . '|' . $row['id'] . '|' . $row['original'] );
 	}
@@ -201,7 +235,7 @@ final class PandaTranslate_Migration {
 		if ( $table_index >= count( $tables ) || ( $missing_only && ! empty( $_POST['reset'] ) && 0 === $total ) ) {
 			$report['completed_at'] = current_time( 'mysql' );
 			update_option( self::REPORT_OPTION, $report, false );
-			wp_send_json_success( array( 'done' => true, 'total' => $total, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'languages' => $report['languages'] ?? array() ) );
+			wp_send_json_success( array( 'done' => true, 'total' => $total, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'languages' => $report['languages'] ?? array(), 'completed_label' => self::completed_label( $report ) ) );
 		}
 
 		$table = $tables[ $table_index ];
@@ -234,9 +268,9 @@ final class PandaTranslate_Migration {
 		$batch = compact( 'processed', 'imported', 'skipped', 'errors' );
 		if ( ! isset( $report['languages'][ $language ] ) ) $report['languages'][ $language ] = array( 'total' => $processed, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 );
 		foreach ( $batch as $key => $amount ) $report['languages'][ $language ][ $key ] += $amount;
-		if ( $done ) $report['completed_at'] = current_time( 'mysql' );
+		if ( $done && 0 === array_sum( array_column( $report['languages'], 'errors' ) ) ) $report['completed_at'] = current_time( 'mysql' );
 		update_option( self::REPORT_OPTION, $report, false );
-		wp_send_json_success( $batch + compact( 'done', 'total', 'table_index', 'last_id', 'language' ) + array( 'languages' => $report['languages'] ) );
+		wp_send_json_success( $batch + compact( 'done', 'total', 'table_index', 'last_id', 'language' ) + array( 'languages' => $report['languages'], 'completed_label' => self::completed_label( $report ) ) );
 	}
 
 	public static function import() {

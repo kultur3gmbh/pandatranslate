@@ -2028,3 +2028,7 @@ msgstr ""
 #: includes/class-pandatranslate-migration.php
 msgid "Import only missing translations"
 msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+msgid "No content has been recorded for this language yet. The translation job determines the amount of content when it starts."
+msgstr ""

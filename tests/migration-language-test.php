@@ -1,7 +1,7 @@
 <?php
 define( 'ABSPATH', __DIR__ );
 class PandaTranslate_Plugin {
-	public static function language_rows() { return array(
+	public static function configured_language_rows() { return array(
 		array( 'code' => 'de', 'locale' => 'de_DE', 'formality' => 'standard' ),
 		array( 'code' => 'de-formal', 'locale' => 'de_DE', 'formality' => 'formal' ),
 		array( 'code' => 'en', 'locale' => 'en_US', 'formality' => 'standard' ),
@@ -20,7 +20,7 @@ function update_option( $key, $value, $autoload = false ) { global $options; $op
 class Migration_DB {
 	public $last_error = ''; public $queries = array(); public $prefix = 'wp_';
 	public function esc_like( $text ) { return $text; }
-	public function get_col( $sql ) { return is_array( $sql ) && strpos( $sql[0], 'SHOW TABLES' ) === 0 ? array( 'wp_trp_dictionary_de_de_en_us', 'wp_trp_dictionary_de_de_fr_fr' ) : array( 'de-de-en-us', 'de-de-fr-fr', 'en' ); }
+	public function get_col( $sql ) { return is_array( $sql ) && strpos( $sql[0], 'SHOW TABLES' ) === 0 ? array( 'wp_trp_dictionary_de_de_en_us', 'wp_trp_dictionary_de_de_fr_fr' ) : array( 'de-de-en-us', 'de-de-fr-fr', 'en', 'ko-kr' ); }
 	public function prepare( $sql, ...$args ) { return array( $sql, $args ); }
 	public function query( $query ) { $this->queries[] = $query; return 1; }
 }
@@ -31,23 +31,30 @@ foreach ( array( 'de_de_formal_fr_fr' => 'fr', 'DE-DE-FORMAL-FR-FR' => 'fr', 'en
 }
 $label = new ReflectionMethod( 'PandaTranslate_Migration', 'report_language_label' ); if ( PHP_VERSION_ID < 80100 ) $label->setAccessible( true );
 if ( 'DE-DE → EN-US' !== $label->invoke( null, 'en' ) ) throw new RuntimeException( 'Incorrect source-target label.' );
+$options['pandatranslate_migration_report']['languages']['ko-kr'] = array( 'total' => 3069, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 );
+$options['pandatranslate_migration_report']['languages']['ko'] = array( 'total' => 3069, 'processed' => 3069, 'imported' => 3069, 'skipped' => 0, 'errors' => 0 );
+$normalize = new ReflectionMethod( 'PandaTranslate_Migration', 'normalize_report_languages' );
+if ( PHP_VERSION_ID < 80100 ) $normalize->setAccessible( true );
+$stats = $normalize->invoke( null, $options['pandatranslate_migration_report']['languages'] );
+assert( ! isset( $stats['ko-kr'] ) && 3069 === $stats['ko']['processed'] && 3069 === $stats['ko']['total'] );
 PandaTranslate_Migration::repair_language_assignments();
-if ( 2 !== count( $wpdb->queries ) ) throw new RuntimeException( 'Expected two legacy repairs.' );
+if ( 3 !== count( $wpdb->queries ) ) throw new RuntimeException( 'Expected three legacy repairs.' );
 if ( array( 'wp_pandatranslate_units', 'wp_pandatranslate_units', 'en', 'en', 'de-de-en-us' ) !== $wpdb->queries[0][1] ) throw new RuntimeException( 'Incorrect repair arguments.' );
+if ( array( 'wp_pandatranslate_units', 'wp_pandatranslate_units', 'ko', 'ko', 'ko-kr' ) !== $wpdb->queries[2][1] ) throw new RuntimeException( 'Korean locale alias was not mapped.' );
 if ( false === strpos( $wpdb->queries[0][0], 'existing.id IS NULL' ) ) throw new RuntimeException( 'Missing collision protection.' );
 if ( 19345 !== $options['pandatranslate_migration_report']['languages']['en']['processed'] ) throw new RuntimeException( 'Report totals lost.' );
 if ( isset( $options['pandatranslate_migration_report']['languages']['de-de-en-us'] ) ) throw new RuntimeException( 'Legacy report key remains.' );
 PandaTranslate_Migration::repair_language_assignments();
-if ( 2 !== count( $wpdb->queries ) ) throw new RuntimeException( 'Repair must run only once.' );
+if ( 3 !== count( $wpdb->queries ) ) throw new RuntimeException( 'Repair must run only once.' );
 echo "migration language assignment and legacy repair: ok\n";
 assert( 'published' === PandaTranslate_Migration::imported_status( 1 ) );
 assert( 'published' === PandaTranslate_Migration::imported_status( 2 ) );
 assert( 'untranslated' === PandaTranslate_Migration::imported_status( 0 ) );
 PandaTranslate_Migration::restore_imported_publication();
-assert( 4 === count( $wpdb->queries ) );
-assert( false !== strpos( $wpdb->queries[2][0], "p.status = 'reviewed'" ) );
-assert( false !== strpos( $wpdb->queries[2][0], 'BINARY p.translated_html = BINARY s.translated' ) );
-assert( false !== strpos( $wpdb->queries[2][0], 's.status IN (1,2)' ) );
+assert( 5 === count( $wpdb->queries ) );
+assert( false !== strpos( $wpdb->queries[3][0], "p.status = 'reviewed'" ) );
+assert( false !== strpos( $wpdb->queries[3][0], 'BINARY p.translated_html = BINARY s.translated' ) );
+assert( false !== strpos( $wpdb->queries[3][0], 's.status IN (1,2)' ) );
 PandaTranslate_Migration::restore_imported_publication();
-assert( 4 === count( $wpdb->queries ) );
+assert( 5 === count( $wpdb->queries ) );
 echo "TranslatePress publication restored only for untouched legacy imports, once: ok\n";

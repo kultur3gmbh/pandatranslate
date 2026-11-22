@@ -2013,3 +2013,7 @@ msgstr "Deactivate the current translation language before activating another, o
 #: includes/class-pandatranslate-migration.php
 msgid "Import only missing translations"
 msgstr "Import only missing translations"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "No content has been recorded for this language yet. The translation job determines the amount of content when it starts."
+msgstr "No content has been recorded for this language yet. The translation job determines the amount of content when it starts."

@@ -2153,3 +2153,7 @@ msgstr "Deaktiviere zuerst die derzeit aktive Übersetzungssprache. Mit Panda Tr
 #: includes/class-pandatranslate-migration.php
 msgid "Import only missing translations"
 msgstr "Nur fehlende Übersetzungen importieren"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "No content has been recorded for this language yet. The translation job determines the amount of content when it starts."
+msgstr "Für diese Sprache wurden noch keine Inhalte erfasst. Der Übersetzungsauftrag ermittelt den Umfang beim Start."

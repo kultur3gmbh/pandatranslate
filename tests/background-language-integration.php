@@ -23,11 +23,18 @@ try{
  $first=$repo->find($keys[0],'fr');$repo->save_revision($first,'Manual remains','published');
  $overview = new ReflectionMethod( 'PandaTranslate_Plugin', 'render_translation_progress' );
  $overview->setAccessible( true );
+ $admin_locale = static function () { return 'de_DE'; };
+ add_filter( 'locale', $admin_locale );
  ob_start();
  $overview->invoke( PandaTranslate_Plugin::boot() );
  $overview_html = ob_get_clean();
+ remove_filter( 'locale', $admin_locale );
+ pt_background_expect( false !== strpos( $overview_html, 'lang="es-ES">Español</span>' ) && false !== strpos( $overview_html, '(Spanisch' ), 'Progress uses both the native name and the active admin language' );
  preg_match( '/<button[^>]*data-language-translate="es"[^>]*data-mode="missing"[^>]*>[^<]*<\/button>/', $overview_html, $spanish_action );
  pt_background_expect( ! empty( $spanish_action ) && false === strpos( $spanish_action[0], ' disabled' ), 'A newly enabled Spanish target offers automatic translation before its first scan' );
+ preg_match( '#<article[^>]*>(?:(?!</article>).)*data-language-translate="es"(?:(?!</article>).)*</article>#s', $overview_html, $spanish_card );
+ pt_background_expect( ! empty( $spanish_card ) && false === strpos( $spanish_card[0], '0 of 0 units' ) && false === strpos( $spanish_card[0], '0 source characters' ) && false !== strpos( $spanish_card[0], 'determines the amount of content when it starts' ), 'A new target reports unknown scope instead of misleading zero counts' );
+
 
  $job=PandaTranslate_Site_Progress::start_languages(array('fr','es'),'background-fixture','missing','background-request-1');pt_background_expect(!is_wp_error($job),'Three configured languages accept two selected background targets');$jobs[]=$job;
  pt_background_expect(PT_Background_Fixture_API::$calls===0,'Enqueue does not perform a paid/provider operation');

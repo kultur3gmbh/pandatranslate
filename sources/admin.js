@@ -461,6 +461,7 @@
 		var migrationStart = migration.querySelector('[data-migration-start]');
 		var migrationProgress = migration.querySelector('[data-migration-progress]');
 		var migrationStatus = migration.querySelector('[data-migration-status]');
+		var migrationCompletedAt = document.querySelector('[data-migration-completed-at]');
 		var counts = ['processed', 'imported', 'skipped', 'errors'];
 		var migrationState;
 		migrationConfirm.addEventListener('change', function () {
@@ -531,6 +532,10 @@
 					updateMigration(Boolean(data.done));
 					if (data.done) {
 						var complete = migrationState.errors === 0;
+						if (migrationCompletedAt && data.completed_label) {
+							migrationCompletedAt.querySelector('small').textContent = data.completed_label;
+							migrationCompletedAt.hidden = false;
+						}
 						migrationStatus.textContent = complete
 							? config.migration.complete
 							: config.migration.failed;
