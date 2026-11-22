@@ -75,7 +75,7 @@ final class PandaTranslate_Plugin {
 			'google_key_last_error' => '',
 			'auto_enabled' => 0,
 			'auto_post_types' => array( 'post', 'page' ),
-			'auto_publish' => 0,
+			'auto_publish' => 1,
 			'show_admin_bar' => 1,
 			'switcher_menu_locations' => array(),
 			'switcher_floating' => 0,
@@ -355,7 +355,7 @@ final class PandaTranslate_Plugin {
 					<h2><?php esc_html_e( 'Automatic translation', 'pandatranslate' ); ?></h2><p><?php esc_html_e( 'Automatically collect and translate newly published or updated content with the configured translation API.', 'pandatranslate' ); ?></p>
 					<label class="pandatranslate-check"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[auto_enabled]" value="1" <?php checked( $s['auto_enabled'], 1 ); ?>><span><?php esc_html_e( 'Automatically translate new and updated content', 'pandatranslate' ); ?></span></label>
 					<h3><?php esc_html_e( 'Content types', 'pandatranslate' ); ?></h3><?php foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $post_type ) : ?><label class="pandatranslate-check"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[auto_post_types][]" value="<?php echo esc_attr( $post_type->name ); ?>" <?php checked( in_array( $post_type->name, (array) $s['auto_post_types'], true ) ); ?>><span><?php echo esc_html( $post_type->labels->name ); ?></span></label><?php endforeach; ?>
-					<label class="pandatranslate-check"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[auto_publish]" value="1" <?php checked( $s['auto_publish'], 1 ); ?>><span><?php esc_html_e( 'Publish automatic translations immediately', 'pandatranslate' ); ?></span></label><p><small><?php esc_html_e( 'Recommended: leave disabled so translations remain automatic drafts until reviewed.', 'pandatranslate' ); ?></small></p>
+					<label class="pandatranslate-check"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[auto_publish]" value="1" <?php checked( $s['auto_publish'], 1 ); ?>><span><?php esc_html_e( 'Publish automatic translations immediately', 'pandatranslate' ); ?></span></label><p><small><?php esc_html_e( 'Turn off to save new automatic translations as drafts for review.', 'pandatranslate' ); ?></small></p>
 					<?php $this->render_api_selector( self::OPTION . '[auto_provider]', 'pandatranslate-run-api' ); $this->render_translation_progress(); ?>
 					<section class="pandatranslate-site-actions"><h3><?php esc_html_e( 'Translate existing website', 'pandatranslate' ); ?></h3><p><?php esc_html_e( 'Queues all published content of the selected types for the selected translation API.', 'pandatranslate' ); ?></p>
 					<p class="pandatranslate-run-provider"><span><?php esc_html_e( 'Translation API', 'pandatranslate' ); ?></span><strong data-api-run-label><?php echo esc_html( PandaTranslate_Providers::label( PandaTranslate_Providers::default_id() ) ); ?></strong></p><div class="pandatranslate-site-action-grid">
@@ -795,7 +795,8 @@ final class PandaTranslate_Plugin {
 	public function auto_translate_unit( WP_REST_Request $request ) {
 		if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'manage_options' ) ) return new WP_Error( 'pandatranslate_api_denied', __( 'Translation API permission is required.', 'pandatranslate' ), array( 'status' => 403 ) );
 		if ( true !== rest_sanitize_boolean( $request['confirm'] ) ) return new WP_Error( 'pandatranslate_confirmation', __( 'Confirm the paid Google request.', 'pandatranslate' ), array( 'status' => 400 ) );
-		$result = self::auto_translate_known( sanitize_text_field( $request['key'] ), sanitize_key( $request['language'] ), sanitize_key( $request['api'] ?? '' ) );
+		$can_publish = current_user_can( 'publish_posts' ) || current_user_can( 'manage_options' );
+		$result = self::auto_translate_known( sanitize_text_field( $request['key'] ), sanitize_key( $request['language'] ), sanitize_key( $request['api'] ?? '' ), ! $can_publish );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
@@ -826,19 +827,23 @@ final class PandaTranslate_Plugin {
 		return is_wp_error( $result ) ? $result : rest_ensure_response( array( 'success' => true, 'translation' => $result ) );
 	}
 
-	public static function auto_translate_known( $key, $language, $api_id = '' ) {
-		$result = self::translate_known( $key, $language, $api_id );
+	public static function auto_translate_known( $key, $language, $api_id = '', $draft_only = false ) {
+		$result = self::translate_known( $key, $language, $api_id, $draft_only );
 		$repository = new PandaTranslate_Repository();
 		if ( method_exists( $repository, 'record_error' ) ) $repository->record_error( $key, $language, is_wp_error( $result ) ? $result->get_error_code() . ': ' . PandaTranslate_Translation_Jobs::safe_error( $result ) : '' );
 		return $result;
 	}
 
-	private static function translate_known( $key, $language, $api_id = '' ) {
+	private static function translate_known( $key, $language, $api_id, $draft_only ) {
 		if ( class_exists( 'PandaTranslate_Edition' ) && ! PandaTranslate_Edition::allows_language( $language ) ) return new WP_Error( 'pandatranslate_language', __( 'Select an active target language.', 'pandatranslate' ) );
 		$repository = new PandaTranslate_Repository();
 		$row = $repository->find( $key, $language );
 		if ( ! $row ) return new WP_Error( 'pandatranslate_unit_missing', __( 'Open the page in the visual editor before translating this unit.', 'pandatranslate' ) );
 		$s = self::get_settings();
+		if ( $draft_only ) {
+			if ( 'published' === $row['status'] ) return new WP_Error( 'pandatranslate_publish_denied', __( 'Publishing permission is required.', 'pandatranslate' ), array( 'status' => 403 ) );
+			$s['auto_publish'] = 0;
+		}
 		$api_id = $api_id ?: PandaTranslate_Providers::default_id(); $provider = PandaTranslate_Providers::get( $api_id ); if ( is_wp_error( $provider ) ) return $provider;
 		$protected = PandaTranslate_Template_Protector::prepare_row( $row );
 		$glossary = PandaTranslate_Features::protect_glossary( $protected['text'], $language );

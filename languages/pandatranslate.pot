@@ -1146,10 +1146,8 @@ msgstr ""
 msgid "Recent MCP activity"
 msgstr ""
 
-#: includes/class-pandatranslate-plugin.php:337
-msgid ""
-"Recommended: leave disabled so translations remain automatic drafts until "
-"reviewed."
+#: includes/class-pandatranslate-plugin.php
+msgid "Turn off to save new automatic translations as drafts for review."
 msgstr ""
 
 #: includes/class-pandatranslate-plugin.php:469

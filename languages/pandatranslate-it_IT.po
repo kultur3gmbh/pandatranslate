@@ -1149,13 +1149,9 @@ msgstr "Pronto"
 msgid "Recent MCP activity"
 msgstr "Attività recente del MCP"
 
-#: includes/class-pandatranslate-plugin.php:337
-msgid ""
-"Recommended: leave disabled so translations remain automatic drafts until "
-"reviewed."
-msgstr ""
-"Consigliato: lasciare disabilitato in modo che le traduzioni rimangano bozze "
-"automatiche fino alla revisione."
+#: includes/class-pandatranslate-plugin.php
+msgid "Turn off to save new automatic translations as drafts for review."
+msgstr "Disattivare per salvare le nuove traduzioni automatiche come bozze da rivedere."
 
 #: includes/class-pandatranslate-plugin.php:469
 msgid "Refresh recommended"

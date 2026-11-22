@@ -15,6 +15,15 @@ try{
  pt_bulk_expect($repo->find($keys[1],'fr')['status']==='automatic','Bulk output respects unpublished automatic preference');
  $result=PandaTranslate_Plugin::auto_translate_many($keys,'fr','google-v2','missing');pt_bulk_expect($requests===1&&$result[$keys[1]]['skipped'],'Already translated units are not sent again');
  $racing_key=$keys[0];$result=PandaTranslate_Plugin::auto_translate_many(array($keys[0]),'fr','google-v2','all');pt_bulk_expect(is_wp_error($result[$keys[0]])&&$repo->find($keys[0],'fr')['translated_html']==='Manual during request','Atomic revision preserves edits made while a bulk API request is in flight');
+ unset( $settings['auto_publish'] );
+ $result = PandaTranslate_Plugin::auto_translate_many( array( $keys[1] ), 'fr', 'google-v2', 'all' );
+ pt_bulk_expect( ! is_wp_error( $result[$keys[1]] ) && 'published' === $repo->find( $keys[1], 'fr' )['status'], 'Automatic translations are published when no review preference is saved' );
+ $result = PandaTranslate_Plugin::auto_translate_known( $keys[2], 'fr', 'google-v2', true );
+ pt_bulk_expect( ! is_wp_error( $result ) && 'automatic' === $repo->find( $keys[2], 'fr' )['status'], 'Draft-only callers cannot publish through the new default' );
+ $before_requests = $requests;
+ $result = PandaTranslate_Plugin::auto_translate_known( $keys[1], 'fr', 'google-v2', true );
+ pt_bulk_expect( is_wp_error( $result ) && $requests === $before_requests && 'published' === $repo->find( $keys[1], 'fr' )['status'], 'Draft-only translation cannot replace a published version' );
+ $settings['auto_publish'] = 0;
  $source='<div style="width:104% !important"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%27x%27%3E"><p>Stored builder text <strong>{first_name}</strong></p></div>';$unit=hash('sha256',$source);$repo->save(array('key'=>$unit,'source_hash'=>hash('sha256',$source),'source_html'=>$source),'fr','','untranslated');
  $result=PandaTranslate_Plugin::auto_translate_many(array($unit),'fr','google-v2','missing');$stored=$repo->find($unit,'fr');
  pt_bulk_expect(!is_wp_error($result[$unit])&&strpos($stored['translated_html'],'width:104% !important')!==false&&strpos($stored['translated_html'],'%3Csvg%20xmlns%3D%27x%27%3E')!==false,'Block HTML and encoded image URLs survive the full provider and real WordPress save path');

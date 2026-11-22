@@ -141,7 +141,7 @@ final class PandaTranslate_MCP {
 		}
 		if ( 'pandatranslate_google_translate' === $name ) {
 			if ( true !== ( $args['confirm'] ?? false ) ) return new WP_Error( 'confirmation_required', __( 'Set confirm to true to start the paid Google request.', 'pandatranslate' ) );
-			return PandaTranslate_Plugin::auto_translate_known( sanitize_text_field( $args['unit_key'] ?? '' ), sanitize_key( $args['language'] ?? '' ), sanitize_key( $args['api'] ?? '' ) );
+			return PandaTranslate_Plugin::auto_translate_known( sanitize_text_field( $args['unit_key'] ?? '' ), sanitize_key( $args['language'] ?? '' ), sanitize_key( $args['api'] ?? '' ), true );
 		}
 		return new WP_Error( 'unknown_tool', __( 'Unknown Panda Translate tool.', 'pandatranslate' ) );
 	}
