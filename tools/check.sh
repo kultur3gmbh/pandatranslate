@@ -12,6 +12,7 @@ if [[ "${PANDATRANSLATE_TEST_WARNING_REGRESSIONS:-}" == "1" ]]; then
   php tests/migration-batches-integration.php
   php tests/migration-formal-integration.php
   php tests/language-performance-integration.php
+  php tests/gettext-configuration-integration.php
   php tests/background-language-integration.php
   php tests/google-batch-integration.php
   php tests/stored-templates-integration.php

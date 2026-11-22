@@ -8,17 +8,44 @@ final class PandaTranslate_Strings {
 	private static $cache = array();
 	private static $published = array();
 	private static $native_locale = false;
+	private static $frontend_ready = false;
+	private static $frontend_configuration = null;
 	public static $email_language = '';
 	public static function boot() {
 		add_filter( 'gettext', array( __CLASS__, 'gettext' ), 20, 3 );
 		add_filter( 'gettext_with_context', array( __CLASS__, 'gettext_context' ), 20, 4 );
 		add_filter( 'ngettext', array( __CLASS__, 'plural' ), 20, 5 );
 		add_action( 'wp', array( __CLASS__, 'locale' ), 1 );
+		foreach ( array( 'added_option', 'updated_option', 'deleted_option' ) as $hook ) add_action( $hook, array( __CLASS__, 'invalidate_language' ), 10, 1 );
+		add_action( 'switch_blog', function () { self::invalidate_language(); } );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ), 30 );
 	}
 	public static function locale() {
-		if ( is_admin() ) return; $language = PandaTranslate_Frontend::current_language(); if ( ! $language ) return;
+		if ( is_admin() ) return; self::$frontend_ready = true; self::invalidate_language(); $language = self::frontend_language(); if ( ! $language ) return;
 		foreach ( PandaTranslate_Plugin::language_rows() as $row ) if ( $row['code'] === $language && ! empty( $row['locale'] ) ) { self::$native_locale = switch_to_locale( $row['locale'] ) || get_locale() === $row['locale']; break; }
+	}
+	public static function invalidate_language( $option = '' ) {
+		if ( '' === $option || in_array( $option, array( PandaTranslate_Plugin::OPTION, 'WPLANG' ), true ) ) self::$frontend_configuration = null;
+	}
+	/** Cache configuration after routing only. Paid entitlement itself is deliberately never cached here. */
+	private static function frontend_language() {
+		if ( ! self::$frontend_ready ) { $language = PandaTranslate_Frontend::current_language(); return $language && PandaTranslate_Edition::allows_language( $language ) ? $language : ''; }
+		global $wp_query;
+		$selector = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : ( is_object( $wp_query ) && is_callable( array( $wp_query, 'get' ) ) ? sanitize_key( $wp_query->get( 'pt_lang' ) ) : '' );
+		if ( '' === $selector ) return '';
+		$blog = get_current_blog_id(); $dynamic = false;
+		foreach ( array( 'pre_option', 'pre_option_' . PandaTranslate_Plugin::OPTION, 'option_' . PandaTranslate_Plugin::OPTION, 'pre_option_WPLANG', 'option_WPLANG' ) as $hook ) if ( has_filter( $hook ) ) { $dynamic = true; break; }
+		$configuration = self::$frontend_configuration;
+		if ( $dynamic || ! $configuration || $configuration['selector'] !== $selector || $configuration['blog'] !== $blog ) {
+			$configuration = array( 'selector' => $selector, 'blog' => $blog, 'language' => '', 'paid' => false );
+			$source = PandaTranslate_Plugin::get_settings()['source_language']; $active = 0;
+			foreach ( PandaTranslate_Plugin::configured_language_rows() as $row ) if ( ! empty( $row['active'] ) ) {
+				$active++;
+				if ( $row['code'] === $selector && $selector !== $source ) { $configuration['language'] = $selector; $configuration['paid'] = $active > 2; break; }
+			}
+			self::$frontend_configuration = $configuration;
+		}
+		return $configuration['language'] && ( ! $configuration['paid'] || PandaTranslate_Edition::multilingual() ) ? $configuration['language'] : '';
 	}
 	private static function published( $language ) {
 		if ( ! isset( self::$published[$language] ) ) {
@@ -42,8 +69,8 @@ final class PandaTranslate_Strings {
 		// Language/settings filters may themselves translate labels. Guard the entire resolution.
 		self::$busy = true;
 		try {
-		$language = self::$email_language ?: PandaTranslate_Frontend::current_language();
-		if ( ! $language || ! PandaTranslate_Edition::allows_language( $language ) ) return $translated;
+		$language = self::$email_language ? ( PandaTranslate_Edition::allows_language( self::$email_language ) ? self::$email_language : '' ) : self::frontend_language();
+		if ( ! $language ) return $translated;
 		$key = hash( 'sha256', 'gettext|' . $domain . '|' . $context . '|' . $original ); $cache_key = $key . '|' . $language;
 		if ( array_key_exists( $cache_key, self::$cache ) ) return self::$cache[$cache_key] ?? $translated;
 			$repo = new PandaTranslate_Repository();
