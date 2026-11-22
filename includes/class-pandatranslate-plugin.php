@@ -688,7 +688,7 @@ final class PandaTranslate_Plugin {
 		$public_rows = null;
 		if ( $language && ! $editing && ! $this->scan_mode && method_exists( $this->repository, 'find_many' ) ) {
 			$keys = array();
-			$this->extractor->transform( $html, function ( $unit ) use ( &$keys ) { $keys[] = $unit['key']; return null; }, $context );
+			$this->extractor->transform( $html, function ( $unit ) use ( &$keys ) { $keys[] = $unit['key']; return null; }, $context, true );
 			$public_rows = $this->repository->find_many( $keys, $language );
 		}
 		$result = $this->extractor->transform( $html, function ( $unit ) use ( $language, $editing, $memory, $public_rows ) {

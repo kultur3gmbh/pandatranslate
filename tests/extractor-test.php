@@ -37,3 +37,15 @@ assert( false !== stripos( $result, '<!DOCTYPE html>' ) );
 assert( false !== strpos( $result, '<head><title>Test</title></head>' ) );
 assert( false !== strpos( $result, 'data-pandatranslate-unit=' ) );
 echo "full document: ok\n";
+
+$form = '<form><label><span>E-Mail-Adresse</span><input type="email" name="email" required></label><label><input type="checkbox" name="calendar_consent" value="1" required><span>Einwilligung</span></label><input name="hb-check-in-date" placeholder="Anreise" value="2026-12-01"><select name="hb-adults"><option selected disabled>Erwachsene</option><option value="2">2</option></select></form>';
+$labels = array( 'E-Mail-Adresse' => 'Adresse e-mail', 'Einwilligung' => 'Consentement', 'Anreise' => 'Arrivée', 'Erwachsene' => 'Adultes' );
+$keys = array();
+assert( $form === $extractor->transform( $form, function ( $unit ) use ( &$keys ) { $keys[] = $unit['key']; return null; }, 'booking', true ) );
+$rendered_keys = array();
+$result = $extractor->transform( $form, function ( $unit ) use ( $labels, &$rendered_keys ) { $rendered_keys[] = $unit['key']; return $labels[ $unit['source_html'] ] ?? null; }, 'booking' );
+assert( $keys === $rendered_keys && 4 === count( $keys ) );
+assert( false !== strpos( $result, 'Adresse e-mail' ) && false !== strpos( $result, 'Consentement' ) );
+assert( false !== strpos( $result, 'placeholder="Arriv' ) && false !== strpos( $result, '>Adultes</option>' ) );
+assert( false !== strpos( $result, 'name="calendar_consent" value="1" required' ) );
+assert( false !== strpos( $result, 'value="2026-12-01"' ) && false !== strpos( $result, '<option value="2">2</option>' ) );

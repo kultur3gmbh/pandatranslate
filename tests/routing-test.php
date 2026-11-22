@@ -34,7 +34,7 @@ check( 'https://example.com/parent/haus/', PandaTranslate_Routing::url( 'de' ) )
 check( 'https://example.com/fr/parent/haus/', PandaTranslate_Routing::url( 'fr' ) );
 check( 'https://example.com/en/parent/house/', PandaTranslate_Routing::url( 'en' ) );
 $wp = (object) array( 'request' => 'en/parent/house', 'query_vars' => array( 'pagename' => 'parent/house', 'pt_lang' => 'en' ) );
-PandaTranslate_Routing::resolve_translated_slug( $wp ); check( 10, $wp->query_vars['p'] ); check( 'en', $wp->query_vars['pt_lang'] );
+PandaTranslate_Routing::resolve_translated_slug( $wp ); check( 10, $wp->query_vars['page_id'] ); check( false, isset( $wp->query_vars['p'] ) ); check( 'en', $wp->query_vars['pt_lang'] );
 $stored['url_mode'] = 'query';
 check( 'https://example.com/parent/haus/?pt_lang=fr', PandaTranslate_Routing::url( 'fr' ) );
 $stored['url_mode'] = 'path'; $singular = false; $_SERVER['REQUEST_URI'] = '/en/category/news/page/2/?s=hello&pt_lang=en';

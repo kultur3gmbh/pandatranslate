@@ -174,7 +174,8 @@ final class PandaTranslate_Routing {
 			$original = self::relative_path( (string) wp_parse_url( get_permalink( $post->ID ), PHP_URL_PATH ) );
 			$parts = explode( '/', $original ); $parts[count( $parts ) - 1] = sanitize_title( basename( $path ) );
 			if ( implode( '/', $parts ) !== trim( $path, '/' ) ) continue;
-			$wp->query_vars = array( 'pt_lang' => $language, 'post_type' => $post->post_type, 'p' => $post->ID );
+			$wp->query_vars = array( 'pt_lang' => $language, 'post_type' => $post->post_type );
+			$wp->query_vars[ 'page' === $post->post_type ? 'page_id' : 'p' ] = $post->ID;
 			return;
 		}
 	}

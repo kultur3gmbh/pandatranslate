@@ -39,3 +39,11 @@ assert( 'Good day' === $corrected_memory->manual_lookup( 'Hallo' ) );
 assert( false !== strpos( $corrected_memory->transform( '<p>Hallo</p>' ), 'Good day' ) );
 assert( false !== strpos( $corrected_memory->transform( $page ), 'Manual &amp; checked<br>translation' ) );
 echo "published dictionary reuse: full units, inline segments, entities, attributes, manual precedence, exclusions and ambiguity: ok\n";
+
+$blank_import = new class { public function published_imports( $language, $hashes ) { return array( array( 'source_html' => '&nbsp;', 'translated_html' => '&nbsp;' ), array( 'source_html' => 'Hallo', 'translated_html' => 'Hello' ) ); } };
+$markup = "<!doctype html><html>\n<head>\n<title>Titel</title>\n</head>\n<body class=\"avada\"><p>Hallo</p></body></html>";
+$memory = new PandaTranslate_Translation_Memory( $markup, 'en', $blank_import );
+assert( null === $memory->lookup( "\n\t" ) );
+$result = $memory->transform( $markup );
+assert( false !== strpos( $result, '<head>' ) && false !== strpos( $result, '<body class="avada">' ) && false !== strpos( $result, '<p>Hello</p>' ) );
+assert( false === strpos( $result, '<?xml' ) );

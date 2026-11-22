@@ -15,6 +15,10 @@ try {
  update_post_meta( $id, $key, 'page-fr' ); $url = get_permalink( $id );
  $localized = PandaTranslate_Frontend::localize_url( $url, 'fr' );
  pt_slug_expect( $calls > 0 && false !== strpos( $localized, 'page-fr' ), 'Adding translated slug immediately restores post resolution and translated URL' );
+ $request = (object) array( 'request' => 'fr/page-fr', 'query_vars' => array( 'pt_lang' => 'fr', 'pandatranslate_slug' => 'page-fr' ) );
+ PandaTranslate_Routing::resolve_translated_slug( $request );
+ $page_query = new WP_Query( $request->query_vars );
+ pt_slug_expect( $page_query->is_page() && ! $page_query->is_single() && $id === $page_query->get_queried_object_id(), 'Translated page keeps the WordPress page template and queried page ID' );
  delete_post_meta( $id, $key ); $calls = 0;
  PandaTranslate_Frontend::localize_url( home_url( '/unmapped-fixture-again/' ), 'fr' );
  pt_slug_expect( 0 === $calls, 'Deleting last translated slug immediately restores fast path' );

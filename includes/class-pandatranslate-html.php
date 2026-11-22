@@ -3,6 +3,11 @@ defined( 'ABSPATH' ) || exit;
 
 /** libxml's HTML serializer entity-encodes Unicode in raw script/style text. */
 final class PandaTranslate_HTML {
+	/** Remove the encoding hint passed to libxml before loading HTML. */
+	public static function remove_encoding_marker( $html ) {
+		return preg_replace( '/\A(\s*(?:<!doctype[^>]*>\s*)?)(?:<\?xml encoding="utf-8"\s*\?>\s*)+/i', '$1', $html );
+	}
+
 	/** Translation protection is inherited; it never changes a node's visibility or language selection. */
 	public static function translation_excluded( $node ) {
 		for ( $current = $node; $current instanceof DOMElement; $current = $current->parentNode ) {

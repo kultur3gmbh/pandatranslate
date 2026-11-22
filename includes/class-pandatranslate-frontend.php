@@ -153,7 +153,7 @@ final class PandaTranslate_Frontend {
 			if ( null !== $value && $value === wp_strip_all_tags( $value ) ) { $node->nodeValue = str_replace( $text, $value, $node->nodeValue ); $changed = true; }
 		}
 		if ( ! $changed ) return $html;
-		return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $doc->saveHTML() ), $raw );
+		return PandaTranslate_HTML::restore_raw( PandaTranslate_HTML::remove_encoding_marker( $doc->saveHTML() ), $raw );
 	}
 
 	/** Decode visible symbol entities without turning escaped markup or attribute syntax into HTML. */
@@ -177,7 +177,7 @@ final class PandaTranslate_Frontend {
 			foreach ( array( 'title', 'alt', 'placeholder', 'aria-label' ) as $attribute ) if ( $node->hasAttribute( $attribute ) ) $node->setAttribute( $attribute, self::glyphs( $node->getAttribute( $attribute ) ) );
 			foreach ( $node->childNodes as $child ) if ( XML_TEXT_NODE === $child->nodeType ) { $value = self::glyphs( $child->nodeValue ); if ( $value !== $child->nodeValue ) $child->nodeValue = $value; }
 		}
-		return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $doc->saveHTML() ), $raw );
+		return PandaTranslate_HTML::restore_raw( PandaTranslate_HTML::remove_encoding_marker( $doc->saveHTML() ), $raw );
 	}
 	private static function excluded( $node ) {
 		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) if ( in_array( strtolower( $current->nodeName ), array( 'script', 'style', 'noscript', 'code', 'pre', 'textarea', 'svg' ), true ) || in_array( $current->getAttribute( 'id' ), array( 'wpadminbar', 'query-monitor-main', 'elementor-editor-wrapper', 'bricks-toolbar' ), true ) || preg_match( '/(?:^|\s)(?:ab-sub-wrapper|fusion-builder-ui|awb-builder|fl-builder-bar|pandatranslate-panel)(?:\s|$)/', $current->getAttribute( 'class' ) ) ) return true;

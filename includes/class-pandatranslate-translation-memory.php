@@ -15,9 +15,16 @@ final class PandaTranslate_Translation_Memory {
 			foreach ( $node->childNodes as $child ) if ( XML_TEXT_NODE === $child->nodeType ) $sources[] = $child->nodeValue;
 			foreach ( self::attributes( $node ) as $attribute ) $sources[] = $node->getAttribute( $attribute );
 		}
-		$hashes = array(); foreach ( $sources as $source ) foreach ( self::variants( $source ) as $variant ) if ( '' !== trim( wp_strip_all_tags( $variant ) ) ) $hashes[hash( 'sha256', $variant )] = true;
+		$hashes = array();
+		foreach ( array_unique( $sources ) as $source ) {
+			if ( '' === self::canonical( $source ) ) continue;
+			foreach ( self::variants( $source ) as $variant ) {
+				if ( '' !== trim( wp_strip_all_tags( $variant ) ) ) $hashes[ hash( 'sha256', $variant ) ] = true;
+			}
+		}
 		foreach ( $repository->published_imports( $language, array_keys( $hashes ) ) as $row ) {
 			$key = self::canonical( $row['source_html'] );
+			if ( '' === $key ) continue;
 			if ( 'manual-dictionary' === ( $row['provider'] ?? '' ) ) {
 				if ( isset( $this->manual_dictionary[$key] ) && $this->manual_dictionary[$key] !== $row['translated_html'] ) $this->manual_dictionary[$key] = false;
 				elseif ( ! array_key_exists( $key, $this->manual_dictionary ) ) $this->manual_dictionary[$key] = $row['translated_html'];
@@ -34,13 +41,13 @@ final class PandaTranslate_Translation_Memory {
 		return array_unique( array( $source, trim( $source ), $decoded, trim( $decoded ), self::canonical( $source ), htmlentities( $decoded, ENT_NOQUOTES | ENT_HTML5, 'UTF-8' ), htmlspecialchars( $decoded, ENT_NOQUOTES | ENT_HTML5, 'UTF-8' ) ) );
 	}
 	private static function canonical( $source ) { return trim( preg_replace( '/[\s\x{00a0}]+/u', ' ', html_entity_decode( $source, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) ); }
-	public function lookup( $source ) { $value = $this->translations[self::canonical( $source )] ?? null; return is_string( $value ) && '' !== $value ? $value : null; }
+	public function lookup( $source ) { $key = self::canonical( $source ); if ( '' === $key ) return null; $value = $this->translations[$key] ?? null; return is_string( $value ) && '' !== $value ? $value : null; }
 	public function transform( $html ) {
 		if ( ! $this->translations ) return $html;
 		$raw = PandaTranslate_HTML::protect_raw( $html );
 		$document = self::document( $raw['html'] ); if ( ! $document ) return $html;
 		$this->walk( $document );
-		return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $document->saveHTML() ), $raw );
+		return PandaTranslate_HTML::restore_raw( PandaTranslate_HTML::remove_encoding_marker( $document->saveHTML() ), $raw );
 	}
 	private function walk( $node ) {
 		if ( XML_ELEMENT_NODE === $node->nodeType ) {

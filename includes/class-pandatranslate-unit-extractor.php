@@ -3,9 +3,9 @@ defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/class-pandatranslate-html.php';
 
 final class PandaTranslate_Unit_Extractor {
-	private $selector = '//p|//h1|//h2|//h3|//h4|//h5|//h6|//li|//td|//th|//button|//a[@role="button"]|//input[@type="submit"]';
+	private $selector = '//p|//h1|//h2|//h3|//h4|//h5|//h6|//li|//td|//th|//button|//a[@role="button"]|//input[@type="submit"]|//label/span[not(*)]';
 
-	public function transform( $html, callable $resolver, $context = '' ) {
+	public function transform( $html, callable $resolver, $context = '', $collect_only = false ) {
 		if ( ! class_exists( 'DOMDocument' ) || false === stripos( (string) $html, '<' ) ) return $html;
 		$raw = PandaTranslate_HTML::protect_raw( $html );
 		$previous = libxml_use_internal_errors( true );
@@ -22,6 +22,7 @@ final class PandaTranslate_Unit_Extractor {
 		foreach ( iterator_to_array( $xpath->query( $this->selector ) ) as $node ) {
 			if ( $this->has_block_child( $node ) || $this->is_excluded( $node ) ) continue;
 			$is_input = 'input' === strtolower( $node->nodeName );
+			$is_label_text = 'span' === strtolower( $node->nodeName );
 			$source   = $is_input ? $node->getAttribute( 'value' ) : $this->inner_html( $node );
 			if ( '' === trim( wp_strip_all_tags( $source ) ) ) continue;
 			$key = hash( 'sha256', $context . '|' . $this->node_path( $node ) . '|' . $source );
@@ -33,17 +34,44 @@ final class PandaTranslate_Unit_Extractor {
 				'context'     => $context,
 			);
 			$replacement = call_user_func( $resolver, $unit );
+			if ( $collect_only ) continue;
 			$node->setAttribute( 'data-pandatranslate-unit', $key );
 			$node->setAttribute( 'data-pandatranslate-source-hash', $unit['source_hash'] );
 			if ( is_string( $replacement ) && '' !== $replacement ) {
 				$node->setAttribute( 'data-pandatranslate-resolved', '1' );
 				if ( $is_input ) $node->setAttribute( 'value', wp_strip_all_tags( $replacement ) );
+				// Only replace the text next to the control, never the control itself.
+				elseif ( $is_label_text ) $node->textContent = html_entity_decode( wp_strip_all_tags( $replacement ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 				else $this->set_inner_html( $node, $replacement );
 			}
 		}
+		// HBook stores date labels as placeholders and guest labels in disabled
+		// options. Collect only those fixed captions, never the reservation values.
+		$booking_labels = '//input[(@name="hb-check-in-date" or @name="hb-check-out-date") and @placeholder]|//select[@name="hb-adults" or @name="hb-children"]/option[@disabled and not(*)]';
+		foreach ( $xpath->query( $booking_labels ) as $node ) {
+			if ( $this->is_excluded( $node ) ) continue;
+			$is_placeholder = 'input' === $node->nodeName;
+			$source = $is_placeholder ? $node->getAttribute( 'placeholder' ) : $node->textContent;
+			if ( '' === trim( $source ) ) continue;
+			$kind = $is_placeholder ? 'placeholder' : 'option-label';
+			$unit = array(
+				'key' => hash( 'sha256', $context . '|' . $this->node_path( $node ) . '|' . $kind . '|' . $source ),
+				'source_html' => htmlspecialchars( $source, ENT_NOQUOTES, 'UTF-8' ),
+				'kind' => $kind,
+				'context' => $context,
+			);
+			$unit['source_hash'] = hash( 'sha256', $unit['source_html'] );
+			$replacement = $resolver( $unit );
+			if ( $collect_only ) continue;
+			if ( ! is_string( $replacement ) || '' === $replacement ) continue;
+			$text = html_entity_decode( wp_strip_all_tags( $replacement ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			if ( $is_placeholder ) $node->setAttribute( 'placeholder', $text );
+			else $node->textContent = $text;
+		}
+		if ( $collect_only ) return $html;
 		if ( $is_document ) {
 			$result = $document->saveHTML();
-			return PandaTranslate_HTML::restore_raw( preg_replace( '/^<\?xml[^>]+>\s*/', '', $result ), $raw );
+			return PandaTranslate_HTML::restore_raw( PandaTranslate_HTML::remove_encoding_marker( $result ), $raw );
 		}
 		$root = $xpath->query( '//*[@data-pandatranslate-root="1"]' )->item( 0 );
 		return $root ? PandaTranslate_HTML::restore_raw( $this->inner_html( $root ), $raw ) : $html;
