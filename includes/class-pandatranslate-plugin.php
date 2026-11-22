@@ -612,11 +612,11 @@ final class PandaTranslate_Plugin {
 			$native = PandaTranslate_Features::language_name( $code );
 			$local = PandaTranslate_Features::language_name( $code, false, get_user_locale() );
 			$language_lang = str_replace( '_', '-', $language['locale'] );
-			echo '<article class="pandatranslate-language-progress"><div><strong><span aria-hidden="true">' . esc_html( PandaTranslate_Features::flag( $code ) ) . '</span> <span lang="' . esc_attr( $language_lang ) . '">' . esc_html( $native ) . '</span>' . ( $local === $native ? '' : ' <span>(' . esc_html( $local ) . ')</span>' ) . '</strong>';
+			echo '<article class="pandatranslate-language-progress"><div class="pandatranslate-language-progress-header"><strong><span aria-hidden="true">' . esc_html( PandaTranslate_Features::flag( $code ) ) . '</span> <span lang="' . esc_attr( $language_lang ) . '">' . esc_html( $native ) . '</span>' . ( $local === $native ? '' : ' <span>(' . esc_html( $local ) . ')</span>' ) . '</strong>';
 			$unmeasured = __( 'Not yet measured', 'pandatranslate' );
 			if ( $total ) {
-				echo '<span>' . esc_html( sprintf( /* translators: %1$d: translated units, %2$d: total units. */
-					__( '%1$d of %2$d units translated', 'pandatranslate' ), $finished, $total ) ) . '</span><b>' . esc_html( round( $finished / $total * 100 ) ) . '%</b>';
+				echo '<span class="pandatranslate-language-progress-count"><span>' . esc_html( sprintf( /* translators: %1$d: translated units, %2$d: total units. */
+					__( '%1$d of %2$d units translated', 'pandatranslate' ), $finished, $total ) ) . '</span><b>' . esc_html( round( $finished / $total * 100 ) ) . '%</b></span>';
 			} else {
 				echo '<span>' . esc_html( $unmeasured ) . '</span>';
 			}
@@ -629,7 +629,7 @@ final class PandaTranslate_Plugin {
 				if ( $stat[ $key ] ) echo '<span class="is-' . esc_attr( $key ) . '" style="width:' . esc_attr( $percentage ) . '%"></span>';
 				$legend[ $key ] .= ': ' . number_format_i18n( $stat[ $key ] ) . ' (' . number_format_i18n( $percentage, 1 ) . '%)';
 			}
-			echo '</div><div class="pandatranslate-progress-meta" tabindex="0" role="group" aria-label="' . esc_attr__( 'Translation progress', 'pandatranslate' ) . '"><ul class="pandatranslate-progress-legend">';
+			echo '</div><div class="pandatranslate-progress-meta"><ul class="pandatranslate-progress-legend">';
 			foreach ( $legend as $key => $label ) echo '<li><span class="is-' . esc_attr( $key ) . '" aria-hidden="true"></span>' . esc_html( $label ) . '</li>';
 			echo '<li>(' . esc_html( sprintf(
 				/* translators: %1$s: count of published translations, %2$s: count of unpublished translations. */
@@ -666,7 +666,7 @@ final class PandaTranslate_Plugin {
 					_n( '%s character', '%s characters', $characters, 'pandatranslate' ),
 					number_format_i18n( $characters )
 				);
-				echo '<button type="button" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="' . esc_attr( 'failed' === $mode ? 'refresh' : 'start' ) . '" data-language-translate="' . esc_attr( $code ) . '" data-mode="' . esc_attr( $mode ) . '" data-nonce="' . esc_attr( $nonce ) . '" data-confirm="' . esc_attr( $action['confirm'] ) . '"' . disabled( ! $providers || ! $action['available'], true, false ) . '>' . esc_html( $action['label'] . ' (' . $scope . ')' ) . '</button>';
+				echo '<button type="button" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="' . esc_attr( 'failed' === $mode ? 'refresh' : 'start' ) . '" data-language-translate="' . esc_attr( $code ) . '" data-mode="' . esc_attr( $mode ) . '" data-nonce="' . esc_attr( $nonce ) . '" data-confirm="' . esc_attr( $action['confirm'] ) . '"' . disabled( ! $providers || ! $action['available'], true, false ) . '><span class="pandatranslate-language-action-label">' . esc_html( $action['label'] . ' (' . $scope . ')' ) . '</span></button>';
 			}
 			echo '<p data-language-run-status role="status" aria-live="polite"></p></div></div></article>';
 		}

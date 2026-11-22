@@ -33,7 +33,7 @@ try{
  $overview_html = ob_get_clean();
  remove_filter( 'locale', $admin_locale );
  pt_background_expect( false !== strpos( $overview_html, 'lang="es-ES">Español</span>' ) && false !== strpos( $overview_html, '(Spanisch' ), 'Progress uses both the native name and the active admin language' );
- preg_match( '/<button[^>]*data-language-translate="es"[^>]*data-mode="missing"[^>]*>[^<]*<\/button>/', $overview_html, $spanish_action );
+ preg_match( '/<button[^>]*data-language-translate="es"[^>]*data-mode="missing"[^>]*>/', $overview_html, $spanish_action );
  pt_background_expect( ! empty( $spanish_action ) && false === strpos( $spanish_action[0], ' disabled' ), 'A newly enabled Spanish target offers automatic translation before its first scan' );
  preg_match( '#<article[^>]*>(?:(?!</article>).)*data-language-translate="es"(?:(?!</article>).)*</article>#s', $overview_html, $spanish_card );
  pt_background_expect( ! empty( $spanish_card ) && false === strpos( $spanish_card[0], '0 of 0 units' ) && false === strpos( $spanish_card[0], '0 source characters' ) && false !== strpos( $spanish_card[0], 'Not yet measured' ), 'A new target reports unknown scope instead of misleading zero counts' );
