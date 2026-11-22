@@ -19,6 +19,28 @@ final class PandaTranslate_Strings {
 		foreach ( array( 'added_option', 'updated_option', 'deleted_option' ) as $hook ) add_action( $hook, array( __CLASS__, 'invalidate_language' ), 10, 1 );
 		add_action( 'switch_blog', function () { self::invalidate_language(); } );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ), 30 );
+		self::prepare_request_locale();
+	}
+	/** Select the validated public language before WordPress loads all plugin catalogs. */
+	public static function prepare_request_locale() {
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) || isset( $_GET['rest_route'] ) ) return;
+		$path = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ), PHP_URL_PATH );
+		$home = rtrim( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ), '/' );
+		if ( $home && 0 === strpos( $path, $home . '/' ) ) $path = substr( $path, strlen( $home ) );
+		$path = trim( $path, '/' );
+		if ( preg_match( '~^(?:wp-admin|wp-json|wp-login\.php|wp-cron\.php|xmlrpc\.php)(?:/|$)~i', $path ) ) return;
+		$requested = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : '';
+		$source = PandaTranslate_Plugin::get_settings()['source_language'];
+		foreach ( PandaTranslate_Plugin::language_rows() as $row ) {
+			if ( empty( $row['active'] ) || $row['code'] === $source ) continue;
+			if ( $requested ? $row['code'] !== $requested : ( 'path' !== PandaTranslate_Plugin::get_settings()['url_mode'] || ( $path !== $row['slug'] && 0 !== strpos( $path, $row['slug'] . '/' ) ) ) ) continue;
+			$locale = $row['locale'];
+			// WordPress's own locale-switcher filters run later, so explicit
+			// recipient/email scopes continue to override and restore this base.
+			$filter = static function () use ( $locale ) { return $locale; };
+			add_filter( 'locale', $filter, 1 ); add_filter( 'determine_locale', $filter, 1 );
+			return;
+		}
 	}
 	public static function locale() {
 		if ( is_admin() ) return; self::$frontend_ready = true; self::invalidate_language(); $language = self::frontend_language(); if ( ! $language ) return;
