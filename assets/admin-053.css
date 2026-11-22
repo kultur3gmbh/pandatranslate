@@ -40,3 +40,25 @@
 .pandatranslate-dashboard-apis li { margin: 0; }
 .pandatranslate-languages { min-width: calc(850px + 10rem); }
 .pandatranslate-formality-column { width: 10rem; }
+
+.pandatranslate-content-types {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 125px), 1fr));
+	gap: 8px;
+}
+.pandatranslate-content-types .pandatranslate-check {
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 44px;
+	margin: 0;
+	padding: 8px 10px;
+	border: 1px solid #d0d4d8;
+	border-radius: 5px;
+	overflow-wrap: anywhere;
+}
+.pandatranslate-content-types input[type=checkbox] { flex: 0 0 auto; margin: 0; }
+.pandatranslate-content-types .pandatranslate-check:has(:checked) { background: #f3f4f5; }
+.pandatranslate-content-types .pandatranslate-check:hover,
+.pandatranslate-content-types .pandatranslate-check:focus-within { border-color: #737a81; }
+.pandatranslate-content-publishing { margin: 14px 0; padding-top: 10px; border-top: 1px solid #d0d4d8; }
+.pandatranslate-content-publishing .pandatranslate-check { min-height: 44px; margin: 0; }
