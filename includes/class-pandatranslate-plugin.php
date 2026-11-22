@@ -150,24 +150,29 @@ final class PandaTranslate_Plugin {
 		$output = $this->settings();
 		$section = sanitize_key( $input['_section'] ?? 'general' );
 		if ( 'google' === $section ) {
-			$output['deepl_enabled'] = empty( $input['deepl_enabled'] ) ? 0 : 1;
-			$old_deepl_plan = $output['deepl_endpoint'];
-			$output['deepl_endpoint'] = 'pro' === ( $input['deepl_endpoint'] ?? '' ) ? 'pro' : 'free';
-			if ( $old_deepl_plan !== $output['deepl_endpoint'] ) unset( $output['deepl_test'] );
-			if ( ! empty( $input['deepl_key_remove'] ) ) { unset( $output['deepl_test'] ); $output['deepl_key_encrypted'] = ''; $output['deepl_key_last4'] = ''; }
-			elseif ( ! empty( $input['deepl_key'] ) ) { $key = trim( (string) $input['deepl_key'] ); $encrypted = $this->encrypt_secret( $key ); if ( is_wp_error( $encrypted ) ) add_settings_error( self::OPTION, 'deepl_key', $encrypted->get_error_message(), 'error' ); else { unset( $output['deepl_test'] ); $output['deepl_key_encrypted'] = $encrypted; $output['deepl_key_last4'] = substr( $key, -4 ); } }
-			$output['provider'] = ! empty( $input['google_enabled'] ) ? 'google-cloud-translation' : 'manual';
-			foreach ( array( 'v2', 'v3' ) as $edition ) $output['google_' . $edition . '_enabled'] = empty( $input['google_' . $edition . '_enabled'] ) ? 0 : 1;
-			$output['provider'] = $output['google_v2_enabled'] || $output['google_v3_enabled'] ? 'google-cloud-translation' : 'manual';
-			$output['google_api_version'] = 'v2' === ( $input['google_api_version'] ?? '' ) ? 'v2' : 'v3';
-			$output['google_project_id'] = sanitize_text_field( $input['google_project_id'] ?? '' );
-			$output['google_location'] = sanitize_key( $input['google_location'] ?? 'global' ) ?: 'global';
-			if ( ! empty( $input['google_api_key_remove'] ) ) {
-				$output['google_api_key_encrypted'] = ''; $output['google_api_key_last4'] = ''; $output['google_key_status'] = 'untested'; unset( $output['google_tests']['v2'] ); $output['google_key_tested_at'] = ''; $output['google_key_last_error'] = '';
-			} elseif ( isset( $input['google_api_key'] ) && '' !== trim( (string) $input['google_api_key'] ) ) {
-				$encrypted = $this->encrypt_secret( trim( (string) $input['google_api_key'] ) );
-				if ( is_wp_error( $encrypted ) ) add_settings_error( self::OPTION, 'google_api_key', $encrypted->get_error_message(), 'error' );
-				else { $output['google_api_key_encrypted'] = $encrypted; $output['google_api_key_last4'] = substr( trim( (string) $input['google_api_key'] ), -4 ); $output['google_key_status'] = 'untested'; unset( $output['google_tests']['v2'] ); $output['google_key_tested_at'] = ''; $output['google_key_last_error'] = ''; }
+			$scope = $input['_api_provider'] ?? '';
+			if ( ! in_array( $scope, array( '', 'deepl', 'google' ), true ) ) return $output;
+			if ( 'google' !== $scope ) {
+				$output['deepl_enabled'] = empty( $input['deepl_enabled'] ) ? 0 : 1;
+				$old_deepl_plan = $output['deepl_endpoint'];
+				$output['deepl_endpoint'] = 'pro' === ( $input['deepl_endpoint'] ?? '' ) ? 'pro' : 'free';
+				if ( $old_deepl_plan !== $output['deepl_endpoint'] ) unset( $output['deepl_test'] );
+				if ( ! empty( $input['deepl_key_remove'] ) ) { unset( $output['deepl_test'] ); $output['deepl_key_encrypted'] = ''; $output['deepl_key_last4'] = ''; }
+				elseif ( ! empty( $input['deepl_key'] ) ) { $key = trim( (string) $input['deepl_key'] ); $encrypted = $this->encrypt_secret( $key ); if ( is_wp_error( $encrypted ) ) add_settings_error( self::OPTION, 'deepl_key', $encrypted->get_error_message(), 'error' ); else { unset( $output['deepl_test'] ); $output['deepl_key_encrypted'] = $encrypted; $output['deepl_key_last4'] = substr( $key, -4 ); } }
+			}
+			if ( 'deepl' !== $scope ) {
+				foreach ( array( 'v2', 'v3' ) as $edition ) $output['google_' . $edition . '_enabled'] = empty( $input['google_' . $edition . '_enabled'] ) ? 0 : 1;
+				$output['provider'] = $output['google_v2_enabled'] || $output['google_v3_enabled'] ? 'google-cloud-translation' : 'manual';
+				$output['google_api_version'] = 'v2' === ( $input['google_api_version'] ?? '' ) ? 'v2' : 'v3';
+				$output['google_project_id'] = sanitize_text_field( $input['google_project_id'] ?? '' );
+				$output['google_location'] = sanitize_key( $input['google_location'] ?? 'global' ) ?: 'global';
+				if ( ! empty( $input['google_api_key_remove'] ) ) {
+					$output['google_api_key_encrypted'] = ''; $output['google_api_key_last4'] = ''; $output['google_key_status'] = 'untested'; unset( $output['google_tests']['v2'] ); $output['google_key_tested_at'] = ''; $output['google_key_last_error'] = '';
+				} elseif ( isset( $input['google_api_key'] ) && '' !== trim( (string) $input['google_api_key'] ) ) {
+					$encrypted = $this->encrypt_secret( trim( (string) $input['google_api_key'] ) );
+					if ( is_wp_error( $encrypted ) ) add_settings_error( self::OPTION, 'google_api_key', $encrypted->get_error_message(), 'error' );
+					else { $output['google_api_key_encrypted'] = $encrypted; $output['google_api_key_last4'] = substr( trim( (string) $input['google_api_key'] ), -4 ); $output['google_key_status'] = 'untested'; unset( $output['google_tests']['v2'] ); $output['google_key_tested_at'] = ''; $output['google_key_last_error'] = ''; }
+				}
 			}
 			return $output;
 		}
@@ -332,9 +337,9 @@ final class PandaTranslate_Plugin {
             <?php if ( class_exists( 'PandaTranslate_Edition' ) ) PandaTranslate_Edition::promotion(); ?>
 
 			<div class="pandatranslate-grid">
-				<?php if ( in_array( $tab, array( 'preferences', 'woocommerce' ), true ) ) : ?><div class="pandatranslate-card"><?php else : ?><form method="post" action="<?php echo esc_url( 'migration' === $tab ? admin_url( 'admin-post.php' ) : 'options.php' ); ?>" class="pandatranslate-card"><?php endif; ?>
-					<?php if ( 'migration' === $tab ) : ?><input type="hidden" name="action" value="pandatranslate_import_translatepress"><?php wp_nonce_field( 'pandatranslate_import_translatepress' ); ?><?php elseif ( ! in_array( $tab, array( 'preferences', 'woocommerce' ), true ) ) : settings_fields( 'pandatranslate' ); endif; ?>
-					<input type="hidden" name="<?php echo esc_attr( self::OPTION ); ?>[_section]" value="<?php echo esc_attr( $tab ); ?>">
+				<?php if ( in_array( $tab, array( 'preferences', 'woocommerce', 'google' ), true ) ) : ?><div class="pandatranslate-card"><?php else : ?><form method="post" action="<?php echo esc_url( 'migration' === $tab ? admin_url( 'admin-post.php' ) : 'options.php' ); ?>" class="pandatranslate-card"><?php endif; ?>
+					<?php if ( 'migration' === $tab ) : ?><input type="hidden" name="action" value="pandatranslate_import_translatepress"><?php wp_nonce_field( 'pandatranslate_import_translatepress' ); ?><?php elseif ( ! in_array( $tab, array( 'preferences', 'woocommerce', 'google' ), true ) ) : settings_fields( 'pandatranslate' ); endif; ?>
+					<?php if ( 'google' !== $tab ) : ?><input type="hidden" name="<?php echo esc_attr( self::OPTION ); ?>[_section]" value="<?php echo esc_attr( $tab ); ?>"><?php endif; ?>
 					<?php if ( 'preferences' === $tab ) : ?>
 					<?php $this->render_general_preferences( $s ); ?>
 					<?php elseif ( 'general' === $tab ) : ?>
@@ -388,8 +393,8 @@ final class PandaTranslate_Plugin {
 					<div class="pandatranslate-note"><strong><?php esc_html_e( 'Troubleshooting', 'pandatranslate' ); ?></strong><p><?php esc_html_e( 'If the editor opens but no content can be selected, check the PHP DOM extension first. URL rules can be refreshed by saving WordPress permalinks once.', 'pandatranslate' ); ?></p></div>
 					<?php PandaTranslate_Edition::render_update_status(); $this->render_mcp(); ?>
 					<?php endif; ?>
-					<?php if ( ! in_array( $tab, array( 'mcp', 'migration', 'advanced', 'glossary', 'preferences', 'woocommerce' ), true ) ) : ?><div class="pandatranslate-settings-actions"><?php if ( 'general' === $tab ) : ?><a class="contactpanda-large-action" data-contactpanda-action="start" data-contactpanda-action-mode="labelled" href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-translation#pandatranslate-translation-progress' ) ); ?>"><?php esc_html_e( 'Automatic translation', 'pandatranslate' ); ?></a><?php endif; ?><button type="submit" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="save"><span class="dashicons dashicons-saved" aria-hidden="true"></span><?php esc_html_e( 'Save settings', 'pandatranslate' ); ?></button></div><?php endif; ?>
-				</<?php echo in_array( $tab, array( 'preferences', 'woocommerce' ), true ) ? 'div' : 'form'; ?>>
+					<?php if ( ! in_array( $tab, array( 'mcp', 'migration', 'advanced', 'glossary', 'preferences', 'woocommerce', 'google' ), true ) ) : ?><div class="pandatranslate-settings-actions"><?php if ( 'general' === $tab ) : ?><a class="contactpanda-large-action" data-contactpanda-action="start" data-contactpanda-action-mode="labelled" href="<?php echo esc_url( admin_url( 'admin.php?page=pandatranslate-translation#pandatranslate-translation-progress' ) ); ?>"><?php esc_html_e( 'Automatic translation', 'pandatranslate' ); ?></a><?php endif; ?><button type="submit" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="save"><span class="dashicons dashicons-saved" aria-hidden="true"></span><?php esc_html_e( 'Save settings', 'pandatranslate' ); ?></button></div><?php endif; ?>
+				</<?php echo in_array( $tab, array( 'preferences', 'woocommerce', 'google' ), true ) ? 'div' : 'form'; ?>>
 			</div>
 		</div>
 		<?php
@@ -433,9 +438,11 @@ final class PandaTranslate_Plugin {
 
 	private function render_api_settings( $s ) {
 		echo '<h2>' . esc_html__( 'Translation APIs', 'pandatranslate' ) . '</h2><p>' . esc_html__( 'Multiple APIs can be enabled simultaneously. The API is selected for each translation run.', 'pandatranslate' ) . '</p>';
+		echo '<div class="pandatranslate-api-settings"><div class="pandatranslate-api-grid">';
+		$this->open_api_provider_form( 'google', 'Google Translate' );
 		foreach ( array( 'v2', 'v3' ) as $edition ) echo '<label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[google_' . $edition . '_enabled]' ) . '" value="1" ' . checked( $s['google_' . $edition . '_enabled'], 1, false ) . '><span>' . esc_html( sprintf( /* translators: %s: translation provider label. */
 		__( 'Enable %s', 'pandatranslate' ), PandaTranslate_Providers::label( 'google-' . $edition ) ) ) . '</span></label>';
-		echo '<div class="pandatranslate-api-settings"><label class="pandatranslate-api-row"><span>' . esc_html__( 'API settings', 'pandatranslate' ) . '</span><select data-google-edition name="' . esc_attr( self::OPTION . '[google_api_version]' ) . '">';
+		echo '<label class="pandatranslate-api-row"><span>' . esc_html__( 'API settings', 'pandatranslate' ) . '</span><select data-google-edition name="' . esc_attr( self::OPTION . '[google_api_version]' ) . '">';
 		foreach ( array( 'v2', 'v3' ) as $edition ) echo '<option value="' . esc_attr( $edition ) . '" ' . selected( $s['google_api_version'], $edition, false ) . '>' . esc_html( PandaTranslate_Providers::label( 'google-' . $edition ) ) . '</option>';
 		echo '</select></label>';
 		foreach ( array( 'v2', 'v3' ) as $edition ) {
@@ -455,15 +462,31 @@ final class PandaTranslate_Plugin {
 			$this->status_row( __( 'Configuration status', 'pandatranslate' ), is_wp_error( $ready ) ? $ready->get_error_message() : __( 'Ready', 'pandatranslate' ), is_wp_error( $ready ) ? 'error' : 'ok' );
 			echo '<button type="button" class="contactpanda-large-action" data-contactpanda-action="test" data-contactpanda-action-mode="labelled" data-google-test="' . esc_attr( $edition ) . '"><span class="dashicons dashicons-admin-tools" aria-hidden="true"></span>' . esc_html( 'v2' === $edition ? __( 'Test API key', 'pandatranslate' ) : __( 'Run connection test', 'pandatranslate' ) ) . '</button><p data-google-result role="status">' . esc_html( $test['error'] ?? '' ) . '</p></section>';
 		}
-		echo '<section><h3>DeepL</h3><label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[deepl_enabled]' ) . '" value="1" ' . checked( $s['deepl_enabled'], 1, false ) . '>' . esc_html__( 'Enable DeepL', 'pandatranslate' ) . '</label><label class="pandatranslate-api-row"><span>' . esc_html__( 'DeepL API plan', 'pandatranslate' ) . '</span><select name="' . esc_attr( self::OPTION . '[deepl_endpoint]' ) . '"><option value="free" ' . selected( $s['deepl_endpoint'], 'free', false ) . '>DeepL API Free</option><option value="pro" ' . selected( $s['deepl_endpoint'], 'pro', false ) . '>DeepL API Pro</option></select></label>';
+		$this->close_api_provider_form();
+		$this->open_api_provider_form( 'deepl', 'DeepL' );
+		echo '<label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[deepl_enabled]' ) . '" value="1" ' . checked( $s['deepl_enabled'], 1, false ) . '>' . esc_html__( 'Enable DeepL', 'pandatranslate' ) . '</label><label class="pandatranslate-api-row"><span>' . esc_html__( 'DeepL API plan', 'pandatranslate' ) . '</span><select name="' . esc_attr( self::OPTION . '[deepl_endpoint]' ) . '"><option value="free" ' . selected( $s['deepl_endpoint'], 'free', false ) . '>DeepL API Free</option><option value="pro" ' . selected( $s['deepl_endpoint'], 'pro', false ) . '>DeepL API Pro</option></select></label>';
 		if ( $s['deepl_key_encrypted'] ) echo '<div class="pandatranslate-key-mask">•••• •••• <code>' . esc_html( $s['deepl_key_last4'] ) . '</code></div>';
 		echo '<label class="pandatranslate-api-row"><span>' . esc_html__( 'Enter or replace DeepL API key', 'pandatranslate' ) . '</span><input type="password" autocomplete="new-password" name="' . esc_attr( self::OPTION . '[deepl_key]' ) . '"></label><label class="pandatranslate-check"><input type="checkbox" name="' . esc_attr( self::OPTION . '[deepl_key_remove]' ) . '" value="1">' . esc_html__( 'Delete stored DeepL API key', 'pandatranslate' ) . '</label>';
 		$test = $s['deepl_test'] ?? array();
-		echo '<p>' . esc_html__( 'Last key test', 'pandatranslate' ) . ': <strong>' . esc_html( empty( $test ) ? __( 'Not tested', 'pandatranslate' ) : ( 'valid' === $test['status'] ? __( 'Works', 'pandatranslate' ) : __( 'Failed', 'pandatranslate' ) ) . ' · ' . ( $test['time'] ?? '' ) ) . '</strong></p><button type="button" class="contactpanda-large-action" data-contactpanda-action="test" data-contactpanda-action-mode="labelled" data-deepl-test>' . esc_html__( 'Test API key', 'pandatranslate' ) . '</button><p data-deepl-result role="status">' . esc_html( $test['error'] ?? '' ) . '</p></section>';
+		echo '<p>' . esc_html__( 'Last key test', 'pandatranslate' ) . ': <strong>' . esc_html( empty( $test ) ? __( 'Not tested', 'pandatranslate' ) : ( 'valid' === $test['status'] ? __( 'Works', 'pandatranslate' ) : __( 'Failed', 'pandatranslate' ) ) . ' · ' . ( $test['time'] ?? '' ) ) . '</strong></p><button type="button" class="contactpanda-large-action" data-contactpanda-action="test" data-contactpanda-action-mode="labelled" data-deepl-test>' . esc_html__( 'Test API key', 'pandatranslate' ) . '</button><p data-deepl-result role="status">' . esc_html( $test['error'] ?? '' ) . '</p>';
+		$this->close_api_provider_form();
 		$usage = $this->provider_usage();
-		echo '</div><h3>' . esc_html__( 'Translation usage', 'pandatranslate' ) . '</h3>';
+		echo '</div></div><h3>' . esc_html__( 'Translation usage', 'pandatranslate' ) . '</h3>';
 		$this->status_row( __( 'Characters sent to translation APIs', 'pandatranslate' ), number_format_i18n( $usage['characters'] ) );
 		$this->status_row( __( 'Words (Panda Translate count)', 'pandatranslate' ), number_format_i18n( $usage['words'] ) );
+	}
+
+	private function open_api_provider_form( $provider, $label ) {
+		$id = 'pandatranslate-' . $provider . '-provider';
+		echo '<form class="pandatranslate-api-provider" method="post" action="' . esc_url( admin_url( 'options.php' ) ) . '" aria-labelledby="' . esc_attr( $id ) . '">';
+		settings_fields( 'pandatranslate' );
+		echo '<input type="hidden" name="' . esc_attr( self::OPTION ) . '[_section]" value="google">';
+		echo '<input type="hidden" name="' . esc_attr( self::OPTION ) . '[_api_provider]" value="' . esc_attr( $provider ) . '">';
+		echo '<h3 id="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</h3>';
+	}
+
+	private function close_api_provider_form() {
+		echo '<div class="pandatranslate-settings-actions"><button type="submit" class="contactpanda-large-action" data-contactpanda-action="save" data-contactpanda-action-mode="labelled">' . esc_html__( 'Save settings', 'pandatranslate' ) . '</button></div></form>';
 	}
 
 	private function render_api_selector( $name = '', $id = '' ) {
