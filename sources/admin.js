@@ -456,55 +456,32 @@
 		});
 	var migration = document.querySelector('[data-migration]');
 	if (migration) {
-		var migrationConfirm = migration.querySelector('[data-migration-confirm]'),
-			migrationStart = migration.querySelector('[data-migration-start]'),
-			migrationProgress = migration.querySelector('[data-migration-progress]'),
-			migrationStatus = migration.querySelector('[data-migration-status]'),
-			migrationBar = migration.querySelector('[data-migration-bar]'),
-			migrationPercent = migration.querySelector('[data-migration-percent]'),
-			migrationProcessed = migration.querySelector('[data-migration-processed]'),
-			migrationImported = migration.querySelector('[data-migration-imported]'),
-			migrationSkipped = migration.querySelector('[data-migration-skipped]'),
-			migrationErrors = migration.querySelector('[data-migration-errors]'),
-			migrationTotal = parseInt(migration.dataset.total, 10) || 0,
-			migrationState = {
-				table_index: 0,
-				last_id: 0,
-				processed: 0,
-				imported: 0,
-				skipped: 0,
-				errors: 0,
-				first: true,
-			};
+		var migrationConfirm = migration.querySelector('[data-migration-confirm]');
+		var migrationMissing = migration.querySelector('[data-migration-missing]');
+		var migrationStart = migration.querySelector('[data-migration-start]');
+		var migrationProgress = migration.querySelector('[data-migration-progress]');
+		var migrationStatus = migration.querySelector('[data-migration-status]');
+		var counts = ['processed', 'imported', 'skipped', 'errors'];
+		var migrationState;
 		migrationConfirm.addEventListener('change', function () {
 			migrationStart.disabled = !migrationConfirm.checked;
 		});
+
 		function updateMigration(done) {
+			var total = migrationState.total;
 			var percent = done
 				? 100
-				: migrationTotal
-					? Math.min(99, Math.round((migrationState.processed / migrationTotal) * 100))
+				: total
+					? Math.min(99, Math.round((migrationState.processed / total) * 100))
 					: 0;
-			migrationBar.style.width = percent + '%';
-			migrationPercent.textContent = percent + '%';
-			migrationProcessed.textContent = migrationState.processed.toLocaleString();
-			migrationImported.textContent = migrationState.imported.toLocaleString();
-			migrationSkipped.textContent = migrationState.skipped.toLocaleString();
-			migrationErrors.textContent = migrationState.errors.toLocaleString();
+			updateMigrationCounters(migration, 'migration', migrationState, percent);
 		}
-		function updateMigrationLanguage(data) {
-			if (!data.language || !data.language_stats) return;
-			var row = document.querySelector('[data-migration-language="' + data.language + '"]');
-			if (!row) return;
-			var stats = data.language_stats,
-				total = parseInt(stats.total, 10) || 0,
-				processed = parseInt(stats.processed, 10) || 0,
-				percent = total ? Math.min(100, Math.round((processed / total) * 100)) : 0;
-			row.querySelector('[data-language-percent]').textContent = percent + '%';
-			row.querySelector('[data-language-bar]').style.width = percent + '%';
-			['processed', 'imported', 'skipped', 'errors'].forEach(function (key) {
-				row.querySelector('[data-language-' + key + ']').textContent = (
-					parseInt(stats[key], 10) || 0
+		function updateMigrationCounters(container, prefix, stats, percent) {
+			container.querySelector('[data-' + prefix + '-percent]').textContent = percent + '%';
+			container.querySelector('[data-' + prefix + '-bar]').style.width = percent + '%';
+			counts.concat('total').forEach(function (key) {
+				container.querySelector('[data-' + prefix + '-' + key + ']').textContent = (
+					Number(stats[key]) || 0
 				).toLocaleString();
 			});
 		}
@@ -515,8 +492,8 @@
 				table_index: migrationState.table_index,
 				last_id: migrationState.last_id,
 				reset: migrationState.first ? '1' : '',
+				missing_only: migrationMissing.checked ? '1' : '',
 			});
-			migrationState.first = false;
 			fetch(window.ajaxurl, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
@@ -524,46 +501,70 @@
 				body: body.toString(),
 			})
 				.then(function (response) {
-					return response.json().then(function (data) {
-						if (!response.ok || !data.success)
-							throw new Error(data.data && data.data.message ? data.data.message : '');
-						return data.data;
+					return response.json().then(function (result) {
+						if (!response.ok || !result.success)
+							throw new Error(result.data && result.data.message ? result.data.message : '');
+						return result.data;
 					});
 				})
 				.then(function (data) {
+					migrationState.first = false;
 					migrationState.table_index = data.table_index || 0;
 					migrationState.last_id = data.last_id || 0;
-					migrationState.processed += data.processed || 0;
-					migrationState.imported += data.imported || 0;
-					migrationState.skipped += data.skipped || 0;
-					migrationState.errors += data.errors || 0;
-					updateMigrationLanguage(data);
-					updateMigration(!!data.done);
+					migrationState.total = Number(data.total) || 0;
+					counts.forEach(function (key) {
+						migrationState[key] += Number(data[key]) || 0;
+					});
+					Object.entries(data.languages || {}).forEach(function (entry) {
+						var row = document.querySelector('[data-migration-language="' + entry[0] + '"]');
+						var stats = entry[1];
+						if (row)
+							updateMigrationCounters(
+								row,
+								'language',
+								stats,
+								stats.total
+									? Math.min(100, Math.round((stats.processed / stats.total) * 100))
+									: 100,
+							);
+					});
+					updateMigration(Boolean(data.done));
 					if (data.done) {
-						migrationStatus.textContent = config.migration.complete;
-						migrationProgress.classList.add('is-complete');
-						migrationStart.disabled = true;
-					} else {
-						window.setTimeout(migrationBatch, 80);
-					}
+						var complete = migrationState.errors === 0;
+						migrationStatus.textContent = complete
+							? config.migration.complete
+							: config.migration.failed;
+						migrationProgress.classList.add(complete ? 'is-complete' : 'is-error');
+						migrationStart.disabled =
+							migrationConfirm.disabled =
+							migrationMissing.disabled =
+								complete;
+					} else window.setTimeout(migrationBatch, 80);
 				})
 				.catch(function (error) {
 					migrationStatus.textContent = (config.migration.failed + ' ' + error.message).trim();
 					migrationProgress.classList.add('is-error');
-					migrationStart.disabled = false;
+					migrationStart.disabled = migrationConfirm.disabled = migrationMissing.disabled = false;
 				});
 		}
 		migrationStart.addEventListener('click', function () {
-			migrationStart.disabled = true;
-			migrationConfirm.disabled = true;
+			migrationState = {
+				table_index: 0,
+				last_id: 0,
+				processed: 0,
+				imported: 0,
+				skipped: 0,
+				errors: 0,
+				total: 0,
+				first: true,
+			};
+			migrationStart.disabled = migrationConfirm.disabled = migrationMissing.disabled = true;
+			migrationProgress.classList.remove('is-error', 'is-complete');
 			migrationProgress.hidden = false;
 			migrationStatus.textContent = config.migration.running;
+			updateMigration(false);
 			document.querySelectorAll('[data-migration-language]').forEach(function (row) {
-				row.querySelector('[data-language-percent]').textContent = '0%';
-				row.querySelector('[data-language-bar]').style.width = '0%';
-				['processed', 'imported', 'skipped', 'errors'].forEach(function (key) {
-					row.querySelector('[data-language-' + key + ']').textContent = '0';
-				});
+				updateMigrationCounters(row, 'language', migrationState, 0);
 			});
 			migrationBatch();
 		});

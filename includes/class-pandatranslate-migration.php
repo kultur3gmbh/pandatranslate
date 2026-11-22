@@ -93,8 +93,9 @@ final class PandaTranslate_Migration {
 		if ( $count && ! is_wp_error( $preflight ) ) {
 			echo '<div data-migration data-total="' . esc_attr( $count ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_migration_batch' ) ) . '">';
 			echo '<p><label><input type="checkbox" data-migration-confirm> ' . esc_html__( 'Database backup created; start the import.', 'pandatranslate' ) . '</label></p>';
+			echo '<p><label><input type="checkbox" data-migration-missing checked> ' . esc_html__( 'Import only missing translations', 'pandatranslate' ) . '</label></p>';
 			echo '<button class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" type="button" data-contactpanda-action="import" data-migration-start disabled><span class="dashicons dashicons-database-import"></span>' . esc_html__( 'Import translations', 'pandatranslate' ) . '</button>';
-			echo '<div class="pandatranslate-migration-progress" data-migration-progress hidden aria-live="polite"><div class="pandatranslate-migration-progress-head"><strong>' . esc_html__( 'Migration progress', 'pandatranslate' ) . '</strong><b data-migration-percent>0%</b></div><span class="pandatranslate-progress-track"><i data-migration-bar style="width:0%"></i></span><p data-migration-status>' . esc_html__( 'Preparing migration…', 'pandatranslate' ) . '</p><div class="pandatranslate-migration-totals"><span>' . esc_html__( 'Processed', 'pandatranslate' ) . ': <strong data-migration-processed>0</strong> / ' . esc_html( number_format_i18n( $count ) ) . '</span><span>' . esc_html__( 'Imported', 'pandatranslate' ) . ': <strong data-migration-imported>0</strong></span><span>' . esc_html__( 'Skipped', 'pandatranslate' ) . ': <strong data-migration-skipped>0</strong></span><span>' . esc_html__( 'Errors', 'pandatranslate' ) . ': <strong data-migration-errors>0</strong></span></div></div>';
+			echo '<div class="pandatranslate-migration-progress" data-migration-progress hidden aria-live="polite"><div class="pandatranslate-migration-progress-head"><strong>' . esc_html__( 'Migration progress', 'pandatranslate' ) . '</strong><b data-migration-percent>0%</b></div><span class="pandatranslate-progress-track"><i data-migration-bar style="width:0%"></i></span><p data-migration-status>' . esc_html__( 'Preparing migration…', 'pandatranslate' ) . '</p><div class="pandatranslate-migration-totals"><span>' . esc_html__( 'Processed', 'pandatranslate' ) . ': <strong data-migration-processed>0</strong> / <strong data-migration-total>' . esc_html( number_format_i18n( $count ) ) . '</strong></span><span>' . esc_html__( 'Imported', 'pandatranslate' ) . ': <strong data-migration-imported>0</strong></span><span>' . esc_html__( 'Skipped', 'pandatranslate' ) . ': <strong data-migration-skipped>0</strong></span><span>' . esc_html__( 'Errors', 'pandatranslate' ) . ': <strong data-migration-errors>0</strong></span></div></div>';
 			echo '</div>';
 		}
 		elseif ( ! $count ) {
@@ -124,38 +125,120 @@ final class PandaTranslate_Migration {
 		echo '<section class="pandatranslate-migration-report"><h3>' . esc_html__( 'Migration status by language', 'pandatranslate' ) . '</h3>';
 		if ( ! empty( $report['completed_at'] ) ) echo '<p><small>' . esc_html( sprintf( /* translators: %s: completion date and time. */
 		__( 'Last completed migration: %s', 'pandatranslate' ), $report['completed_at'] ) ) . '</small></p>';
-		foreach ( array_unique( array_merge( array_keys( $source_totals ), array_keys( $languages ) ) ) as $language ) { $stats = wp_parse_args( $languages[ $language ] ?? array(), array( 'total' => $source_totals[ $language ] ?? 0, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 ) ); $total = max( (int) $stats['total'], (int) ( $source_totals[ $language ] ?? 0 ) ); $percent = $total ? min( 100, round( (int) $stats['processed'] / $total * 100 ) ) : 0; $name = self::report_language_label( $language ); echo '<article class="pandatranslate-migration-language" data-migration-language="' . esc_attr( $language ) . '"><div><strong>' . esc_html( PandaTranslate_Features::flag( $language ) . ' ' . $name ) . '</strong><b data-language-percent>' . esc_html( $percent ) . '%</b></div><span class="pandatranslate-progress-track"><i data-language-bar style="width:' . esc_attr( $percent ) . '%"></i></span><p><span>' . esc_html__( 'Processed', 'pandatranslate' ) . ': <strong data-language-processed>' . esc_html( number_format_i18n( $stats['processed'] ) ) . '</strong> / ' . esc_html( number_format_i18n( $total ) ) . '</span><span>' . esc_html__( 'Imported', 'pandatranslate' ) . ': <strong data-language-imported>' . esc_html( number_format_i18n( $stats['imported'] ) ) . '</strong></span><span>' . esc_html__( 'Skipped', 'pandatranslate' ) . ': <strong data-language-skipped>' . esc_html( number_format_i18n( $stats['skipped'] ) ) . '</strong></span><span>' . esc_html__( 'Errors', 'pandatranslate' ) . ': <strong data-language-errors>' . esc_html( number_format_i18n( $stats['errors'] ) ) . '</strong></span></p></article>'; }
+		foreach ( array_unique( array_merge( array_keys( $source_totals ), array_keys( $languages ) ) ) as $language ) { $stats = wp_parse_args( $languages[ $language ] ?? array(), array( 'total' => $source_totals[ $language ] ?? 0, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 ) ); $total = isset( $languages[ $language ] ) && ! empty( $report['missing_only'] ) ? (int) $stats['total'] : max( (int) $stats['total'], (int) ( $source_totals[ $language ] ?? 0 ) ); $percent = $total ? min( 100, round( (int) $stats['processed'] / $total * 100 ) ) : ( isset( $languages[ $language ] ) && ! empty( $report['missing_only'] ) ? 100 : 0 ); $name = self::report_language_label( $language ); echo '<article class="pandatranslate-migration-language" data-migration-language="' . esc_attr( $language ) . '"><div><strong>' . esc_html( PandaTranslate_Features::flag( $language ) . ' ' . $name ) . '</strong><b data-language-percent>' . esc_html( $percent ) . '%</b></div><span class="pandatranslate-progress-track"><i data-language-bar style="width:' . esc_attr( $percent ) . '%"></i></span><p><span>' . esc_html__( 'Processed', 'pandatranslate' ) . ': <strong data-language-processed>' . esc_html( number_format_i18n( $stats['processed'] ) ) . '</strong> / <strong data-language-total>' . esc_html( number_format_i18n( $total ) ) . '</strong></span><span>' . esc_html__( 'Imported', 'pandatranslate' ) . ': <strong data-language-imported>' . esc_html( number_format_i18n( $stats['imported'] ) ) . '</strong></span><span>' . esc_html__( 'Skipped', 'pandatranslate' ) . ': <strong data-language-skipped>' . esc_html( number_format_i18n( $stats['skipped'] ) ) . '</strong></span><span>' . esc_html__( 'Errors', 'pandatranslate' ) . ': <strong data-language-errors>' . esc_html( number_format_i18n( $stats['errors'] ) ) . '</strong></span></p></article>'; }
 		echo '</section>';
 	}
+	private static function source_key( $table, $row ) {
+		return hash( 'sha256', 'translatepress|' . $table . '|' . $row['id'] . '|' . $row['original'] );
+	}
+
+	private static function source_batch( $table, $language, $cursor, $missing_only ) {
+		global $wpdb;
+		if ( $missing_only && ! self::uses_sqlite() ) {
+			// Match the existing import identity to include gaps and changed source strings below a previous cursor.
+			$sql = 'SELECT s.id,s.original,s.translated,s.status FROM %i s WHERE s.translated <> %s AND s.id > %d AND NOT EXISTS (SELECT 1 FROM %i p WHERE p.target_language = %s AND p.unit_key = SHA2(CONCAT(%s,s.id,%s,s.original),256)) ORDER BY s.id LIMIT %d';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Fixed query and bound identifiers; migration reads current source and destination rows.
+			return $wpdb->get_results( $wpdb->prepare( $sql, $table, '', $cursor, PandaTranslate_Repository::table(), $language, 'translatepress|' . $table . '|', '|', self::BATCH_SIZE ), ARRAY_A );
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The source and cursor are bound and the scan must see current rows.
+		return $wpdb->get_results( $wpdb->prepare( "SELECT id,original,translated,status FROM %i WHERE translated <> '' AND id > %d ORDER BY id ASC LIMIT %d", $table, $cursor, self::BATCH_SIZE ), ARRAY_A );
+	}
+
+	private static function uses_sqlite() {
+		return defined( 'DB_ENGINE' ) && 'sqlite' === DB_ENGINE;
+	}
+
+	private static function missing_totals( $tables, $repository ) {
+		global $wpdb;
+		$totals = array();
+		foreach ( $tables as $table ) {
+			$language = self::table_language( $table );
+			if ( ! $language ) continue;
+			if ( self::uses_sqlite() ) {
+				$count = 0;
+				$cursor = 0;
+				do {
+					$rows = self::source_batch( $table, $language, $cursor, false );
+					if ( $wpdb->last_error ) return false;
+					if ( ! $rows ) break;
+					$cursor = (int) end( $rows )['id'];
+					$keys = array_map( function ( $row ) use ( $table ) { return self::source_key( $table, $row ); }, $rows );
+					$count += count( $rows ) - count( $repository->find_many( $keys, $language ) );
+					if ( $wpdb->last_error ) return false;
+				} while ( count( $rows ) === self::BATCH_SIZE );
+			} else {
+				$sql = 'SELECT COUNT(*) FROM %i s WHERE s.translated <> %s AND NOT EXISTS (SELECT 1 FROM %i p WHERE p.target_language = %s AND p.unit_key = SHA2(CONCAT(%s,s.id,%s,s.original),256))';
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Fixed query and bound identifiers; the count is specific to this run.
+				$count = (int) $wpdb->get_var( $wpdb->prepare( $sql, $table, '', PandaTranslate_Repository::table(), $language, 'translatepress|' . $table . '|', '|' ) );
+				if ( $wpdb->last_error ) return false;
+			}
+			$totals[ $language ] = ( $totals[ $language ] ?? 0 ) + $count;
+		}
+		return $totals;
+	}
+
 	public static function ajax_batch() {
 		if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( array( 'message' => __( 'Permission required to run this import.', 'pandatranslate' ) ), 403 );
 		check_ajax_referer( 'pandatranslate_migration_batch', 'nonce' );
 		$preflight = self::preflight(); if ( is_wp_error( $preflight ) ) wp_send_json_error( array( 'message' => $preflight->get_error_message() ), 409 );
 		global $wpdb;
-		$tables = self::tables();
-		$table_index = max( 0, absint( $_POST['table_index'] ?? 0 ) );
-		$last_id = max( 0, absint( $_POST['last_id'] ?? 0 ) );
-		if ( ! empty( $_POST['reset'] ) ) { $language_totals = self::source_totals(); $initial = array( 'started_at' => current_time( 'mysql' ), 'completed_at' => '', 'languages' => array() ); foreach ( $language_totals as $code => $total ) $initial['languages'][ $code ] = array( 'total' => $total, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 ); update_option( self::REPORT_OPTION, $initial, false ); }
-		if ( $table_index >= count( $tables ) ) wp_send_json_success( array( 'done' => true, 'processed' => 0, 'imported' => 0, 'skipped' => 0 ) );
+		$tables = array_values( array_filter( self::tables(), array( __CLASS__, 'table_language' ) ) );
+		$repository = new PandaTranslate_Repository();
+		$missing_only = ! empty( $_POST['missing_only'] );
+		$table_index = absint( $_POST['table_index'] ?? 0 );
+		$last_id = absint( $_POST['last_id'] ?? 0 );
+		$report = (array) get_option( self::REPORT_OPTION, array() );
+
+		if ( ! empty( $_POST['reset'] ) ) {
+			$totals = $missing_only ? self::missing_totals( $tables, $repository ) : self::source_totals();
+			if ( false === $totals ) wp_send_json_error( array( 'message' => __( 'The translation could not be stored.', 'pandatranslate' ) ), 500 );
+			$report = array( 'started_at' => current_time( 'mysql' ), 'completed_at' => '', 'languages' => array(), 'missing_only' => $missing_only );
+			foreach ( $totals as $code => $total ) $report['languages'][ $code ] = array( 'total' => $total, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 );
+		}
+
+		$totals = array_column( $report['languages'] ?? array(), 'total' );
+		$total = array_sum( $totals );
+		if ( $table_index >= count( $tables ) || ( $missing_only && ! empty( $_POST['reset'] ) && 0 === $total ) ) {
+			$report['completed_at'] = current_time( 'mysql' );
+			update_option( self::REPORT_OPTION, $report, false );
+			wp_send_json_success( array( 'done' => true, 'total' => $total, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'languages' => $report['languages'] ?? array() ) );
+		}
+
 		$table = $tables[ $table_index ];
 		$language = self::table_language( $table );
-		if ( ! $language ) wp_send_json_error( array( 'message' => __( 'Invalid target language.', 'pandatranslate' ) ), 400 );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,original,translated,status FROM %i WHERE translated <> '' AND id > %d ORDER BY id ASC LIMIT %d", $table, $last_id, self::BATCH_SIZE ), ARRAY_A );
-		$repository = new PandaTranslate_Repository();
-		$imported = 0; $skipped = 0; $errors = 0;
-		foreach ( $rows as $row ) {
-			$key = hash( 'sha256', 'translatepress|' . $table . '|' . $row['id'] . '|' . $row['original'] );
-			if ( $repository->find( $key, $language ) ) { ++$skipped; continue; }
+		$rows = self::source_batch( $table, $language, $last_id, $missing_only );
+		if ( $wpdb->last_error ) wp_send_json_error( array( 'message' => __( 'The translation could not be stored.', 'pandatranslate' ) ), 500 );
+		$keys = array_map( function ( $row ) use ( $table ) { return self::source_key( $table, $row ); }, $rows );
+		$existing = $missing_only && ! self::uses_sqlite() ? array() : $repository->find_many( $keys, $language );
+		if ( $wpdb->last_error ) wp_send_json_error( array( 'message' => __( 'The translation could not be stored.', 'pandatranslate' ) ), 500 );
+		$imported = 0;
+		$skipped = 0;
+		$errors = 0;
+		$processed = 0;
+		foreach ( $rows as $index => $row ) {
+			$key = $keys[ $index ];
+			if ( isset( $existing[ $key ] ) ) {
+				if ( ! $missing_only ) { ++$skipped; ++$processed; }
+				continue;
+			}
+			++$processed;
 			$unit = array( 'key' => $key, 'source_hash' => hash( 'sha256', $row['original'] ), 'source_html' => $row['original'] );
-			is_wp_error( $repository->save( $unit, $language, $row['translated'], self::imported_status( $row['status'] ), 'translatepress-import' ) ) ? ++$errors : ++$imported;
+			$result = $repository->save( $unit, $language, $row['translated'], self::imported_status( $row['status'] ), 'translatepress-import', true );
+			if ( is_wp_error( $result ) ) ++$errors;
+			elseif ( $result ) ++$imported;
+			else ++$skipped;
 		}
-		$processed = count( $rows );
-		if ( $processed < self::BATCH_SIZE ) { ++$table_index; $last_id = 0; }
-		elseif ( $rows ) $last_id = absint( end( $rows )['id'] );
-		$done = $table_index >= count( $tables ); $report = (array) get_option( self::REPORT_OPTION, array() ); if ( ! isset( $report['languages'][ $language ] ) ) $report['languages'][ $language ] = array( 'total' => $processed, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 ); foreach ( array( 'processed' => $processed, 'imported' => $imported, 'skipped' => $skipped, 'errors' => $errors ) as $key => $amount ) $report['languages'][ $language ][ $key ] = (int) ( $report['languages'][ $language ][ $key ] ?? 0 ) + $amount; if ( $done ) $report['completed_at'] = current_time( 'mysql' ); update_option( self::REPORT_OPTION, $report, false );
-		wp_send_json_success( array( 'done' => $done, 'table_index' => $table_index, 'last_id' => $last_id, 'language' => $language, 'language_stats' => $report['languages'][ $language ], 'processed' => $processed, 'imported' => $imported, 'skipped' => $skipped, 'errors' => $errors ) );
+		if ( count( $rows ) < self::BATCH_SIZE ) { ++$table_index; $last_id = 0; }
+		else $last_id = absint( end( $rows )['id'] );
+		$done = $table_index >= count( $tables );
+		$batch = compact( 'processed', 'imported', 'skipped', 'errors' );
+		if ( ! isset( $report['languages'][ $language ] ) ) $report['languages'][ $language ] = array( 'total' => $processed, 'processed' => 0, 'imported' => 0, 'skipped' => 0, 'errors' => 0 );
+		foreach ( $batch as $key => $amount ) $report['languages'][ $language ][ $key ] += $amount;
+		if ( $done ) $report['completed_at'] = current_time( 'mysql' );
+		update_option( self::REPORT_OPTION, $report, false );
+		wp_send_json_success( $batch + compact( 'done', 'total', 'table_index', 'last_id', 'language' ) + array( 'languages' => $report['languages'] ) );
 	}
+
 	public static function import() {
 		if ( ! current_user_can( 'manage_options' ) ) wp_die( esc_html__( 'Permission required to run this import.', 'pandatranslate' ) );
 		check_admin_referer( 'pandatranslate_import_translatepress' ); global $wpdb; $repository = new PandaTranslate_Repository(); $imported = 0; $skipped = 0;
@@ -167,7 +250,7 @@ final class PandaTranslate_Migration {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read current import source and preserve target records. Source tables are prefix/regex allowlisted; table identifiers and values are bound. No persistent cache during migration/repair.
 				$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id,original,translated,status FROM %i WHERE translated <> '' AND id > %d ORDER BY id ASC LIMIT %d", $table, $last_id, self::BATCH_SIZE ), ARRAY_A );
 				if ( $wpdb->last_error ) wp_die( esc_html__( 'The translation could not be stored.', 'pandatranslate' ) );
-				foreach ( $rows as $row ) { $key = hash( 'sha256', 'translatepress|' . $table . '|' . $row['id'] . '|' . $row['original'] ); if ( $repository->find( $key, $language ) ) { ++$skipped; continue; } $unit = array( 'key' => $key, 'source_hash' => hash( 'sha256', $row['original'] ), 'source_html' => $row['original'] ); is_wp_error( $repository->save( $unit, $language, $row['translated'], self::imported_status( $row['status'] ), 'translatepress-import' ) ) ? ++$skipped : ++$imported; }
+				foreach ( $rows as $row ) { $key = self::source_key( $table, $row ); if ( $repository->find( $key, $language ) ) { ++$skipped; continue; } $unit = array( 'key' => $key, 'source_hash' => hash( 'sha256', $row['original'] ), 'source_html' => $row['original'] ); true === $repository->save( $unit, $language, $row['translated'], self::imported_status( $row['status'] ), 'translatepress-import', true ) ? ++$imported : ++$skipped; }
 				if ( $rows ) $last_id = (int) end( $rows )['id'];
 			} while ( count( $rows ) === self::BATCH_SIZE );
 		}

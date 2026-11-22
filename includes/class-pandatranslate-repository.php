@@ -164,7 +164,7 @@ final class PandaTranslate_Repository {
 		return $counts;
 	}
 
-	public function save( array $unit, $language, $translated_html, $status = 'untranslated', $provider = '' ) {
+	public function save( array $unit, $language, $translated_html, $status = 'untranslated', $provider = '', $insert_only = false ) {
 		global $wpdb;
 		if ( ! in_array( $status, self::STATUSES, true ) ) return new WP_Error( 'pandatranslate_status', __( 'Invalid translation status.', 'pandatranslate' ) );
 		$data = array(
@@ -173,9 +173,17 @@ final class PandaTranslate_Repository {
 			'provider' => $provider, 'character_count' => function_exists( 'mb_strlen' ) ? mb_strlen( wp_strip_all_tags( $unit['source_html'] ) ) : strlen( wp_strip_all_tags( $unit['source_html'] ) ),
 			'updated_at' => current_time( 'mysql', true ),
 		);
-		$existing = $this->find( $unit['key'], $language );
+		$existing = $insert_only ? null : $this->find( $unit['key'], $language );
 		if ( ! $existing || isset( $unit['source_kind'] ) ) { $data['source_kind'] = sanitize_key( $unit['source_kind'] ?? 'page' ); $data['source_domain'] = sanitize_text_field( $unit['source_domain'] ?? '' ); }
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache.
+		if ( $insert_only ) {
+			$previous = $wpdb->suppress_errors( true );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The unique index makes this an atomic create.
+			try { $result = $wpdb->insert( self::table(), $data ); }
+			finally { $wpdb->suppress_errors( $previous ); }
+			if ( false === $result && $this->find( $unit['key'], $language ) ) return false;
+			return false === $result ? new WP_Error( 'pandatranslate_database', __( 'The translation could not be stored.', 'pandatranslate' ) ) : true;
+		}
 		$result = $existing ? $wpdb->update( self::table(), $data, array( 'id' => $existing['id'] ) ) : $wpdb->insert( self::table(), $data );
 		return false === $result ? new WP_Error( 'pandatranslate_database', __( 'The translation could not be stored.', 'pandatranslate' ) ) : true;
 	}
