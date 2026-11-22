@@ -14,7 +14,6 @@ if [[ "${PANDATRANSLATE_TEST_WARNING_REGRESSIONS:-}" == "1" ]]; then
   php tests/migration-formal-integration.php
   php tests/language-performance-integration.php
   php tests/slug-performance-integration.php
-  php tests/early-locale-integration.php
   php tests/gettext-configuration-integration.php
   php tests/backend-locale-integration.php
   php tests/background-language-integration.php

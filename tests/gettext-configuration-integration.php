@@ -18,6 +18,15 @@ try {
  $initial = $reads;
  for ( $i = 0; $i < 10000; $i++ ) PandaTranslate_Strings::gettext( 'Configuration test', 'Configuration test', 'synthetic-config' );
  pt_configuration_expect( $reads - $initial < 5, 'Ten thousand repeated gettext calls do not repeatedly read language settings' );
+ $unrelated = function ( $value ) { return $value; }; add_filter( 'pre_option', $unrelated );
+ $initial = $reads;
+ for ( $i = 0; $i < 10000; $i++ ) PandaTranslate_Strings::gettext( 'Configuration test', 'Configuration test', 'synthetic-config' );
+ // Pre-option probes still run, but full settings resolution must stay cached.
+ $counter = new ReflectionProperty( PandaTranslate_Strings::class, 'configuration_count' ); $counter->setAccessible( true );
+ $resolved = $counter->getValue();
+ for ( $i = 0; $i < 100; $i++ ) $resolve->invoke( null );
+ pt_configuration_expect( $counter->getValue() === $resolved, 'Unrelated global pre_option listeners do not rebuild configuration for every text' );
+ remove_filter( 'pre_option', $unrelated );
  $settings['languages'][1]['active'] = 0; update_option( PandaTranslate_Plugin::OPTION, $settings );
  pt_configuration_expect( '' === $resolve->invoke( null ), 'Saved deactivation invalidates configuration immediately' );
  $settings['languages'][1]['active'] = 1; update_option( PandaTranslate_Plugin::OPTION, $settings );
@@ -28,6 +37,14 @@ try {
  pt_configuration_expect( 'fr' === $resolve->invoke( null ), 'Dynamic configuration filter is respected' );
  $settings['languages'][1]['active'] = 0;
  pt_configuration_expect( '' === $resolve->invoke( null ), 'Dynamic filter changes bypass configuration cache' );
+ remove_filter( 'pre_option_' . PandaTranslate_Plugin::OPTION, $dynamic, 999 );
+ $generic = function ( $value, $key ) use ( &$settings ) { return PandaTranslate_Plugin::OPTION === $key ? $settings : $value; }; add_filter( 'pre_option', $generic, 999, 2 );
+ $settings['languages'][1]['active'] = 1; pt_configuration_expect( 'fr' === $resolve->invoke( null ), 'Global pre_option overrides remain live' );
+ $settings['languages'][1]['active'] = 0; pt_configuration_expect( '' === $resolve->invoke( null ), 'Changed global pre_option result immediately invalidates configuration' );
+ remove_filter( 'pre_option', $generic, 999 );
+ $post = function ( $value ) use ( &$settings ) { return $settings; }; add_filter( 'option_' . PandaTranslate_Plugin::OPTION, $post, 999 );
+ $settings['languages'][1]['active'] = 1; pt_configuration_expect( 'fr' === $resolve->invoke( null ), 'Post-option overrides remain live' );
+ $settings['languages'][1]['active'] = 0; pt_configuration_expect( '' === $resolve->invoke( null ), 'Post-option changes are never memoized' ); remove_filter( 'option_' . PandaTranslate_Plugin::OPTION, $post, 999 );
  unset( $_GET['pt_lang'] ); pt_configuration_expect( '' === $resolve->invoke( null ), 'Source selector never reuses target configuration' );
 } finally {
  remove_action( 'all', $observe ); remove_filter( 'pre_option_' . PandaTranslate_Plugin::OPTION, $dynamic, 999 ); remove_filter( 'pandatranslate_multilingual_available', $edition, PHP_INT_MAX );

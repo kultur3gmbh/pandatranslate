@@ -23,28 +23,6 @@ final class PandaTranslate_Strings {
 		foreach ( array( 'added_option', 'updated_option', 'deleted_option' ) as $hook ) add_action( $hook, array( __CLASS__, 'invalidate_language' ), 10, 1 );
 		add_action( 'switch_blog', function () { self::invalidate_language(); } );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ), 30 );
-		self::prepare_request_locale();
-	}
-	/** Select the validated public language before WordPress loads all plugin catalogs. */
-	public static function prepare_request_locale() {
-		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) || isset( $_GET['rest_route'] ) ) return;
-		$path = (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ), PHP_URL_PATH );
-		$home = rtrim( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ), '/' );
-		if ( $home && 0 === strpos( $path, $home . '/' ) ) $path = substr( $path, strlen( $home ) );
-		$path = trim( $path, '/' );
-		if ( preg_match( '~^(?:wp-admin|wp-json|wp-login\.php|wp-cron\.php|xmlrpc\.php)(?:/|$)~i', $path ) ) return;
-		$requested = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : '';
-		$source = PandaTranslate_Plugin::get_settings()['source_language'];
-		foreach ( PandaTranslate_Plugin::language_rows() as $row ) {
-			if ( empty( $row['active'] ) || $row['code'] === $source ) continue;
-			if ( $requested ? $row['code'] !== $requested : ( 'path' !== PandaTranslate_Plugin::get_settings()['url_mode'] || ( $path !== $row['slug'] && 0 !== strpos( $path, $row['slug'] . '/' ) ) ) ) continue;
-			$locale = $row['locale'];
-			// WordPress's own locale-switcher filters run later, so explicit
-			// recipient/email scopes continue to override and restore this base.
-			$filter = static function () use ( $locale ) { return $locale; };
-			add_filter( 'locale', $filter, 1 ); add_filter( 'determine_locale', $filter, 1 );
-			return;
-		}
 	}
 	public static function locale() {
 		if ( is_admin() ) return; self::$frontend_ready = true; self::invalidate_language(); $language = self::frontend_language(); if ( ! $language ) return;
@@ -59,12 +37,23 @@ final class PandaTranslate_Strings {
 		global $wp_query;
 		$selector = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : ( is_object( $wp_query ) && is_callable( array( $wp_query, 'get' ) ) ? sanitize_key( $wp_query->get( 'pt_lang' ) ) : '' );
 		if ( '' === $selector ) return '';
-		$blog = get_current_blog_id(); $dynamic = false;
-		foreach ( array( 'pre_option', 'pre_option_' . PandaTranslate_Plugin::OPTION, 'option_' . PandaTranslate_Plugin::OPTION, 'pre_option_WPLANG', 'option_WPLANG' ) as $hook ) if ( has_filter( $hook ) ) { $dynamic = true; break; }
+		$blog = get_current_blog_id(); $dynamic = false; $pre = array();
+		foreach ( array( PandaTranslate_Plugin::OPTION => array(), 'WPLANG' => 'en_US' ) as $option => $default ) {
+			// A global pre_option listener often handles unrelated options. Probe
+			// its actual result, preserving live overrides without repeatedly
+			// fetching/unserializing the full stored settings when it returns false.
+			$value = false;
+			if ( has_filter( 'pre_option' ) || has_filter( 'pre_option_' . $option ) ) {
+				$value = apply_filters( 'pre_option_' . $option, false, $option, $default );
+				$value = apply_filters( 'pre_option', $value, $option, $default );
+			}
+			$pre[$option] = is_object( $value ) ? (array) $value : $value;
+			if ( has_filter( 'option_' . $option ) || has_filter( 'default_option_' . $option ) ) $dynamic = true;
+		}
 		$configuration = self::$frontend_configuration;
-		if ( $dynamic || ! $configuration || $configuration['selector'] !== $selector || $configuration['blog'] !== $blog ) {
+		if ( $dynamic || ! $configuration || $configuration['selector'] !== $selector || $configuration['blog'] !== $blog || $configuration['pre'] !== $pre ) {
 			++self::$configuration_count;
-			$configuration = array( 'selector' => $selector, 'blog' => $blog, 'language' => '', 'paid' => false );
+			$configuration = array( 'selector' => $selector, 'blog' => $blog, 'pre' => $pre, 'language' => '', 'paid' => false );
 			$source = PandaTranslate_Plugin::get_settings()['source_language']; $active = 0;
 			foreach ( PandaTranslate_Plugin::configured_language_rows() as $row ) if ( ! empty( $row['active'] ) ) {
 				$active++;
