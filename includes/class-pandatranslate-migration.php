@@ -170,9 +170,8 @@ final class PandaTranslate_Migration {
 		global $wpdb;
 		if ( $missing_only && ! self::uses_sqlite() ) {
 			// Match the existing import identity to include gaps and changed source strings below a previous cursor.
-			$sql = 'SELECT s.id,s.original,s.translated,s.status FROM %i s WHERE s.translated <> %s AND s.id > %d AND NOT EXISTS (SELECT 1 FROM %i p WHERE p.target_language = %s AND p.unit_key = SHA2(CONCAT(%s,s.id,%s,s.original),256)) ORDER BY s.id LIMIT %d';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Fixed query and bound identifiers; migration reads current source and destination rows.
-			return $wpdb->get_results( $wpdb->prepare( $sql, $table, '', $cursor, PandaTranslate_Repository::table(), $language, 'translatepress|' . $table . '|', '|', self::BATCH_SIZE ), ARRAY_A );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Migration reads current source and destination rows using bound table identifiers and values.
+			return $wpdb->get_results( $wpdb->prepare( 'SELECT s.id,s.original,s.translated,s.status FROM %i s WHERE s.translated <> %s AND s.id > %d AND NOT EXISTS (SELECT 1 FROM %i p WHERE p.target_language = %s AND p.unit_key = SHA2(CONCAT(%s,s.id,%s,s.original),256)) ORDER BY s.id LIMIT %d', $table, '', $cursor, PandaTranslate_Repository::table(), $language, 'translatepress|' . $table . '|', '|', self::BATCH_SIZE ), ARRAY_A );
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The source and cursor are bound and the scan must see current rows.
 		return $wpdb->get_results( $wpdb->prepare( "SELECT id,original,translated,status FROM %i WHERE translated <> '' AND id > %d ORDER BY id ASC LIMIT %d", $table, $cursor, self::BATCH_SIZE ), ARRAY_A );

@@ -90,8 +90,8 @@ final class PandaTranslate_Translation_Jobs {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
 		if ( ! $result['total_units'] ) $result['total_units'] = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE target_language = %s AND id <= %d {$condition}", $table, $language, $limit ) );
 		if ( ! $limit ) return new WP_Error( 'pandatranslate_no_sources', __( 'No source content was collected. Check published content types and source-page collection.', 'pandatranslate' ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
 		$batch_size = 'google-v2' === $api_id && method_exists( 'PandaTranslate_Plugin', 'auto_translate_many' ) ? 25 : 5;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Read current job rows. The only SQL fragment is the fixed predicate selected above, and all identifiers and values are bound.
 		$units = $wpdb->get_results( $wpdb->prepare( "SELECT id,unit_key,source_html FROM %i WHERE target_language = %s AND id > %d AND id <= %d {$condition} ORDER BY id ASC LIMIT %d", $table, $language, $cursor, $limit, $batch_size ), ARRAY_A );
 		$truncated = false;
 		if ( $batch_size > 5 ) {

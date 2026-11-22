@@ -799,6 +799,7 @@ final class PandaTranslate_Plugin {
 	public function start_language_job() {
 		if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( array( 'message' => __( 'Access denied.', 'pandatranslate' ) ), 403 );
 		check_ajax_referer( 'pandatranslate_language_batch', 'nonce' );
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Decode JSON before checking the array shape and sanitizing each language code below.
 		$raw_languages = wp_unslash( $_POST['languages'] ?? '[]' );
 		$languages = is_string( $raw_languages ) ? json_decode( $raw_languages, true ) : null;
 		if ( ! is_array( $languages ) || count( $languages ) > 100 || array_filter( $languages, function ( $value ) { return ! is_string( $value ); } ) ) wp_send_json_error( array( 'message' => __( 'Invalid target language.', 'pandatranslate' ) ), 400 );

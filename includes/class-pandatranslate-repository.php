@@ -63,7 +63,7 @@ final class PandaTranslate_Repository {
 		global $wpdb; $rows = array();
 		foreach ( array_chunk( array_values( array_unique( $keys ) ), 250 ) as $chunk ) {
 			$sql = 'SELECT * FROM %i WHERE target_language = %s AND unit_key IN (' . implode( ',', array_fill( 0, count( $chunk ), '%s' ) ) . ')';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Bound identifiers/keys; request-local public-render snapshot only.
+			// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- The query adds only generated %s placeholders. Bind the table, language and keys and take a fresh public-render snapshot.
 			foreach ( $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( self::table(), $language ), $chunk ) ), ARRAY_A ) as $row ) $rows[$row['unit_key']] = $row;
 		}
 		return $rows;
@@ -89,6 +89,7 @@ final class PandaTranslate_Repository {
 			$cursor = (int) $row['id'];
 			if ( ! PandaTranslate_Template_Protector::has_text( $row['source_html'] ) ) {
 				// Retain imported technical fragments, but never bill a provider for empty markup.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomically mark only rows that remain untranslated in the plugin-owned table.
 				$ignored = $wpdb->query( $wpdb->prepare( "UPDATE %i SET source_kind = 'technical', last_error = '' WHERE source_hash = %s AND BINARY source_html = BINARY %s AND status = 'untranslated' AND translated_html = ''", $table, $row['source_hash'], $row['source_html'] ) );
 				if ( false === $ignored ) return new WP_Error( 'pandatranslate_seed_failed', __( 'Source content could not be prepared.', 'pandatranslate' ) );
 				continue;
@@ -202,6 +203,7 @@ final class PandaTranslate_Repository {
 			if ( false === $result && $this->find( $unit['key'], $language ) ) return false;
 			return false === $result ? new WP_Error( 'pandatranslate_database', __( 'The translation could not be stored.', 'pandatranslate' ) ) : true;
 		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Write the current translation to the plugin-owned table using wpdb value binding.
 		$result = $existing ? $wpdb->update( self::table(), $data, array( 'id' => $existing['id'] ) ) : $wpdb->insert( self::table(), $data );
 		return false === $result ? new WP_Error( 'pandatranslate_database', __( 'The translation could not be stored.', 'pandatranslate' ) ) : true;
 	}

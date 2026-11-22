@@ -35,6 +35,7 @@ final class PandaTranslate_Strings {
 	private static function frontend_language() {
 		if ( ! self::$frontend_ready ) { $language = PandaTranslate_Frontend::current_language(); return $language && PandaTranslate_Edition::allows_language( $language ) ? $language : ''; }
 		global $wp_query;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public read-only language selector, sanitized here and checked against active languages below.
 		$selector = isset( $_GET['pt_lang'] ) ? sanitize_key( wp_unslash( $_GET['pt_lang'] ) ) : ( is_object( $wp_query ) && is_callable( array( $wp_query, 'get' ) ) ? sanitize_key( $wp_query->get( 'pt_lang' ) ) : '' );
 		if ( '' === $selector ) return '';
 		$blog = get_current_blog_id(); $dynamic = false; $pre = array();
@@ -44,7 +45,9 @@ final class PandaTranslate_Strings {
 			// fetching/unserializing the full stored settings when it returns false.
 			$value = false;
 			if ( has_filter( 'pre_option' ) || has_filter( 'pre_option_' . $option ) ) {
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing WordPress core hook, evaluated in get_option() order for the frontend cache key.
 				$value = apply_filters( 'pre_option_' . $option, false, $option, $default );
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing WordPress core hook, evaluated in get_option() order for the frontend cache key.
 				$value = apply_filters( 'pre_option', $value, $option, $default );
 			}
 			$pre[$option] = is_object( $value ) ? (array) $value : $value;

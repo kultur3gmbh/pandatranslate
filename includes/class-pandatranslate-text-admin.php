@@ -17,13 +17,20 @@ final class PandaTranslate_Text_Admin {
 		$rows = ( new PandaTranslate_Repository() )->list_rows( $filters );
 		$javascript = (array) get_option( PandaTranslate_JavaScript_Inventory::OPTION, array() );
 		foreach ( $rows as &$row ) { $entry = $javascript[$row['unit_key']] ?? null; $row['source_details'] = '';
-			if ( in_array( $row['source_kind'], array( 'stored-template-text', 'stored-template-html' ), true ) ) $row['source_details'] = sprintf( __( 'Context: %s', 'pandatranslate' ), $row['source_domain'] );
+			if ( in_array( $row['source_kind'], array( 'stored-template-text', 'stored-template-html' ), true ) ) {
+				/* translators: %s: the context identifier of a stored text template. */
+				$row['source_details'] = sprintf( __( 'Context: %s', 'pandatranslate' ), $row['source_domain'] );
+			}
 			if ( is_array( $entry ) ) {
 				$context = $entry['original_context'] ?? $entry['context'];
-				if ( $context ) $row['source_details'] = sprintf( __( 'Context: %s', 'pandatranslate' ), $context );
+				if ( $context ) {
+					/* translators: %s: the gettext context of the source string. */
+					$row['source_details'] = sprintf( __( 'Context: %s', 'pandatranslate' ), $context );
+				}
 				if ( isset( $entry['category'] ) ) {
 					$locale = $row['target_language']; foreach ( PandaTranslate_Plugin::language_rows() as $language ) if ( $language['code'] === $row['target_language'] ) $locale = $language['locale'];
 					$sample = PandaTranslate_JavaScript_Inventory::categories( $locale )[$entry['category']] ?? '';
+					/* translators: 1: plural category, 2: an example number in that category. */
 					$row['source_details'] .= ( $context ? ' · ' : '' ) . sprintf( __( 'Plural form: %1$s (example: %2$s)', 'pandatranslate' ), $entry['category'], $sample );
 				}
 			}
