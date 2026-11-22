@@ -32,7 +32,7 @@
 		pause.dataset.contactpandaActionMode = 'labelled';
 		pause.hidden = true;
 		pause.style.display = 'none';
-		filters.before(collect, pause);
+		document.querySelector('[data-text-collection]').append(collect, pause);
 		ContactPandaAdminUI.enhance(collect);
 		ContactPandaAdminUI.enhance(pause);
 		pause.onclick = function () {
@@ -236,6 +236,10 @@
 						edit(row);
 					});
 					editButton.className = 'contactpanda-list-action';
+					editButton.dataset.contactpandaActionMode = 'icon';
+					editButton.setAttribute('aria-label', config.labels.edit);
+					editButton.title = config.labels.edit;
+					editButton.textContent = '';
 					last.appendChild(editButton);
 					tr.appendChild(last);
 					body.appendChild(tr);

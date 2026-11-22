@@ -109,7 +109,7 @@ msgstr "Alle Formatierungsplatzhalter müssen genau einmal vorkommen."
 
 #: includes/class-pandatranslate-text-admin.php:68
 msgid "All statuses"
-msgstr "Alle Status"
+msgstr "Beliebiger Status"
 
 msgid "All-in offer"
 msgstr "All-in-Angebot"
@@ -162,7 +162,7 @@ msgstr "Neue und aktualisierte Inhalte automatisch übersetzen"
 
 #: includes/class-pandatranslate-plugin.php:577
 msgid "Automatically translate untranslated content"
-msgstr "Nicht übersetzte automatisch übersetzen"
+msgstr "Fehlende Inhalte automatisch übersetzen"
 
 #: includes/class-pandatranslate-plugin.php:694
 msgid "Automatically translated"

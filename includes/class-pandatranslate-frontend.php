@@ -171,20 +171,39 @@ final class PandaTranslate_Frontend {
 		$loaded = $doc->loadHTML( '<?xml encoding="utf-8" ?>' . $raw['html'], LIBXML_HTML_NODEFDTD ); libxml_clear_errors(); libxml_use_internal_errors( $previous ); if ( ! $loaded ) return $html;
 		$root = $doc->documentElement; $locale = self::locale( $row ); $root->setAttribute( 'lang', $locale ); $root->setAttribute( 'dir', self::direction( $locale ) ); if ( $root->hasAttribute( 'xml:lang' ) ) $root->setAttribute( 'xml:lang', $locale );
 		$base = ''; foreach ( $doc->getElementsByTagName( 'base' ) as $element ) if ( $element->hasAttribute( 'href' ) ) { $base = $element->getAttribute( 'href' ); break; }
-		foreach ( ( new DOMXPath( $doc ) )->query( '//*' ) as $node ) {
-			if ( self::excluded( $node ) ) continue;
-			if ( 'a' === strtolower( $node->nodeName ) && $node->hasAttribute( 'href' ) && ! $node->hasAttribute( 'download' ) && ! $node->hasAttribute( 'hreflang' ) && ! self::switcher( $node ) ) $node->setAttribute( 'href', self::localize_url( $node->getAttribute( 'href' ), $language, false, $base ) );
-			foreach ( array( 'title', 'alt', 'placeholder', 'aria-label' ) as $attribute ) if ( $node->hasAttribute( $attribute ) ) $node->setAttribute( $attribute, self::glyphs( $node->getAttribute( $attribute ) ) );
-			foreach ( $node->childNodes as $child ) if ( XML_TEXT_NODE === $child->nodeType ) { $value = self::glyphs( $child->nodeValue ); if ( $value !== $child->nodeValue ) $child->nodeValue = $value; }
-		}
+		self::transform_element( $root, $language, $base, false );
 		return PandaTranslate_HTML::restore_raw( PandaTranslate_HTML::remove_encoding_marker( $doc->saveHTML() ), $raw );
 	}
+	private static function transform_element( DOMElement $node, $language, $base, $in_switcher ) {
+		if ( self::excluded_element( $node ) ) return;
+		$in_switcher = $in_switcher || $node->hasAttribute( 'data-pt-language' )
+			|| ( $node->hasAttribute( 'class' ) && preg_match( '/(?:^|\s)(?:pandatranslate[^\s]*|language[-_]switcher[^\s]*)(?:\s|$)/', $node->getAttribute( 'class' ) ) );
+		if ( ! $in_switcher && 'a' === $node->nodeName && $node->hasAttribute( 'href' ) && ! $node->hasAttribute( 'download' ) && ! $node->hasAttribute( 'hreflang' ) ) {
+			$href = $node->getAttribute( 'href' );
+			$localized = self::localize_url( $href, $language, false, $base );
+			if ( $localized !== $href ) $node->setAttribute( 'href', $localized );
+		}
+		foreach ( array( 'title', 'alt', 'placeholder', 'aria-label' ) as $attribute ) {
+			$value = $node->getAttribute( $attribute );
+			if ( false === strpos( $value, '&' ) ) continue;
+			$decoded = self::glyphs( $value );
+			if ( $decoded !== $value ) $node->setAttribute( $attribute, $decoded );
+		}
+		for ( $child = $node->firstChild; $child; $child = $child->nextSibling ) {
+			if ( $child instanceof DOMElement ) self::transform_element( $child, $language, $base, $in_switcher );
+			elseif ( XML_TEXT_NODE === $child->nodeType && false !== strpos( $child->nodeValue, '&' ) ) {
+				$value = self::glyphs( $child->nodeValue );
+				if ( $value !== $child->nodeValue ) $child->nodeValue = $value;
+			}
+		}
+	}
 	private static function excluded( $node ) {
-		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) if ( in_array( strtolower( $current->nodeName ), array( 'script', 'style', 'noscript', 'code', 'pre', 'textarea', 'svg' ), true ) || in_array( $current->getAttribute( 'id' ), array( 'wpadminbar', 'query-monitor-main', 'elementor-editor-wrapper', 'bricks-toolbar' ), true ) || preg_match( '/(?:^|\s)(?:ab-sub-wrapper|fusion-builder-ui|awb-builder|fl-builder-bar|pandatranslate-panel)(?:\s|$)/', $current->getAttribute( 'class' ) ) ) return true;
+		for ( $current = $node; $current instanceof DOMElement; $current = $current->parentNode ) if ( self::excluded_element( $current ) ) return true;
 		return false;
 	}
-	private static function switcher( $node ) {
-		for ( $current = $node; $current && XML_ELEMENT_NODE === $current->nodeType; $current = $current->parentNode ) if ( preg_match( '/(?:^|\s)(?:pandatranslate[^\s]*|language[-_]switcher[^\s]*)(?:\s|$)/', $current->getAttribute( 'class' ) ) || $current->hasAttribute( 'data-pt-language' ) ) return true;
-		return false;
+	private static function excluded_element( DOMElement $node ) {
+		return in_array( $node->nodeName, array( 'script', 'style', 'noscript', 'code', 'pre', 'textarea', 'svg' ), true )
+			|| ( $node->hasAttribute( 'id' ) && in_array( $node->getAttribute( 'id' ), array( 'wpadminbar', 'query-monitor-main', 'elementor-editor-wrapper', 'bricks-toolbar' ), true ) )
+			|| ( $node->hasAttribute( 'class' ) && preg_match( '/(?:^|\s)(?:ab-sub-wrapper|fusion-builder-ui|awb-builder|fl-builder-bar|pandatranslate-panel)(?:\s|$)/', $node->getAttribute( 'class' ) ) );
 	}
 }
