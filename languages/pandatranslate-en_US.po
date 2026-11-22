@@ -1980,3 +1980,15 @@ msgstr "Stored HTML templates"
 #: includes/class-pandatranslate-stored-templates.php
 msgid "Collect stored templates"
 msgstr "Collect stored templates"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Request failed."
+msgstr "Request failed."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Select flag image"
+msgstr "Select flag image"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Use flag image"
+msgstr "Use flag image"

@@ -1998,3 +1998,15 @@ msgstr "Modelli HTML salvati"
 #: includes/class-pandatranslate-stored-templates.php
 msgid "Collect stored templates"
 msgstr "Raccogli modelli salvati"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Request failed."
+msgstr "Richiesta non riuscita."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Select flag image"
+msgstr "Seleziona un’immagine della bandiera"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Use flag image"
+msgstr "Usa questa immagine della bandiera"

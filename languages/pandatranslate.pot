@@ -1993,3 +1993,15 @@ msgstr ""
 
 msgid "Collect stored templates"
 msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Request failed."
+msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Select flag image"
+msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Use flag image"
+msgstr ""

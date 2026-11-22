@@ -222,7 +222,7 @@
 			.then(function (response) {
 				return response.json().then(function (result) {
 					if (!response.ok || !result.success)
-						throw new Error((result.data && result.data.message) || 'Request failed');
+						throw new Error((result.data && result.data.message) || config.requestFailed);
 					return result.data;
 				});
 			})
@@ -443,7 +443,7 @@
 			reindexLanguages();
 			if (window.ContactPandaAdminUI) window.ContactPandaAdminUI.enhance(row);
 			picker.value = '';
-			selection.textContent = config.selectLanguage || 'Select language';
+			selection.textContent = config.selectLanguage;
 			selection.classList.remove('has-language');
 			add.disabled = true;
 			if (languageSearch) languageSearch.value = '';
@@ -521,9 +521,7 @@
 				.then(function (response) {
 					return response.json().then(function (data) {
 						if (!response.ok || !data.success)
-							throw new Error(
-								data.data && data.data.message ? data.data.message : 'Migration failed',
-							);
+							throw new Error(data.data && data.data.message ? data.data.message : '');
 						return data.data;
 					});
 				})
@@ -576,8 +574,8 @@
 			field = row.querySelector('[data-flag-id]'),
 			preview = row.querySelector('[data-flag-preview]'),
 			frame = wp.media({
-				title: 'Select flag image',
-				button: { text: 'Use flag image' },
+				title: config.flagMediaTitle,
+				button: { text: config.flagMediaButton },
 				multiple: false,
 				library: { type: 'image' },
 			});

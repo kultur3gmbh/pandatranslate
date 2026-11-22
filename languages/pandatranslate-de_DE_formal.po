@@ -2120,3 +2120,15 @@ msgstr "Gespeicherte HTML-Vorlagen"
 #: includes/class-pandatranslate-stored-templates.php
 msgid "Collect stored templates"
 msgstr "Gespeicherte Vorlagen erfassen"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Request failed."
+msgstr "Anfrage fehlgeschlagen."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Select flag image"
+msgstr "Flaggenbild auswählen"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Use flag image"
+msgstr "Flaggenbild verwenden"
