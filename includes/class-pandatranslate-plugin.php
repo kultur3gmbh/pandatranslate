@@ -25,6 +25,7 @@ final class PandaTranslate_Plugin {
 		add_action( 'wp_footer', array( $this, 'floating_switcher' ) );
 		add_action( 'admin_bar_menu', array( $this, 'admin_bar_menu' ), 90 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_filter( 'wp_php_error_message', array( $this, 'editor_error_message' ), 10, 2 );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_assets' ), 99 );
 		add_filter( 'plugin_action_links_' . plugin_basename( PANDATRANSLATE_FILE ), array( $this, 'plugin_action_links' ) );
@@ -290,10 +291,17 @@ final class PandaTranslate_Plugin {
 		if ( ! ( current_user_can( 'edit_posts' ) || current_user_can( 'pandatranslate_translate' ) ) || ! is_admin_bar_showing() ) return;
 		$settings = $this->settings();
 		if ( empty( $settings['show_admin_bar'] ) ) return;
-		$base = is_admin() ? home_url( '/' ) : remove_query_arg( array( 'pandatranslate', 'pt_lang' ) );
-		$url = wp_nonce_url( add_query_arg( array( 'pandatranslate' => 'edit', 'pt_lang' => $settings['default_target_language'] ), $base ), 'pandatranslate_editor', '_pt_editor_nonce' );
+		$base = is_admin() ? home_url( '/' ) : remove_query_arg( array( 'pandatranslate', 'pt_lang', '_pt_editor_nonce' ) );
+		$language = ( is_admin() ? '' : $this->target_language() ) ?: $settings['default_target_language'];
+		$url = wp_nonce_url( add_query_arg( array( 'pandatranslate' => 'edit', 'pt_lang' => $language ), $base ), 'pandatranslate_editor', '_pt_editor_nonce' );
 		$bar->add_node( array( 'id' => 'pandatranslate', 'title' => '<span class="ab-icon dashicons-translation" aria-hidden="true"></span><span class="ab-label">' . esc_html__( 'Translate page', 'pandatranslate' ) . '</span>', 'href' => esc_url( $url ), 'meta' => array( 'class' => 'pandatranslate-admin-bar' ) ) );
 		$bar->add_node( array( 'parent' => 'pandatranslate', 'id' => 'pandatranslate-settings', 'title' => esc_html__( 'Settings', 'pandatranslate' ), 'href' => admin_url( 'admin.php?page=pandatranslate-settings' ) ) );
+	}
+
+	/** Explain where an editor-only fatal occurred, without exposing server paths or error contents. */
+	public function editor_error_message( $message, $error ) {
+		if ( ! current_user_can( 'manage_options' ) || ! self::editing_request() || empty( $error['file'] ) ) return $message;
+		return $message . '<p><code>' . esc_html( basename( $error['file'] ) . ':' . absint( $error['line'] ?? 0 ) ) . '</code></p>';
 	}
 
 	public function settings_page() {
