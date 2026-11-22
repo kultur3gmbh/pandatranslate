@@ -1984,3 +1984,12 @@ msgstr ""
 #: includes/class-pandatranslate-site-progress.php
 msgid "Overall progress"
 msgstr ""
+
+msgid "Stored text templates"
+msgstr ""
+
+msgid "Stored HTML templates"
+msgstr ""
+
+msgid "Collect stored templates"
+msgstr ""

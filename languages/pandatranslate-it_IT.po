@@ -1986,3 +1986,15 @@ msgstr "Traduzione in coda. La scheda può essere chiusa."
 #: includes/class-pandatranslate-site-progress.php
 msgid "Overall progress"
 msgstr "Avanzamento complessivo"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored text templates"
+msgstr "Modelli di testo salvati"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored HTML templates"
+msgstr "Modelli HTML salvati"
+
+#: includes/class-pandatranslate-stored-templates.php
+msgid "Collect stored templates"
+msgstr "Raccogli modelli salvati"

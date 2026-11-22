@@ -1985,3 +1985,15 @@ msgstr "Traduction mise en attente. L’onglet peut être fermé."
 #: includes/class-pandatranslate-site-progress.php
 msgid "Overall progress"
 msgstr "Progression globale"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored text templates"
+msgstr "Modèles de texte enregistrés"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored HTML templates"
+msgstr "Modèles HTML enregistrés"
+
+#: includes/class-pandatranslate-stored-templates.php
+msgid "Collect stored templates"
+msgstr "Recenser les modèles enregistrés"

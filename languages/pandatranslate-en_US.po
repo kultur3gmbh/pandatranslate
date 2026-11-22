@@ -1968,3 +1968,15 @@ msgstr "Translation queued. The tab can be closed."
 #: includes/class-pandatranslate-site-progress.php
 msgid "Overall progress"
 msgstr "Overall progress"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored text templates"
+msgstr "Stored text templates"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored HTML templates"
+msgstr "Stored HTML templates"
+
+#: includes/class-pandatranslate-stored-templates.php
+msgid "Collect stored templates"
+msgstr "Collect stored templates"

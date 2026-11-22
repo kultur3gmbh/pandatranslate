@@ -19,8 +19,8 @@ final class PandaTranslate_Template_Protector {
 	}
 	public static function protect( $source, $html = false ) {
 		$tokens = array();
-		$tag = '<\/?[a-z][a-z0-9:-]*\b(?:"[^"]*"|\x27[^\x27]*\x27|[^\x27">])*>';
-		$patterns = array( '\{\{[a-z_][a-z0-9_.:-]*\}\}', '\{[a-z_][a-z0-9_.:-]*\}', '\[[a-z_][a-z0-9_.:-]*\]', '%[a-z_][a-z0-9_]*%', '(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]', '\bPanda Translate(?: Multilingual)?\b' );
+		$tag = '<\/?[a-z][a-z0-9:-]*(?=[\s/>])(?:"[^"]*"|\x27[^\x27]*\x27|[^\x27">])*>';
+		$patterns = array( '<[a-z0-9._%+-]+@[a-z0-9.-]+>', '\{\{\s*[a-z_][a-z0-9_.:-]*\s*\}\}', '\{[a-z_][a-z0-9_.:-]*\}', '\[[a-z_][a-z0-9_.:-]*\]', '%%[a-z_][a-z0-9_]*%%', '%[a-z_][a-z0-9_]*%', '(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]', '\bPanda Translate(?: Multilingual)?\b' );
 		if ( $html ) array_unshift( $patterns, '<(?:script|style)\b[^>]*>[\s\S]*?</(?:script|style)\s*>', '<!--[\s\S]*?-->', '<([a-z][a-z0-9:-]*)\b(?:"[^"]*"|\x27[^\x27]*\x27|[^\x27">])*>\s*</\1\s*>', $tag );
 		$text = preg_replace_callback( '~' . implode( '|', $patterns ) . '~i', function ( $match ) use ( &$tokens, $html ) {
 			$value = $match[0]; $type = 'VOID';
@@ -35,7 +35,7 @@ final class PandaTranslate_Template_Protector {
 	public static function restore( $translated, array $tokens, $html = false ) {
 		$valid = PandaTranslate_Inline_Protector::validate( $translated, $tokens ); if ( is_wp_error( $valid ) ) return $valid;
 		// Only the registered source supplies markup/attributes. Never accept new HTML from a provider or translator.
-		$text = $html ? htmlspecialchars( (string) $translated, ENT_QUOTES | ENT_HTML5, 'UTF-8', false ) : (string) $translated;
+		$text = $html ? htmlspecialchars( (string) $translated, ENT_QUOTES | ENT_HTML5, 'UTF-8', false ) : wp_strip_all_tags( (string) $translated );
 		return strtr( $text, $tokens );
 	}
 }

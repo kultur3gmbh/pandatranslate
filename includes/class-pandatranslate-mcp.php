@@ -168,8 +168,8 @@ final class PandaTranslate_MCP {
 		if ( ! self::target_allowed( $language ) ) return new WP_Error( 'pandatranslate_language', 'Select an active target language.', array( 'status' => 400 ) );
 		if ( ! current_user_can( 'edit_post', $id ) ) return new WP_Error( 'pandatranslate_forbidden', 'Post access denied.', array( 'status' => 403 ) );
 		$post = get_post( $id ); if ( ! $post ) return new WP_Error( 'pandatranslate_not_found', 'Post not found.', array( 'status' => 404 ) );
-		$values = array(); foreach ( array( 'slug', 'seo_title', 'seo_description', 'og_title', 'og_description' ) as $field ) $values[$field] = (string) get_post_meta( $id, '_pandatranslate_' . $field . '_' . $language, true );
-		return array( 'post_id' => $id, 'language' => $language, 'overrides' => $values, 'source' => array( 'slug' => $post->post_name, 'seo_title' => get_post_meta( $id, '_yoast_wpseo_title', true ) ?: get_post_meta( $id, 'rank_math_title', true ) ?: $post->post_title, 'seo_description' => get_post_meta( $id, '_yoast_wpseo_metadesc', true ) ?: get_post_meta( $id, 'rank_math_description', true ) ?: $post->post_excerpt ) );
+		$values = array(); foreach ( array( 'slug', 'seo_title', 'seo_description', 'focus_keywords', 'og_title', 'og_description' ) as $field ) $values[$field] = (string) get_post_meta( $id, '_pandatranslate_' . $field . '_' . $language, true );
+		return array( 'post_id' => $id, 'language' => $language, 'overrides' => $values, 'source' => array( 'slug' => $post->post_name, 'focus_keywords' => get_post_meta( $id, '_yoast_wpseo_focuskw', true ) ?: get_post_meta( $id, 'rank_math_focus_keyword', true ), 'seo_title' => get_post_meta( $id, '_yoast_wpseo_title', true ) ?: get_post_meta( $id, 'rank_math_title', true ) ?: $post->post_title, 'seo_description' => get_post_meta( $id, '_yoast_wpseo_metadesc', true ) ?: get_post_meta( $id, 'rank_math_description', true ) ?: $post->post_excerpt ) );
 	}
 
 	public static function audit_entries() { return array_reverse( (array) get_option( self::AUDIT_OPTION, array() ) ); }

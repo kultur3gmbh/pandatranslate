@@ -83,17 +83,18 @@ final class PandaTranslate_Repository {
 	public function seed_language( $language, $cursor = 0 ) {
 		global $wpdb; $table = self::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT source.* FROM %i source INNER JOIN (SELECT MIN(id) id FROM %i WHERE source_html <> '' GROUP BY CASE WHEN source_kind = 'gettext' THEN unit_key ELSE source_hash END) canonical ON canonical.id = source.id WHERE source.id > %d ORDER BY source.id LIMIT 250", $table, $table, $cursor ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT source.* FROM %i source INNER JOIN (SELECT MIN(id) id FROM %i WHERE source_html <> '' GROUP BY CASE WHEN source_kind IN ('gettext','stored-template-text','stored-template-html') THEN unit_key ELSE source_hash END) canonical ON canonical.id = source.id WHERE source.id > %d ORDER BY source.id LIMIT 250", $table, $table, $cursor ), ARRAY_A );
 		if ( $wpdb->last_error ) return new WP_Error( 'pandatranslate_seed_failed', __( 'Source content could not be prepared.', 'pandatranslate' ) );
 		foreach ( $rows as $row ) {
 			$cursor = (int) $row['id'];
 			if ( ! PandaTranslate_Template_Protector::has_text( $row['source_html'] ) ) {
 				// Retain imported technical fragments, but never bill a provider for empty markup.
-				$wpdb->query( $wpdb->prepare( "UPDATE %i SET source_kind = 'technical', last_error = '' WHERE unit_key = %s AND source_hash = %s AND status = 'untranslated' AND translated_html = ''", $table, $row['unit_key'], $row['source_hash'] ) );
+				$ignored = $wpdb->query( $wpdb->prepare( "UPDATE %i SET source_kind = 'technical', last_error = '' WHERE source_hash = %s AND BINARY source_html = BINARY %s AND status = 'untranslated' AND translated_html = ''", $table, $row['source_hash'], $row['source_html'] ) );
+				if ( false === $ignored ) return new WP_Error( 'pandatranslate_seed_failed', __( 'Source content could not be prepared.', 'pandatranslate' ) );
 				continue;
 			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache.
-			$exists = 'gettext' === ( $row['source_kind'] ?? '' ) ? $this->find( $row['unit_key'], $language ) : $wpdb->get_var( $wpdb->prepare( "SELECT id FROM %i WHERE target_language = %s AND source_hash = %s LIMIT 1", $table, $language, $row['source_hash'] ) );
+			$exists = in_array( $row['source_kind'] ?? '', array( 'gettext', 'stored-template-text', 'stored-template-html' ), true ) ? $this->find( $row['unit_key'], $language ) : $wpdb->get_var( $wpdb->prepare( "SELECT id FROM %i WHERE target_language = %s AND source_hash = %s LIMIT 1", $table, $language, $row['source_hash'] ) );
 			if ( ! $exists ) { $saved = $this->save( array( 'key' => $row['unit_key'], 'source_hash' => $row['source_hash'], 'source_html' => $row['source_html'], 'source_kind' => $row['source_kind'] ?? 'page', 'source_domain' => $row['source_domain'] ?? '' ), $language, '', 'untranslated' ); if ( is_wp_error( $saved ) ) return $saved; }
 		}
 		return array( 'cursor' => $cursor, 'done' => count( $rows ) < 250, 'processed' => count( $rows ) );
@@ -158,7 +159,7 @@ final class PandaTranslate_Repository {
 	public function public_language_counts() {
 		global $wpdb; $counts = array();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT target_language,COUNT(*) AS total FROM %i WHERE status = 'published' AND TRIM(translated_html) <> '' GROUP BY target_language", self::table() ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT target_language,COUNT(*) AS total FROM %i WHERE status = 'published' AND TRIM(translated_html) <> '' AND source_kind NOT IN ('stored-template-text','stored-template-html','technical') GROUP BY target_language", self::table() ), ARRAY_A );
 		foreach ( $rows as $row ) $counts[$row['target_language']] = (int) $row['total'];
 		return $counts;
 	}

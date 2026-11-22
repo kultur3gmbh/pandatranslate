@@ -2108,3 +2108,15 @@ msgstr "Übersetzung eingeplant. Der Tab kann geschlossen werden."
 #: includes/class-pandatranslate-site-progress.php
 msgid "Overall progress"
 msgstr "Gesamtfortschritt"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored text templates"
+msgstr "Gespeicherte Textvorlagen"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Stored HTML templates"
+msgstr "Gespeicherte HTML-Vorlagen"
+
+#: includes/class-pandatranslate-stored-templates.php
+msgid "Collect stored templates"
+msgstr "Gespeicherte Vorlagen erfassen"

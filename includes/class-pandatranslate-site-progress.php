@@ -29,6 +29,7 @@ final class PandaTranslate_Site_Progress {
 		if ( ! add_option( $lock, time(), '', false ) ) return new WP_Error( 'pandatranslate_busy', __( 'A translation is already running.', 'pandatranslate' ) );
 		try {
 			if ( self::running( self::state( true ) ) ) return new WP_Error( 'pandatranslate_busy', __( 'A translation is already running.', 'pandatranslate' ) );
+			apply_filters( 'pandatranslate_static_templates_collect', 0 );
 			return self::create_query( $types, $languages, $api );
 		} finally { delete_option( $lock ); }
 	}
@@ -66,6 +67,7 @@ final class PandaTranslate_Site_Progress {
 			$old = self::state( true );
 			if ( ( $old['request_id'] ?? '' ) === $request_id ) return $old;
 			if ( self::running( $old ) ) return new WP_Error( 'pandatranslate_busy', __( 'A translation is already running.', 'pandatranslate' ) );
+			apply_filters( 'pandatranslate_static_templates_collect', 0 );
 			$job = array( 'id' => wp_generate_uuid4(), 'request_id' => $request_id, 'inventory' => true, 'mode' => $mode, 'api' => $api, 'languages' => array() );
 			foreach ( array_unique( $languages ) as $language ) $job['languages'][$language] = array( 'total' => 0, 'processed' => 0, 'failed' => 0, 'phase' => 'start' );
 			update_option( self::OPTION, $job, false );

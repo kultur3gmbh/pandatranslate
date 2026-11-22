@@ -12,6 +12,9 @@ $option=function()use(&$settings){return $settings;};
 $registry=function($providers){$providers['background-fixture']=new PT_Background_Fixture_API();return $providers;};
 add_filter('pre_option_'.PandaTranslate_Plugin::OPTION,$option,999);
 add_filter('pandatranslate_providers',$registry,999);
+remove_filter('pandatranslate_static_templates_collect',array('PandaTranslate_WooCommerce','collect_templates'));
+$template_registry=function($items){return array(array('source'=>'Synthetic background template {first_name}','id'=>'background-template','domain'=>'background-fixture','html'=>false));};
+add_filter('pandatranslate_stored_templates',$template_registry,999);
 global $wpdb;$table=PandaTranslate_Repository::table();$repo=new PandaTranslate_Repository();
 $wpdb->query('START TRANSACTION');$jobs=array();
 try{
@@ -27,7 +30,7 @@ try{
  pt_background_expect(!PandaTranslate_Site_Progress::running($done)&&$done['languages']['es']['phase']==='done','Workers finish both languages without browser batch or polling requests');
  pt_background_expect($repo->find($keys[0],'fr')['translated_html']==='Manual remains','Missing-only background run preserves manual published text');
  pt_background_expect($repo->find($keys[1],'fr')['status']==='automatic','Auto-publication preference remains enforced');
- ob_start();PandaTranslate_Site_Progress::render();$html=ob_get_clean();pt_background_expect(strpos($html,'FR')!==false&&strpos($html,'ES')!==false&&strpos($html,'/ 11')!==false,'Reopened progress renders persisted results for both languages');
+ ob_start();PandaTranslate_Site_Progress::render();$html=ob_get_clean();pt_background_expect(strpos($html,'FR')!==false&&strpos($html,'ES')!==false&&strpos($html,'/ 12')!==false,'Reopened progress includes the newly collected stored template in both persisted totals');
  $job=PandaTranslate_Site_Progress::start_languages(array('fr'),'background-fixture','all','background-request-2');$jobs[]=$job;PandaTranslate_Translation_Jobs::cancel($job['id']);PandaTranslate_Site_Progress::cancel($job['id']);$calls=PT_Background_Fixture_API::$calls;do_action('pandatranslate_process_language_batch',$job['id'],'fr');
  pt_background_expect($calls===PT_Background_Fixture_API::$calls,'Cancelled scheduled operation sends no provider requests');
  pt_background_expect(!wp_next_scheduled('pandatranslate_process_language_batch',array($job['id'],'fr')),'Cancellation removes pending continuation');

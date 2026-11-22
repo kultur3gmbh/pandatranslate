@@ -14,6 +14,7 @@ if [[ "${PANDATRANSLATE_TEST_WARNING_REGRESSIONS:-}" == "1" ]]; then
   php tests/language-performance-integration.php
   php tests/background-language-integration.php
   php tests/google-batch-integration.php
+  php tests/stored-templates-integration.php
 fi
 
 if [[ "${PANDATRANSLATE_TEST_WOO_SYSTEM_PAGES:-}" == "1" ]]; then

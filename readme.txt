@@ -3,7 +3,7 @@ Contributors: kultur3gmbh
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.13
+Stable tag: 0.7.14
 License: GPL-3.0-only
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -66,6 +66,12 @@ The WordPress.org distribution uses the standard WordPress.org update system. Se
 The pandatranslate_migration_sources filter allows verified future import adapters to register label, detected and render callbacks. Adapters must enforce administrative capabilities, nonces, bounded batches and existing manual-translation protection. TranslatePress is the only supported built-in source in 0.5.0; no other importer is advertised as working. The Migration tab appears only for detected registered sources.
 
 == Changelog ==
+
+= 0.7.14 =
+* Collect explicitly registered stored text and HTML templates without exposing them in public dictionaries.
+* Preserve template variables and source structure; display published exact-source translations in an explicit recipient language.
+* Add template collection and content-type filters to Translation texts, and collect templates before background operations.
+* Include language-specific focus keywords in the SEO read tool.
 
 = 0.7.13 =
 * Register language paths in the free plugin independently of licensed SEO integration.
@@ -317,3 +323,11 @@ The pandatranslate_migration_sources filter allows verified future import adapte
 WordPress 6.9 Abilities API: pandatranslate/settings-get, translations-list, translation-get, translation-save, google-translate and (Multilingual) seo-get. The existing Royal and ContactPanda registries and standalone endpoint remain available simultaneously. Additional authenticated transports can consume the native abilities or PandaTranslate_MCP::tools()/call(). Hosts retain responsibility for discovery policy, allowed tools and authentication; no host allow-list is modified. All calls additionally require manage_options; writes require confirmation and the last-read revision. Native abilities are not exposed as unauthenticated REST actions. On older WordPress versions Royal, ContactPanda and the standalone endpoint still work.
 
 Language blocks register only if another provider has not already registered the shortcode. lang accepts base or regional codes and comma-separated values. language-include and trp_language preserve visible localized editorial text from automatic retranslation by default; enable_translation="yes" explicitly opts in. language-exclude remains translatable unless enable_translation="no" is supplied. Hidden blocks are not executed. No stored content is stripped or rewritten.
+
+== Stored templates and integration contract ==
+
+Translation texts > Collect stored templates collects saved ContactPanda registration messages and system-email text blocks. Stored text/HTML template filters show these separately from public text. The full-site and missing-content operations collect these templates before queuing work. Existing manual translations remain unchanged. Published template translations are never included in the public JavaScript catalog and do not by themselves make a target language visible in the frontend language switcher.
+
+Integrations register only static source definitions through pandatranslate_stored_templates (source, id, domain, html). PandaTranslate_Stored_Templates::translate reads an exact-source published translation without sending anything to an API. Variables must be expanded afterwards. A mail integration uses PandaTranslate_Stored_Templates::with_language($recipient_language, $callback) to scope template lookup; the previous scope is restored even when the callback throws. Unknown/inactive target languages use the current source. Never pass a rendered personalized email or order/customer details to source collection.
+
+WooCommerce uses its existing stored order/customer language context. The ContactPanda option/frame adapters cover raw configured templates and translated frontend reads. Asynchronous ContactPanda sends require the explicit recipient-language scope before template expansion; the adapter never guesses a recipient from the administrator locale. HBook stored-mail integration still requires validation against its installed template API and is not claimed as automatic email translation by this package. No real test emails are sent by the fixture checks.

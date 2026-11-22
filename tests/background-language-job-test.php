@@ -1,6 +1,7 @@
 <?php
 require __DIR__.'/bootstrap.php';
 $options=array();$scheduled=array();$calls=array();
+function apply_filters($hook,$value){return $value;}
 function get_option($k,$d=array()){global $options;return $options[$k]??$d;}
 function update_option($k,$v,$a=false){global $options;$options[$k]=$v;return true;}
 function add_option($k,$v,$d='',$a=false){global $options;if(isset($options[$k]))return false;$options[$k]=$v;return true;}
