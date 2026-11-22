@@ -10,6 +10,10 @@ final class PandaTranslate_Strings {
 	private static $native_locale = false;
 	private static $frontend_ready = false;
 	private static $frontend_configuration = null;
+	private static $lookup_seconds = 0.0;
+	private static $lookup_count = 0;
+	private static $configuration_count = 0;
+	public static function timing_header() { return 'pandatranslate_gettext;dur=' . round( self::$lookup_seconds * 1000, 2 ) . ';desc="' . self::$lookup_count . ' calls", pandatranslate_configuration;desc="' . self::$configuration_count . ' resolutions"'; }
 	public static $email_language = '';
 	public static function boot() {
 		add_filter( 'gettext', array( __CLASS__, 'gettext' ), 20, 3 );
@@ -59,6 +63,7 @@ final class PandaTranslate_Strings {
 		foreach ( array( 'pre_option', 'pre_option_' . PandaTranslate_Plugin::OPTION, 'option_' . PandaTranslate_Plugin::OPTION, 'pre_option_WPLANG', 'option_WPLANG' ) as $hook ) if ( has_filter( $hook ) ) { $dynamic = true; break; }
 		$configuration = self::$frontend_configuration;
 		if ( $dynamic || ! $configuration || $configuration['selector'] !== $selector || $configuration['blog'] !== $blog ) {
+			++self::$configuration_count;
 			$configuration = array( 'selector' => $selector, 'blog' => $blog, 'language' => '', 'paid' => false );
 			$source = PandaTranslate_Plugin::get_settings()['source_language']; $active = 0;
 			foreach ( PandaTranslate_Plugin::configured_language_rows() as $row ) if ( ! empty( $row['active'] ) ) {
@@ -90,6 +95,7 @@ final class PandaTranslate_Strings {
 		if ( self::$busy || ( is_admin() && ! self::$email_language ) || in_array( $domain, array( 'pandatranslate', 'pandatranslate-multilingual' ), true ) || ! trim( $translated ) || strlen( $translated ) > 4000 ) return $translated;
 		// Language/settings filters may themselves translate labels. Guard the entire resolution.
 		self::$busy = true;
+		$started = microtime( true ); ++self::$lookup_count;
 		try {
 		$language = self::$email_language ? ( PandaTranslate_Edition::allows_language( self::$email_language ) ? self::$email_language : '' ) : self::frontend_language();
 		if ( ! $language ) return $translated;
@@ -105,7 +111,7 @@ final class PandaTranslate_Strings {
 			if ( null !== $value && ! self::same_placeholders( $translated, $value ) ) $value = null;
 			self::$cache[$cache_key] = $value;
 			return $value ?? $translated;
-		} finally { self::$busy = false; }
+		} finally { self::$lookup_seconds += microtime( true ) - $started; self::$busy = false; }
 	}
 	public static function same_placeholders( $source, $target ) {
 		preg_match_all( '/(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]/', $source, $a ); preg_match_all( '/(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]/', $target, $b );

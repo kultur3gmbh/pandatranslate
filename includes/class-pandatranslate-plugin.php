@@ -664,7 +664,7 @@ final class PandaTranslate_Plugin {
 		finally {
 			// Standard, content-free timing metric separates our HTML work from
 			// WordPress/theme generation when investigating slow translated pages.
-			if ( ! headers_sent() ) header( 'Server-Timing: pandatranslate;dur=' . round( ( microtime( true ) - $started ) * 1000, 2 ), false );
+			if ( ! headers_sent() ) { header( 'Server-Timing: pandatranslate;dur=' . round( ( microtime( true ) - $started ) * 1000, 2 ), false ); header( 'Server-Timing: ' . PandaTranslate_Strings::timing_header(), false ); }
 		}
 	}
 	private function render_page( $html ) {
