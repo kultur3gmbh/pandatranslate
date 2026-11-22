@@ -3,7 +3,7 @@ Contributors: kultur3gmbh
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.7.41
+Stable tag: 0.8.0
 License: GPL-3.0-only
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -66,6 +66,12 @@ The WordPress.org distribution uses the standard WordPress.org update system. Se
 The pandatranslate_migration_sources filter allows verified future import adapters to register label, detected and render callbacks. Adapters must enforce administrative capabilities, nonces, bounded batches and existing manual-translation protection. TranslatePress is the only supported built-in source in 0.5.0; no other importer is advertised as working. The Migration tab appears only for detected registered sources.
 
 == Changelog ==
+
+= 0.8.0 =
+* Continue automatic translation in the background and restore overall and per-language progress when the Translation page is reopened.
+* Add the website overview, compact translation progress, responsive content-type options and independent Google Translate and DeepL settings.
+* Improve TranslatePress migration, including formal German and imports of missing entries only.
+* Update WordPress.org packaging, language pack handling and repository checks.
 
 = 0.7.41 =
 * Use WordPress language pack loading with bundled catalog fallback for separate distributions and document the translation and database operations used by the free plugin.
