@@ -174,8 +174,17 @@ final class PandaTranslate_Site_Progress {
 
 		foreach ( $job['languages'] as $language => $counts ) {
 			$translation = $counts['translation'] ?? array(); $processed = 'collect' === $counts['phase'] && empty( $job['inventory'] ) ? $counts['processed'] : ( $translation['processed'] ?? $counts['processed'] ); $total = 'collect' === $counts['phase'] && empty( $job['inventory'] ) ? $counts['total'] : ( $translation['total'] ?? $counts['total'] );
-			echo '<div><strong>' . esc_html( strtoupper( $language ) ) . '</strong> <progress' . ( in_array( $counts['phase'], array( 'failed', 'cancelled' ), true ) ? ' hidden' : '' ) . ( $total ? ' max="' . esc_attr( $total ) . '" value="' . esc_attr( min( $processed, $total ) ) . '"' : '' ) . '></progress> ' . esc_html( ( 'cancelled' === $counts['phase'] ? __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ) : null ) ?? $translation['message'] ?? ( 'failed' === $counts['phase'] ? __( 'Failed', 'pandatranslate' ) : ( 'start' === $counts['phase'] ? __( 'Translation queued. The tab can be closed.', 'pandatranslate' ) : __( 'Collecting source content…', 'pandatranslate' ) ) ) ) . ' ' . esc_html( $total ? $processed . ' / ' . $total : (string) $processed ) . ' · ' . esc_html( sprintf( /* translators: %d: number of failed translations. */
-		__( '%d failed', 'pandatranslate' ), $counts['failed'] + ( $translation['errors'] ?? 0 ) ) ) . ( isset( $counts['last_error'] ) ? ' · ' . esc_html( $counts['last_error'] ) : '' ) . '</div>';
+			// Worker messages may have been persisted in another locale. Render the
+			// structured phase/counts in the current viewer's language instead.
+			if ( 'cancelled' === $counts['phase'] ) $message = __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' );
+			elseif ( in_array( $counts['phase'], array( 'translate', 'done', 'failed' ), true ) && isset( $translation['success'] ) ) $message = sprintf( /* translators: %1$d: translated items, %2$d: failed items. */
+				__( '%1$d translated · %2$d failed', 'pandatranslate' ), $translation['success'], ( $counts['failed'] ?? 0 ) + ( $translation['errors'] ?? 0 ) );
+			elseif ( 'failed' === $counts['phase'] ) $message = __( 'Failed', 'pandatranslate' );
+			elseif ( 'start' === $counts['phase'] ) $message = __( 'Translation queued. The tab can be closed.', 'pandatranslate' );
+			elseif ( 'collect' === $counts['phase'] && empty( $job['inventory'] ) ) $message = __( 'Collecting source content…', 'pandatranslate' );
+			else $message = __( 'Preparing untranslated content…', 'pandatranslate' );
+			$error = $counts['last_error'] ?? $translation['last_error_message'] ?? '';
+			echo '<div><strong>' . esc_html( strtoupper( $language ) ) . '</strong> <progress' . ( in_array( $counts['phase'], array( 'failed', 'cancelled' ), true ) ? ' hidden' : '' ) . ( $total ? ' max="' . esc_attr( $total ) . '" value="' . esc_attr( min( $processed, $total ) ) . '"' : '' ) . '></progress> ' . esc_html( $message ) . ' · ' . esc_html( $total ? $processed . ' / ' . $total : (string) $processed ) . ( $error ? ' · ' . esc_html( $error ) : '' ) . '</div>';
 		}
 		echo '</section>';
 	}

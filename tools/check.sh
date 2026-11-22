@@ -6,6 +6,7 @@ for test in tests/*-test.php; do php -d zend.assertions=1 -d assert.exception=1 
 for file in assets/*.js; do node --check "$file"; done
 for test in tests/*-test.js; do node "$test"; done
 for file in languages/*.po; do msgfmt --check "$file" -o /dev/null; done
+python3 tools/check-translations.py
 
 if [[ "${PANDATRANSLATE_TEST_WARNING_REGRESSIONS:-}" == "1" ]]; then
   php tests/warning-regressions-integration.php
@@ -13,6 +14,7 @@ if [[ "${PANDATRANSLATE_TEST_WARNING_REGRESSIONS:-}" == "1" ]]; then
   php tests/migration-formal-integration.php
   php tests/language-performance-integration.php
   php tests/gettext-configuration-integration.php
+  php tests/backend-locale-integration.php
   php tests/background-language-integration.php
   php tests/google-batch-integration.php
   php tests/stored-templates-integration.php

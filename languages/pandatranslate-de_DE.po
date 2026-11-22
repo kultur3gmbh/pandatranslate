@@ -13,7 +13,7 @@ msgstr ""
 #: includes/class-pandatranslate-plugin.php:569
 #, php-format
 msgid "%1$d of %2$d units translated"
-msgstr "%1$d von %2$d-Einheiten übersetzt"
+msgstr "%1$d von %2$d Einheiten übersetzt"
 
 #: includes/class-pandatranslate-plugin.php:259
 #: includes/class-pandatranslate-translation-jobs.php:111
@@ -31,7 +31,7 @@ msgstr ""
 #: includes/class-pandatranslate-plugin.php:346
 #, php-format
 msgid "%d content items were queued."
-msgstr "%d-Inhaltselemente wurden in die Warteschlange gestellt."
+msgstr "%d Inhalte wurden in die Warteschlange gestellt."
 
 #: includes/class-pandatranslate-site-progress.php:109
 #, php-format

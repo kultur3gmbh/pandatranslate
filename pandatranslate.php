@@ -4,7 +4,7 @@
  * Description: Visual website translation with language paths, menus and builder elements.
  * Requires at least: 6.4
  * Requires PHP: 7.4
- * Version: 0.7.16
+ * Version: 0.7.17
  * Author: Kultur3 GmbH
  * Plugin URI: https://pandacosmo.com/
  * License: GPL-3.0-only
@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'PANDATRANSLATE_FILE', __FILE__ );
 define( 'PANDATRANSLATE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PANDATRANSLATE_URL', plugin_dir_url( __FILE__ ) );
-define( 'PANDATRANSLATE_VERSION', '0.7.16' );
+define( 'PANDATRANSLATE_VERSION', '0.7.17' );
 
 // Resolve feature classes only when their callbacks are invoked.
 spl_autoload_register( static function ( $class ) {
@@ -64,7 +64,17 @@ spl_autoload_register( static function ( $class ) {
 
 register_activation_hook( __FILE__, function () { PandaTranslate_Repository::install(); PandaTranslate_Routing::boot(); flush_rewrite_rules(); } );
 add_action( 'init', static function () { if ( (int) get_option( 'pandatranslate_schema', 0 ) !== PandaTranslate_Repository::SCHEMA_VERSION ) PandaTranslate_Repository::install(); }, 5 );
-// WordPress.org language packs load automatically; the manual-distribution bootstrap registers its bundled fallback.
+// Load the installed language pack first, then supplement missing/new strings
+// from the bundled catalog. A partial older pack must not hide current labels.
+$pandatranslate_load_locale = static function ( $locale = null ) {
+	$locale = $locale ?: determine_locale();
+	load_plugin_textdomain( 'pandatranslate', false, dirname( plugin_basename( PANDATRANSLATE_FILE ) ) . '/languages' );
+	get_translations_for_domain( 'pandatranslate' );
+	$file = PANDATRANSLATE_DIR . 'languages/pandatranslate-' . $locale . '.mo';
+	if ( is_readable( $file ) ) load_textdomain( 'pandatranslate', $file, $locale );
+};
+add_action( 'init', $pandatranslate_load_locale, 0 );
+add_action( 'change_locale', $pandatranslate_load_locale, 20 );
 add_action( 'plugins_loaded', array( 'PandaTranslate_Plugin', 'boot' ) );
 add_action( 'plugins_loaded', array( 'PandaTranslate_Migration', 'boot' ) );
 add_action( 'plugins_loaded', array( 'PandaTranslate_Edition', 'register_updater' ), 30 );
