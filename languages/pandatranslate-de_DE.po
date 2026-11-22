@@ -2132,3 +2132,16 @@ msgstr "Flaggenbild auswählen"
 #: includes/class-pandatranslate-plugin.php
 msgid "Use flag image"
 msgstr "Flaggenbild verwenden"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "This preview includes drafts. Only published translations appear on the public page."
+msgstr "Diese Vorschau enthält Entwürfe. Auf der öffentlichen Seite erscheinen nur veröffentlichte Übersetzungen."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "View public page"
+msgstr "Öffentliche Seite ansehen"
+
+#: includes/class-pandatranslate-plugin.php
+#, php-format
+msgid "Published: %1$s · Unpublished: %2$s"
+msgstr "Veröffentlicht: %1$s · Unveröffentlicht: %2$s"

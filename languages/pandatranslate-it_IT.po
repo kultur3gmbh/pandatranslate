@@ -2010,3 +2010,16 @@ msgstr "Seleziona un’immagine della bandiera"
 #: includes/class-pandatranslate-plugin.php
 msgid "Use flag image"
 msgstr "Usa questa immagine della bandiera"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "This preview includes drafts. Only published translations appear on the public page."
+msgstr "Questa anteprima include le bozze. Nella pagina pubblica appaiono solo le traduzioni pubblicate."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "View public page"
+msgstr "Visualizza la pagina pubblica"
+
+#: includes/class-pandatranslate-plugin.php
+#, php-format
+msgid "Published: %1$s · Unpublished: %2$s"
+msgstr "Pubblicate: %1$s · Non pubblicate: %2$s"

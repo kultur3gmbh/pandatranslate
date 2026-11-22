@@ -2009,3 +2009,16 @@ msgstr "Sélectionner une image de drapeau"
 #: includes/class-pandatranslate-plugin.php
 msgid "Use flag image"
 msgstr "Utiliser cette image de drapeau"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "This preview includes drafts. Only published translations appear on the public page."
+msgstr "Cet aperçu inclut les brouillons. Seules les traductions publiées apparaissent sur la page publique."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "View public page"
+msgstr "Voir la page publique"
+
+#: includes/class-pandatranslate-plugin.php
+#, php-format
+msgid "Published: %1$s · Unpublished: %2$s"
+msgstr "Publiées : %1$s · Non publiées : %2$s"

@@ -586,10 +586,16 @@ final class PandaTranslate_Plugin {
 			if ( empty( $language['active'] ) ) continue;
 			$stat = $stats[ $language['code'] ] ?? array( 'total' => 0, 'migrated' => 0, 'automatic' => 0, 'manual' => 0, 'untranslated' => 0 );
 			$total = $stat['total']; $finished = $total - $stat['untranslated'];
+			$published = $stat['published'] ?? 0;
 			echo '<article class="pandatranslate-language-progress"><div><strong>' . esc_html( PandaTranslate_Features::flag( $language['code'] ) . ' ' . ( PandaTranslate_Features::catalog()[ $language['code'] ]['name'] ?? strtoupper( $language['code'] ) ) ) . '</strong><span>' . esc_html( sprintf( /* translators: %1$d: translated units, %2$d: total units. */
 		__( '%1$d of %2$d units translated', 'pandatranslate' ), $finished, $total ) ) . '</span><b>' . esc_html( $total ? round( $finished / $total * 100 ) : 0 ) . '%</b></div><div class="pandatranslate-stacked-progress" role="img" aria-label="' . esc_attr( implode( ', ', array_map( function ( $key ) use ( $stat, $categories ) { return $categories[ $key ] . ': ' . $stat[ $key ]; }, array_keys( $categories ) ) ) ) . '">';
 			foreach ( $categories as $key => $label ) if ( $total && $stat[ $key ] ) echo '<span class="is-' . esc_attr( $key ) . '" style="width:' . esc_attr( $stat[ $key ] / $total * 100 ) . '%"></span>';
-			echo '</div><ul class="pandatranslate-progress-legend">';
+			echo '</div><p>' . esc_html( sprintf(
+                /* translators: %1$s: count of published translations, %2$s: count of unpublished translations. */
+                __( 'Published: %1$s · Unpublished: %2$s', 'pandatranslate' ),
+                number_format_i18n( $published ),
+                number_format_i18n( $finished - $published )
+            ) ) . '</p><ul class="pandatranslate-progress-legend">';
 			foreach ( $categories as $key => $label ) echo '<li><span class="is-' . esc_attr( $key ) . '" aria-hidden="true"></span>' . esc_html( $label . ': ' . number_format_i18n( $stat[ $key ] ) . ' (' . ( $total ? number_format_i18n( $stat[ $key ] / $total * 100, 1 ) : '0' ) . '%)' ) . '</li>';
 			echo '</ul><ul class="pandatranslate-progress-legend">';
 			foreach ( $categories as $key => $label ) echo '<li>' . esc_html( $label . ': ' . sprintf( /* translators: %s: formatted number of source characters. */
@@ -729,6 +735,7 @@ final class PandaTranslate_Plugin {
 			'restUrl' => esc_url_raw( rest_url( 'pandatranslate/v1/unit' ) ),
 			'nonceUrl' => esc_url_raw( admin_url( 'admin-ajax.php?action=rest-nonce' ) ),
 			'autoUrl' => esc_url_raw( rest_url( 'pandatranslate/v1/unit/auto' ) ),
+			'publicUrl' => esc_url_raw( self::language_url( $this->target_language() ) ),
 			'canPublish' => current_user_can( 'publish_posts' ) || current_user_can( 'manage_options' ),
 			'apis' => current_user_can( 'edit_posts' ) || current_user_can( 'manage_options' ) ? PandaTranslate_Providers::choices() : array(),
 			'defaultApi' => PandaTranslate_Providers::default_id(),
@@ -740,7 +747,7 @@ final class PandaTranslate_Plugin {
 				'requestSessionError' => __( 'The login session could not be renewed. Sign in and reload the editor.', 'pandatranslate' ),
 				'requestOriginError' => __( 'The editor and API addresses use different domains. Check the WordPress website addresses.', 'pandatranslate' ),
 				'requestResponseError' => __( 'The website returned an unexpected API response. Check the connection and server logs.', 'pandatranslate' ),
-				'saving' => __( 'Saving…', 'pandatranslate' ), 'saved' => __( 'Saved.', 'pandatranslate' ), 'translating' => __( 'Translating…', 'pandatranslate' ), 'close' => __( 'Close', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => __( 'Panda Translate', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => /* translators: %s: selected translation provider label. */
+				'saving' => __( 'Saving…', 'pandatranslate' ), 'saved' => __( 'Saved.', 'pandatranslate' ), 'translating' => __( 'Translating…', 'pandatranslate' ), 'close' => __( 'Close', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => 'Panda Translate', 'previewNotice' => __( 'This preview includes drafts. Only published translations appear on the public page.', 'pandatranslate' ), 'publicPage' => __( 'View public page', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => /* translators: %s: selected translation provider label. */
 		__( 'Translate with %s', 'pandatranslate' ), 'automaticPage' => /* translators: %s: selected translation provider label. */
 		__( 'Translate entire page with %s', 'pandatranslate' ), 'apiLabel' => __( 'Translation API', 'pandatranslate' ), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'select' => __( 'Select visible content to translate it.', 'pandatranslate' ), 'progressTitle' => __( 'Translating current page', 'pandatranslate' ), 'progressDone' => __( 'translated', 'pandatranslate' ), 'progressFailed' => __( 'failed', 'pandatranslate' ), 'cancelLabel' => __( 'Cancel translation', 'pandatranslate' ), 'cancelled' => __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ), 'cancelling' => __( 'Stopping after the current request…', 'pandatranslate' ), 'repeatedErrors' => __( 'Stopped after repeated errors.', 'pandatranslate' ) ),
 		) );

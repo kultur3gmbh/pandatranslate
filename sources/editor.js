@@ -8,10 +8,22 @@
 	document.addEventListener('pandatranslate:media-selected',function(){if(selected)selected.classList.remove('pandatranslate-selected');selected=null;selectedRevision='';selectionGeneration++;});
 	var shell = document.createElement('aside');
 	shell.className = 'pandatranslate-panel is-open';
+	shell.setAttribute('translate', 'no');
 	shell.innerHTML = '<header><h2></h2><button type="button" class="pandatranslate-close contactpanda-list-action" aria-label="Close"><span class="dashicons dashicons-no-alt"></span></button></header>' +
 		'<div class="pandatranslate-empty"></div><button type="button" class="contactpanda-large-action pandatranslate-button pandatranslate-page-button" data-automatic-page><span class="dashicons dashicons-translation"></span><span></span></button><form hidden><label><span data-label="source"></span><textarea data-source readonly></textarea></label><label><span data-label="translation"></span><textarea data-translation></textarea></label><label><span>Status</span><select data-status><option value="untranslated">Not translated</option><option value="automatic">Automatically translated</option><option value="reviewed">Reviewed</option><option value="published">Published</option></select></label><div class="pandatranslate-actions"><button type="button" class="contactpanda-large-action pandatranslate-button" data-automatic><span class="dashicons dashicons-translation"></span><span></span></button><button type="submit" class="contactpanda-large-action pandatranslate-button" data-contactpanda-action="save" data-contactpanda-action-mode="labelled"><span class="dashicons dashicons-saved"></span><span></span></button><button type="button" class="contactpanda-large-action is-primary pandatranslate-button" data-publish data-contactpanda-action="publish" data-contactpanda-action-mode="labelled"><span class="dashicons dashicons-megaphone"></span><span></span></button></div><p data-message role="status"></p></form>';
 	document.body.appendChild(shell);
 	shell.querySelector('h2').textContent = config.i18n.title;
+	var preview = document.createElement('p');
+	preview.textContent = config.i18n.previewNotice + ' ';
+	if (config.publicUrl) {
+		var publicLink = document.createElement('a');
+		publicLink.href = config.publicUrl;
+		publicLink.target = '_blank';
+		publicLink.rel = 'noopener';
+		publicLink.textContent = config.i18n.publicPage;
+		preview.appendChild(publicLink);
+	}
+	shell.querySelector('header').after(preview);
 	shell.querySelector('.pandatranslate-close').setAttribute('aria-label', config.i18n.close || 'Close');
 	shell.querySelectorAll('[data-status] option').forEach(function(option){option.textContent=(config.i18n.statusLabels||{})[option.value]||option.textContent;});
 	shell.querySelector('.pandatranslate-empty').textContent = config.i18n.select;

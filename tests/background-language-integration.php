@@ -30,6 +30,8 @@ try{
  pt_background_expect(!PandaTranslate_Site_Progress::running($done)&&$done['languages']['es']['phase']==='done','Workers finish both languages without browser batch or polling requests');
  pt_background_expect($repo->find($keys[0],'fr')['translated_html']==='Manual remains','Missing-only background run preserves manual published text');
  pt_background_expect($repo->find($keys[1],'fr')['status']==='automatic','Auto-publication preference remains enforced');
+ $stats = $repo->language_stats()['fr'];
+ pt_background_expect( 1 === $stats['published'] && 11 === $stats['total'] - $stats['untranslated'] - $stats['published'], 'Translation progress distinguishes saved drafts from published translations' );
  ob_start();PandaTranslate_Site_Progress::render();$html=ob_get_clean();pt_background_expect(strpos($html,'FR')!==false&&strpos($html,'ES')!==false&&strpos($html,'/ 12')!==false,'Reopened progress includes the newly collected stored template in both persisted totals');
  $job=PandaTranslate_Site_Progress::start_languages(array('fr'),'background-fixture','all','background-request-2');$jobs[]=$job;PandaTranslate_Translation_Jobs::cancel($job['id']);PandaTranslate_Site_Progress::cancel($job['id']);$calls=PT_Background_Fixture_API::$calls;do_action('pandatranslate_process_language_batch',$job['id'],'fr');
  pt_background_expect($calls===PT_Background_Fixture_API::$calls,'Cancelled scheduled operation sends no provider requests');

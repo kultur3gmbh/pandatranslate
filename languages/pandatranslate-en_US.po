@@ -1992,3 +1992,16 @@ msgstr "Select flag image"
 #: includes/class-pandatranslate-plugin.php
 msgid "Use flag image"
 msgstr "Use flag image"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "This preview includes drafts. Only published translations appear on the public page."
+msgstr "This preview includes drafts. Only published translations appear on the public page."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "View public page"
+msgstr "View public page"
+
+#: includes/class-pandatranslate-plugin.php
+#, php-format
+msgid "Published: %1$s · Unpublished: %2$s"
+msgstr "Published: %1$s · Unpublished: %2$s"
