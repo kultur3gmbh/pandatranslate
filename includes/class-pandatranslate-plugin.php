@@ -613,34 +613,64 @@ final class PandaTranslate_Plugin {
 			$local = PandaTranslate_Features::language_name( $code, false, get_user_locale() );
 			$language_lang = str_replace( '_', '-', $language['locale'] );
 			echo '<article class="pandatranslate-language-progress"><div><strong><span aria-hidden="true">' . esc_html( PandaTranslate_Features::flag( $code ) ) . '</span> <span lang="' . esc_attr( $language_lang ) . '">' . esc_html( $native ) . '</span>' . ( $local === $native ? '' : ' <span>(' . esc_html( $local ) . ')</span>' ) . '</strong>';
+			$unmeasured = __( 'Not yet measured', 'pandatranslate' );
 			if ( $total ) {
 				echo '<span>' . esc_html( sprintf( /* translators: %1$d: translated units, %2$d: total units. */
-					__( '%1$d of %2$d units translated', 'pandatranslate' ), $finished, $total ) ) . '</span><b>' . esc_html( round( $finished / $total * 100 ) ) . '%</b></div><div class="pandatranslate-stacked-progress" role="img" aria-label="' . esc_attr( implode( ', ', array_map( function ( $key ) use ( $stat, $categories ) { return $categories[ $key ] . ': ' . $stat[ $key ]; }, array_keys( $categories ) ) ) ) . '">';
-				foreach ( $categories as $key => $label ) if ( $stat[ $key ] ) echo '<span class="is-' . esc_attr( $key ) . '" style="width:' . esc_attr( $stat[ $key ] / $total * 100 ) . '%"></span>';
-				echo '</div><p>' . esc_html( sprintf(
-					/* translators: %1$s: count of published translations, %2$s: count of unpublished translations. */
-					__( 'Published: %1$s · Unpublished: %2$s', 'pandatranslate' ),
-					number_format_i18n( $published ),
-					number_format_i18n( $finished - $published )
-				) ) . '</p><ul class="pandatranslate-progress-legend">';
-				foreach ( $categories as $key => $label ) echo '<li><span class="is-' . esc_attr( $key ) . '" aria-hidden="true"></span>' . esc_html( $label . ': ' . number_format_i18n( $stat[ $key ] ) . ' (' . number_format_i18n( $stat[ $key ] / $total * 100, 1 ) . '%)' ) . '</li>';
-				echo '</ul><ul class="pandatranslate-progress-legend">';
-				foreach ( $categories as $key => $label ) echo '<li>' . esc_html( $label . ': ' . sprintf( /* translators: %s: formatted number of source characters. */
-					__( '%s source characters', 'pandatranslate' ), number_format_i18n( $stat['characters'][ $key ] ?? 0 ) ) ) . '</li>';
-				echo '</ul>';
+					__( '%1$d of %2$d units translated', 'pandatranslate' ), $finished, $total ) ) . '</span><b>' . esc_html( round( $finished / $total * 100 ) ) . '%</b>';
 			} else {
-				echo '</div><p>' . esc_html__( 'No content has been recorded for this language yet. The translation job determines the amount of content when it starts.', 'pandatranslate' ) . '</p>';
+				echo '<span>' . esc_html( $unmeasured ) . '</span>';
 			}
+			echo '</div><div class="pandatranslate-stacked-progress" aria-hidden="true">';
+			$legend = array();
+			foreach ( $categories as $key => $name ) {
+				$legend[ $key ] = $name;
+				if ( ! $total ) continue;
+				$percentage = $stat[ $key ] / $total * 100;
+				if ( $stat[ $key ] ) echo '<span class="is-' . esc_attr( $key ) . '" style="width:' . esc_attr( $percentage ) . '%"></span>';
+				$legend[ $key ] .= ': ' . number_format_i18n( $stat[ $key ] ) . ' (' . number_format_i18n( $percentage, 1 ) . '%)';
+			}
+			echo '</div><div class="pandatranslate-progress-meta" tabindex="0" role="group" aria-label="' . esc_attr__( 'Translation progress', 'pandatranslate' ) . '"><ul class="pandatranslate-progress-legend">';
+			foreach ( $legend as $key => $label ) echo '<li><span class="is-' . esc_attr( $key ) . '" aria-hidden="true"></span>' . esc_html( $label ) . '</li>';
+			echo '<li>(' . esc_html( sprintf(
+				/* translators: %1$s: count of published translations, %2$s: count of unpublished translations. */
+				__( 'Published: %1$s · Unpublished: %2$s', 'pandatranslate' ),
+				number_format_i18n( $published ),
+				number_format_i18n( $finished - $published )
+			) ) . ')</li></ul>';
 			echo '<div class="pandatranslate-language-actions">';
-			$actions = array( 'missing' => __( 'Automatically translate untranslated content', 'pandatranslate' ) );
-			if ( $total ) $actions['all'] = __( 'Automatically translate everything again', 'pandatranslate' );
-			foreach ( $actions as $mode => $label ) { $characters = 'missing' === $mode ? ( $stat['characters']['untranslated'] ?? 0 ) : array_sum( $stat['characters'] ?? array() ); echo '<button type="button" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="start" data-language-translate="' . esc_attr( $language['code'] ) . '" data-mode="' . esc_attr( $mode ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '" data-confirm="' . esc_attr( 'all' === $mode ? __( 'Replace all translations, including migrated and manual texts?', 'pandatranslate' ) : __( 'Translate untranslated content with the selected API?', 'pandatranslate' ) ) . '"' . ( ! $providers ? ' disabled' : '' ) . '>' . esc_html( $label ) . ( $total ? ' · ' . esc_html( sprintf( /* translators: %s: formatted number of source characters. */
-		__( '%s source characters', 'pandatranslate' ), number_format_i18n( $characters ) ) ) : '' ) . '</button>'; }
-			if ( $total ) echo '<button type="button" class="contactpanda-large-action" data-contactpanda-action="refresh" data-contactpanda-action-mode="labelled" data-language-translate="' . esc_attr( $language['code'] ) . '" data-mode="failed" data-nonce="' . esc_attr( wp_create_nonce( 'pandatranslate_language_batch' ) ) . '" data-confirm="' . esc_attr__( 'Retry failed translations? Existing translations will be replaced.', 'pandatranslate' ) . '"' . ( ! $providers ? ' disabled' : '' ) . '>' . esc_html__( 'Retry failed translations', 'pandatranslate' ) . '</button>';
-			echo '<progress hidden aria-label="' . esc_attr__( 'Translation progress', 'pandatranslate' ) . '"></progress><p data-language-run-status role="status" aria-live="polite"></p></div></article>';
+			$actions = array(
+				'missing' => array(
+					'label' => __( 'Translate missing content', 'pandatranslate' ),
+					'characters' => $total ? ( $stat['characters']['untranslated'] ?? 0 ) : null,
+					'confirm' => __( 'Translate untranslated content with the selected API?', 'pandatranslate' ),
+					'available' => true,
+				),
+				'all' => array(
+					'label' => __( 'Retranslate all', 'pandatranslate' ),
+					'characters' => $total ? array_sum( $stat['characters'] ?? array() ) : null,
+					'confirm' => __( 'Replace all translations, including migrated and manual texts?', 'pandatranslate' ),
+					'available' => $total > 0,
+				),
+				'failed' => array(
+					'label' => __( 'Retry failures', 'pandatranslate' ),
+					'characters' => $stat['failed_characters'] ?? 0,
+					'confirm' => __( 'Retry failed translations? Existing translations will be replaced.', 'pandatranslate' ),
+					'available' => ! empty( $stat['failed'] ),
+				),
+			);
+			$nonce = wp_create_nonce( 'pandatranslate_language_batch' );
+			foreach ( $actions as $mode => $action ) {
+				$characters = $action['characters'];
+				$scope = null === $characters ? $unmeasured : sprintf(
+					/* translators: %s: formatted count of source characters. */
+					_n( '%s character', '%s characters', $characters, 'pandatranslate' ),
+					number_format_i18n( $characters )
+				);
+				echo '<button type="button" class="contactpanda-large-action pandatranslate-action" data-contactpanda-action-mode="labelled" data-contactpanda-action="' . esc_attr( 'failed' === $mode ? 'refresh' : 'start' ) . '" data-language-translate="' . esc_attr( $code ) . '" data-mode="' . esc_attr( $mode ) . '" data-nonce="' . esc_attr( $nonce ) . '" data-confirm="' . esc_attr( $action['confirm'] ) . '"' . disabled( ! $providers || ! $action['available'], true, false ) . '>' . esc_html( $action['label'] . ' (' . $scope . ')' ) . '</button>';
+			}
+			echo '<p data-language-run-status role="status" aria-live="polite"></p></div></div></article>';
 		}
 
-		echo '<p><small>' . esc_html__( 'Counts cover recorded translation units. Source characters are an estimate; API billing may differ.', 'pandatranslate' ) . '</small></p>';
 		echo '</div>';
 	}
 

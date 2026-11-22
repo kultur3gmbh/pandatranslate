@@ -8,6 +8,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: includes/class-pandatranslate-plugin.php:518
 #: includes/class-pandatranslate-plugin.php:569
@@ -2035,3 +2036,22 @@ msgstr "Importa solo le traduzioni mancanti"
 #: includes/class-pandatranslate-plugin.php
 msgid "No content has been recorded for this language yet. The translation job determines the amount of content when it starts."
 msgstr "Non sono ancora stati rilevati contenuti per questa lingua. La quantità di contenuti viene calcolata all’avvio della traduzione."
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Not yet measured"
+msgstr "Da stimare"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Retranslate all"
+msgstr "Ritraduci tutto"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Retry failures"
+msgstr "Riprova le traduzioni fallite"
+
+#: includes/class-pandatranslate-plugin.php
+#, php-format
+msgid "%s character"
+msgid_plural "%s characters"
+msgstr[0] "%s carattere"
+msgstr[1] "%s caratteri"

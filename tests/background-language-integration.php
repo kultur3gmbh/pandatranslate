@@ -21,6 +21,9 @@ try{
  $wpdb->query("DELETE FROM $table");delete_option(PandaTranslate_Site_Progress::OPTION);
  $keys=array();for($i=0;$i<11;$i++){$text='Synthetic background unit '.$i;$key=hash('sha256',$text);$keys[]=$key;$repo->save(array('key'=>$key,'source_hash'=>hash('sha256',$text),'source_html'=>$text),'fr','','untranslated');}
  $first=$repo->find($keys[0],'fr');$repo->save_revision($first,'Manual remains','published');
+ $repo->record_error( $keys[1], 'fr', 'Synthetic failure' );
+ $repo->record_error( $keys[2], 'fr', 'Synthetic failure' );
+
  $overview = new ReflectionMethod( 'PandaTranslate_Plugin', 'render_translation_progress' );
  $overview->setAccessible( true );
  $admin_locale = static function () { return 'de_DE'; };
@@ -33,7 +36,17 @@ try{
  preg_match( '/<button[^>]*data-language-translate="es"[^>]*data-mode="missing"[^>]*>[^<]*<\/button>/', $overview_html, $spanish_action );
  pt_background_expect( ! empty( $spanish_action ) && false === strpos( $spanish_action[0], ' disabled' ), 'A newly enabled Spanish target offers automatic translation before its first scan' );
  preg_match( '#<article[^>]*>(?:(?!</article>).)*data-language-translate="es"(?:(?!</article>).)*</article>#s', $overview_html, $spanish_card );
- pt_background_expect( ! empty( $spanish_card ) && false === strpos( $spanish_card[0], '0 of 0 units' ) && false === strpos( $spanish_card[0], '0 source characters' ) && false !== strpos( $spanish_card[0], 'determines the amount of content when it starts' ), 'A new target reports unknown scope instead of misleading zero counts' );
+ pt_background_expect( ! empty( $spanish_card ) && false === strpos( $spanish_card[0], '0 of 0 units' ) && false === strpos( $spanish_card[0], '0 source characters' ) && false !== strpos( $spanish_card[0], 'Not yet measured' ), 'A new target reports unknown scope instead of misleading zero counts' );
+ $overview_dom = new DOMDocument();
+ $overview_dom->loadHTML( '<?xml encoding="UTF-8">' . $overview_html, LIBXML_NOERROR | LIBXML_NOWARNING );
+ $overview_xpath = new DOMXPath( $overview_dom );
+ $french_actions = $overview_xpath->query( '//button[@data-language-translate="fr"]' );
+ $expected_failed_characters = 2 * strlen( 'Synthetic background unit 1' );
+ $retry = $overview_xpath->query( '//button[@data-language-translate="fr" and @data-mode="failed"]' )->item(0);
+ pt_background_expect( 3 === $french_actions->length && $retry && false !== strpos( $retry->textContent, (string) $expected_failed_characters ), 'All three actions are present and retry shows the character count of failed units only' );
+ $article = $retry->parentNode->parentNode->parentNode;
+ pt_background_expect( 1 === $overview_xpath->query( './/ul[@class="pandatranslate-progress-legend"]', $article )->length, 'Publication counts share one color legend' );
+
 
 
  $job=PandaTranslate_Site_Progress::start_languages(array('fr','es'),'background-fixture','missing','background-request-1');pt_background_expect(!is_wp_error($job),'Three configured languages accept two selected background targets');$jobs[]=$job;

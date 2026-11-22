@@ -2032,3 +2032,22 @@ msgstr ""
 #: includes/class-pandatranslate-plugin.php
 msgid "No content has been recorded for this language yet. The translation job determines the amount of content when it starts."
 msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Not yet measured"
+msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Retranslate all"
+msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Retry failures"
+msgstr ""
+
+#: includes/class-pandatranslate-plugin.php
+#, php-format
+msgid "%s character"
+msgid_plural "%s characters"
+msgstr[0] ""
+msgstr[1] ""
