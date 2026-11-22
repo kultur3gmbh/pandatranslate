@@ -2016,3 +2016,7 @@ msgstr ""
 #, php-format
 msgid "Published: %1$s · Unpublished: %2$s"
 msgstr ""
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Select"
+msgstr ""

@@ -999,7 +999,7 @@ msgstr "Page"
 #: includes/class-pandatranslate-plugin.php:297
 #: includes/class-pandatranslate-plugin.php:694
 msgid "Panda Translate"
-msgstr "PandaTraduire"
+msgstr "Panda Translate"
 
 #: includes/class-pandatranslate-beaver-menu-module.php:5
 #: includes/class-pandatranslate-bricks-menu-element.php:6
@@ -2018,3 +2018,7 @@ msgstr "Voir la page publique"
 #, php-format
 msgid "Published: %1$s · Unpublished: %2$s"
 msgstr "Publiées : %1$s · Non publiées : %2$s"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Select"
+msgstr "Sélectionner"

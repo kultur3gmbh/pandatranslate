@@ -133,7 +133,7 @@
 			source = document.createElement('textarea'),
 			target = document.createElement('textarea'),
 			heading = document.createElement('h2'),
-			close = action('×', 'cancel', function () {
+			close = action(config.labels.close, 'cancel', function () {
 				dialog.close();
 			});
 		if (row.last_error) {
@@ -142,7 +142,8 @@
 			error.textContent = config.labels.lastError + ': ' + row.last_error;
 			form.appendChild(error);
 		}
-		heading.textContent = config.labels.edit + (row.source_details ? ' · ' + row.source_details : '');
+		heading.textContent =
+			config.labels.edit + (row.source_details ? ' · ' + row.source_details : '');
 		source.value = row.source_text;
 		source.readOnly = true;
 		target.value = row.translated_text;
@@ -154,10 +155,21 @@
 			label.appendChild(input);
 			form.appendChild(label);
 		});
+		var notice = document.createElement('p');
+		notice.setAttribute('role', 'status');
 		var save = action(config.labels.save, 'save', function () {
-			save.disabled = true;
-			var notice = document.createElement('p');
-			form.appendChild(notice);
+			var status = row.status;
+			if (status === 'untranslated' || (status === 'published' && !config.canPublish)) {
+				status = 'reviewed';
+			}
+			saveText(status);
+		});
+		var publish = action(config.labels.publish, 'publish', function () {
+			saveText('published');
+		});
+		function saveText(status) {
+			save.disabled = publish.disabled = true;
+			notice.textContent = '';
 			api('POST', {
 				items: [
 					{
@@ -165,7 +177,7 @@
 						language: row.target_language,
 						revision: row.revision,
 						text: target.value,
-						status: row.status === 'published' && !config.canPublish ? 'reviewed' : row.status,
+						status: status,
 					},
 				],
 			})
@@ -174,14 +186,16 @@
 					dialog.close();
 					load();
 				})
-				.catch(function (e) {
-					notice.textContent = e.message;
+				.catch(function (error) {
+					notice.textContent = error.message;
 				})
 				.finally(function () {
-					save.disabled = false;
+					save.disabled = publish.disabled = false;
 				});
-		});
+		}
 		form.appendChild(save);
+		if (config.canPublish && row.status !== 'published') form.appendChild(publish);
+		form.appendChild(notice);
 		dialog.append(close, heading, form);
 		ContactPandaAdminUI.enhance(dialog);
 		dialog.showModal();
@@ -200,21 +214,29 @@
 						check = document.createElement('input');
 					check.type = 'checkbox';
 					check.dataset.index = index;
+					check.setAttribute(
+						'aria-label',
+						config.labels.select + ': ' + row.source_text.slice(0, 80),
+					);
 					var first = document.createElement('td');
 					first.appendChild(check);
 					tr.appendChild(first);
-					[row.source_text+(row.source_details?'\n'+row.source_details:''), row.translated_text, row.status].forEach(function (text) {
+					[
+						row.source_text + (row.source_details ? '\n' + row.source_details : ''),
+						row.translated_text,
+						config.statusLabels[row.status] || row.status,
+					].forEach(function (text) {
 						var td = document.createElement('td');
 						td.textContent = text;
 						td.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;max-width:30vw;';
 						tr.appendChild(td);
 					});
 					var last = document.createElement('td');
-					last.appendChild(
-						action(config.labels.edit, 'edit', function () {
-							edit(row);
-						}),
-					);
+					var editButton = action(config.labels.edit, 'edit', function () {
+						edit(row);
+					});
+					editButton.className = 'contactpanda-list-action';
+					last.appendChild(editButton);
 					tr.appendChild(last);
 					body.appendChild(tr);
 				});

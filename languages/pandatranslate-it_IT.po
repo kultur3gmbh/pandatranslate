@@ -2019,3 +2019,7 @@ msgstr "Visualizza la pagina pubblica"
 #, php-format
 msgid "Published: %1$s · Unpublished: %2$s"
 msgstr "Pubblicate: %1$s · Non pubblicate: %2$s"
+
+#: includes/class-pandatranslate-text-admin.php
+msgid "Select"
+msgstr "Seleziona"
