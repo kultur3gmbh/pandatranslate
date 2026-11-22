@@ -22,7 +22,16 @@
 	function updateRunLabel(){if(runLabel&&apiSelector&&apiSelector.selectedOptions.length)runLabel.textContent=apiSelector.value?apiSelector.selectedOptions[0].textContent:config.noApi;}
 	if(apiSelector){apiSelector.addEventListener('change',updateRunLabel);updateRunLabel();}
 	var picker = document.querySelector('[data-language-picker]'), rows = document.querySelector('[data-language-rows]');
-	if(rows)rows.addEventListener('change',function(e){if(rows.dataset.languageLimit!=='2'||!e.target.matches('input[type="checkbox"][name$="[active]"]')||!e.target.checked)return;rows.querySelectorAll('[data-language-row]:not(.is-source-language) input[type="checkbox"][name$="[active]"]').forEach(function(input){if(input!==e.target)input.checked=false;});});
+	if (rows) rows.addEventListener('change', function (event) {
+		var active = event.target;
+		if (rows.dataset.languageLimit !== '2' || !active.matches('input[type="checkbox"][name$="[active]"]')) return;
+		var feedback = document.querySelector('[data-language-activation-feedback]');
+		var occupied = active.checked && Array.from(rows.querySelectorAll(
+			'[data-language-row]:not(.is-source-language) input[type="checkbox"][name$="[active]"]:checked'
+		)).some(function (input) { return input !== active; });
+		if (occupied) active.checked = false;
+		if (feedback) feedback.textContent = occupied ? feedback.dataset.message : '';
+	});
     function cancelRun(id,nonce){return fetch(window.ajaxurl,{method:'POST',credentials:'same-origin',body:new URLSearchParams({action:'pandatranslate_cancel_translation',nonce:nonce,run_id:id})}).then(function(r){return r.json().then(function(v){if(!r.ok||!v.success)throw new Error(config.cancelFailed);return v.data;});});}
     var jobPollTimer=null;
     function jobControls(running){document.querySelectorAll('[data-language-translate],[data-language-translate-all]').forEach(function(button){if(!button.dataset.jobPrevious)button.dataset.jobPrevious=button.disabled?'disabled':'enabled';button.disabled=running||button.dataset.jobPrevious==='disabled';});if(apiSelector)apiSelector.disabled=running;}

@@ -2023,3 +2023,7 @@ msgstr "Pubblicate: %1$s · Non pubblicate: %2$s"
 #: includes/class-pandatranslate-text-admin.php
 msgid "Select"
 msgstr "Seleziona"
+
+#: includes/class-pandatranslate-plugin.php
+msgid "Deactivate the current translation language before activating another, or activate Panda Translate Multilingual to use multiple translation languages."
+msgstr "Disattiva la lingua di traduzione attuale prima di attivarne un’altra. Attiva Panda Translate Multilingual per usare più lingue di traduzione."

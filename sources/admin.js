@@ -118,20 +118,25 @@
 	var picker = document.querySelector('[data-language-picker]'),
 		rows = document.querySelector('[data-language-rows]');
 	if (rows)
-		rows.addEventListener('change', function (e) {
+		rows.addEventListener('change', function (event) {
+			var active = event.target;
 			if (
 				rows.dataset.languageLimit !== '2' ||
-				!e.target.matches('input[type="checkbox"][name$="[active]"]') ||
-				!e.target.checked
+				!active.matches('input[type="checkbox"][name$="[active]"]')
 			)
 				return;
-			rows
-				.querySelectorAll(
-					'[data-language-row]:not(.is-source-language) input[type="checkbox"][name$="[active]"]',
-				)
-				.forEach(function (input) {
-					if (input !== e.target) input.checked = false;
+			var feedback = document.querySelector('[data-language-activation-feedback]');
+			var occupied =
+				active.checked &&
+				Array.from(
+					rows.querySelectorAll(
+						'[data-language-row]:not(.is-source-language) input[type="checkbox"][name$="[active]"]:checked',
+					),
+				).some(function (input) {
+					return input !== active;
 				});
+			if (occupied) active.checked = false;
+			if (feedback) feedback.textContent = occupied ? feedback.dataset.message : '';
 		});
 	function cancelRun(id, nonce) {
 		return fetch(window.ajaxurl, {
