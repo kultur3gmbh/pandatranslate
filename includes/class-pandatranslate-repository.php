@@ -86,10 +86,15 @@ final class PandaTranslate_Repository {
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT source.* FROM %i source INNER JOIN (SELECT MIN(id) id FROM %i WHERE source_html <> '' GROUP BY CASE WHEN source_kind = 'gettext' THEN unit_key ELSE source_hash END) canonical ON canonical.id = source.id WHERE source.id > %d ORDER BY source.id LIMIT 250", $table, $table, $cursor ), ARRAY_A );
 		if ( $wpdb->last_error ) return new WP_Error( 'pandatranslate_seed_failed', __( 'Source content could not be prepared.', 'pandatranslate' ) );
 		foreach ( $rows as $row ) {
+			$cursor = (int) $row['id'];
+			if ( ! PandaTranslate_Template_Protector::has_text( $row['source_html'] ) ) {
+				// Retain imported technical fragments, but never bill a provider for empty markup.
+				$wpdb->query( $wpdb->prepare( "UPDATE %i SET source_kind = 'technical', last_error = '' WHERE unit_key = %s AND source_hash = %s AND status = 'untranslated' AND translated_html = ''", $table, $row['unit_key'], $row['source_hash'] ) );
+				continue;
+			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache.
 			$exists = 'gettext' === ( $row['source_kind'] ?? '' ) ? $this->find( $row['unit_key'], $language ) : $wpdb->get_var( $wpdb->prepare( "SELECT id FROM %i WHERE target_language = %s AND source_hash = %s LIMIT 1", $table, $language, $row['source_hash'] ) );
 			if ( ! $exists ) { $saved = $this->save( array( 'key' => $row['unit_key'], 'source_hash' => $row['source_hash'], 'source_html' => $row['source_html'], 'source_kind' => $row['source_kind'] ?? 'page', 'source_domain' => $row['source_domain'] ?? '' ), $language, '', 'untranslated' ); if ( is_wp_error( $saved ) ) return $saved; }
-			$cursor = (int) $row['id'];
 		}
 		return array( 'cursor' => $cursor, 'done' => count( $rows ) < 250, 'processed' => count( $rows ) );
 	}
@@ -144,7 +149,7 @@ final class PandaTranslate_Repository {
 	public function language_stats() {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT target_language, CASE WHEN status = 'untranslated' OR TRIM(translated_html) = '' THEN 'untranslated' WHEN provider = 'manual' THEN 'manual' WHEN provider IN ('translatepress-import','native-locale') THEN 'migrated' WHEN provider LIKE %s OR provider LIKE %s OR status = 'automatic' THEN 'automatic' ELSE 'manual' END AS category, COUNT(*) AS total, SUM(character_count) AS characters FROM %i GROUP BY target_language, category", 'google-cloud-translation%', 'api:%', self::table() ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT target_language, CASE WHEN status = 'untranslated' OR TRIM(translated_html) = '' THEN 'untranslated' WHEN provider = 'manual' THEN 'manual' WHEN provider IN ('translatepress-import','native-locale') THEN 'migrated' WHEN provider LIKE %s OR provider LIKE %s OR status = 'automatic' THEN 'automatic' ELSE 'manual' END AS category, COUNT(*) AS total, SUM(character_count) AS characters FROM %i WHERE source_kind <> 'technical' GROUP BY target_language, category", 'google-cloud-translation%', 'api:%', self::table() ), ARRAY_A );
 		$stats = array();
 		foreach ( $rows as $row ) { $language = $row['target_language']; if ( ! isset( $stats[ $language ] ) ) $stats[ $language ] = array( 'total' => 0, 'untranslated' => 0, 'automatic' => 0, 'migrated' => 0, 'manual' => 0, 'characters' => array() ); $count = absint( $row['total'] ); $stats[ $language ]['total'] += $count; $stats[ $language ][ $row['category'] ] += $count; $stats[ $language ]['characters'][ $row['category'] ] = absint( $row['characters'] ); }
 		return $stats;

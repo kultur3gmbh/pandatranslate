@@ -12,3 +12,5 @@ function wp_kses( $html ) { return $html; }
 define( 'ABSPATH', __DIR__ );
 require_once dirname( __DIR__ ) . '/includes/class-pandatranslate-inline-protector.php';
 require_once dirname( __DIR__ ) . '/includes/class-pandatranslate-unit-extractor.php';
+
+require_once dirname( __DIR__ ) . '/includes/class-pandatranslate-template-protector.php';

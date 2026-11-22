@@ -6,10 +6,12 @@ final class PandaTranslate_Routing {
 	public static function boot() {
 		if ( self::$booted ) return; self::$booted = true;
 		add_filter( 'rewrite_rules_array', array( __CLASS__, 'rules' ) );
+		add_filter( 'query_vars', array( __CLASS__, 'query_vars' ) );
 		add_action( 'wp_loaded', array( __CLASS__, 'refresh_rules' ), 30 );
 		add_action( 'parse_request', array( __CLASS__, 'resolve_translated_slug' ), 20 );
 		add_filter( 'redirect_canonical', array( __CLASS__, 'canonical_redirect' ) );
 	}
+	public static function query_vars( $vars ) { $vars[] = 'pt_lang'; return array_values( array_unique( $vars ) ); }
 	public static function rules( $rules ) {
 		$base = array_filter( $rules, function ( $query ) { return false === strpos( $query, 'pt_lang=' ) && false === strpos( $query, 'pandatranslate_slug=' ); } );
 		$translated = array(); $source = PandaTranslate_Plugin::get_settings()['source_language'];

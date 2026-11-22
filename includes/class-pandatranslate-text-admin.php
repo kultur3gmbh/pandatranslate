@@ -26,7 +26,7 @@ final class PandaTranslate_Text_Admin {
 					$row['source_details'] .= ( $context ? ' · ' : '' ) . sprintf( __( 'Plural form: %1$s (example: %2$s)', 'pandatranslate' ), $entry['category'], $sample );
 				}
 			}
-			$row['revision'] = PandaTranslate_Repository::revision( $row ); $row['source_text'] = PandaTranslate_Inline_Protector::protect( $row['source_html'] )['text']; $row['translated_text'] = PandaTranslate_Inline_Protector::protect( $row['translated_html'] )['text']; }
+			$row['revision'] = PandaTranslate_Repository::revision( $row ); $row['source_text'] = PandaTranslate_Template_Protector::prepare_row( $row )['text']; $row['translated_text'] = PandaTranslate_Template_Protector::prepare_row( array_merge( $row, array( 'source_html' => $row['translated_html'] ) ) )['text']; }
 		return rest_ensure_response( $rows );
 	}
 	public static function save( $request ) {
@@ -37,9 +37,9 @@ final class PandaTranslate_Text_Admin {
 			if ( ! PandaTranslate_Edition::allows_language( $language ) || ! $row || ! hash_equals( PandaTranslate_Repository::revision( $row ), (string) ( $item['revision'] ?? '' ) ) ) { $results[] = array( 'saved' => false, 'error' => __( 'The translation changed. Reload before saving.', 'pandatranslate' ) ); continue; }
 			$status = sanitize_key( $item['status'] ?? $row['status'] );
 			if ( ! in_array( $status, PandaTranslate_Repository::STATUSES, true ) ) { $results[] = array( 'saved' => false, 'error' => __( 'Invalid translation status.', 'pandatranslate' ) ); continue; }
-			$protected = PandaTranslate_Inline_Protector::protect( $row['source_html'] );
+			$protected = PandaTranslate_Template_Protector::prepare_row( $row );
 			if ( 'published' === $status && ! current_user_can( 'publish_posts' ) && ! current_user_can( 'manage_options' ) ) { $results[] = array( 'saved' => false, 'error' => __( 'Publishing permission is required.', 'pandatranslate' ) ); continue; }
-			$value = isset( $item['text'] ) ? PandaTranslate_Inline_Protector::restore( $item['text'], $protected['tokens'] ) : $row['translated_html'];
+			$value = isset( $item['text'] ) ? PandaTranslate_Template_Protector::restore_prepared( $item['text'], $protected ) : $row['translated_html'];
 			if ( ! is_wp_error( $value ) && ! PandaTranslate_Strings::same_placeholders( $row['source_html'], $value ) ) $value = new WP_Error( 'pandatranslate_placeholders', __( 'Formatting variables must remain unchanged.', 'pandatranslate' ) );
 			if ( ! is_wp_error( $value ) && 'published' === $status && '' === trim( $value ) ) $value = new WP_Error( 'pandatranslate_empty', __( 'An empty translation cannot be published.', 'pandatranslate' ) );
 			$saved = is_wp_error( $value ) ? $value : $repo->save_revision( $row, $value, $status );

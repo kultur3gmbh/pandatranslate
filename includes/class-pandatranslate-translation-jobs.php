@@ -86,6 +86,7 @@ final class PandaTranslate_Translation_Jobs {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
 		if ( ! $limit ) $limit = (int) $wpdb->get_var( $wpdb->prepare( "SELECT MAX(id) FROM %i WHERE target_language = %s", $table, $language ) );
 		$condition = 'all' === ( $input['mode'] ?? '' ) ? '' : ( 'failed' === ( $input['mode'] ?? '' ) ? " AND last_error IS NOT NULL AND TRIM(last_error) <> ''" : " AND (status = 'untranslated' OR TRIM(translated_html) = '')" );
+		$condition .= " AND source_kind <> 'technical'";
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Fresh bounded job reads and concurrent cancellation must bypass persistent/request-local caches. Identifiers and values are bound; the only SQL suffix comes from the fixed all/failed/missing whitelist.
 		if ( ! $result['total_units'] ) $result['total_units'] = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE target_language = %s AND id <= %d {$condition}", $table, $language, $limit ) );
 		if ( ! $limit ) return new WP_Error( 'pandatranslate_no_sources', __( 'No source content was collected. Check published content types and source-page collection.', 'pandatranslate' ) );

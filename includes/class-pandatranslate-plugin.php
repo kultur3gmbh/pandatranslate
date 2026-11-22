@@ -824,7 +824,7 @@ final class PandaTranslate_Plugin {
 		if ( ! $row ) return new WP_Error( 'pandatranslate_unit_missing', __( 'Open the page in the visual editor before translating this unit.', 'pandatranslate' ) );
 		$s = self::get_settings();
 		$api_id = $api_id ?: PandaTranslate_Providers::default_id(); $provider = PandaTranslate_Providers::get( $api_id ); if ( is_wp_error( $provider ) ) return $provider;
-		$protected = PandaTranslate_Inline_Protector::protect( $row['source_html'] );
+		$protected = PandaTranslate_Template_Protector::prepare_row( $row );
 		$glossary = PandaTranslate_Features::protect_glossary( $protected['text'], $language );
 		$provider_source = 'gettext' === ( $row['source_kind'] ?? '' ) ? '' : self::provider_language( $s['source_language'] );
 		$translated = $provider->translate( $glossary['text'], $provider_source, self::provider_language( $language ), array( 'unit_key' => $key, 'requested_language' => $language, 'api' => $api_id ) );
@@ -837,7 +837,7 @@ final class PandaTranslate_Plugin {
 		$repository = new PandaTranslate_Repository();
 		$translated = PandaTranslate_Features::restore_glossary( $translated, $glossary['tokens'] );
 		if ( is_wp_error( $translated ) ) return $translated;
-		$restored = PandaTranslate_Inline_Protector::restore( $translated, $protected['tokens'] );
+		$restored = PandaTranslate_Template_Protector::restore_prepared( $translated, $protected );
 		if ( is_wp_error( $restored ) ) return $restored;
 		if ( class_exists( 'PandaTranslate_Strings' ) && ! PandaTranslate_Strings::same_placeholders( $row['source_html'], $restored ) ) return new WP_Error( 'pandatranslate_variables', __( 'Formatting variables must remain unchanged.', 'pandatranslate' ) );
 		$unit = array( 'key' => $row['unit_key'], 'source_hash' => $row['source_hash'], 'source_html' => $row['source_html'] );
@@ -857,7 +857,7 @@ final class PandaTranslate_Plugin {
 			$row = $rows[$key] ?? null;
 			if ( ! $row ) { $out[$key] = new WP_Error( 'pandatranslate_unit_missing', __( 'Open the page in the visual editor before translating this unit.', 'pandatranslate' ) ); continue; }
 			if ( 'missing' === $mode && 'untranslated' !== $row['status'] && '' !== trim( $row['translated_html'] ) ) { $out[$key] = array( 'skipped' => true ); continue; }
-			$protected = PandaTranslate_Inline_Protector::protect( $row['source_html'] ); $glossary = PandaTranslate_Features::protect_glossary( $protected['text'], $language );
+			$protected = PandaTranslate_Template_Protector::prepare_row( $row ); $glossary = PandaTranslate_Features::protect_glossary( $protected['text'], $language );
 			$source = 'gettext' === ( $row['source_kind'] ?? '' ) ? '' : self::provider_language( $s['source_language'] );
 			$groups[$source][$key] = $glossary['text']; $items[$key] = array( $row, $protected, $glossary );
 		}
@@ -876,8 +876,8 @@ final class PandaTranslate_Plugin {
 	public static function save_known_translation( $key, $language, $translated_text, $status ) {
 		$repository = new PandaTranslate_Repository(); $row = $repository->find( $key, $language );
 		if ( ! $row ) return new WP_Error( 'pandatranslate_unit_missing', __( 'The translation unit does not exist.', 'pandatranslate' ) );
-		$protected = PandaTranslate_Inline_Protector::protect( $row['source_html'] );
-		$restored = PandaTranslate_Inline_Protector::restore( $translated_text, $protected['tokens'] );
+		$protected = PandaTranslate_Template_Protector::prepare_row( $row );
+		$restored = PandaTranslate_Template_Protector::restore_prepared( $translated_text, $protected );
 		if ( is_wp_error( $restored ) ) return $restored;
 		$unit = array( 'key' => $row['unit_key'], 'source_hash' => $row['source_hash'], 'source_html' => $row['source_html'] );
 		$provider = $restored === $row['translated_html'] ? $row['provider'] : 'manual';

@@ -4,7 +4,7 @@
  * Description: Visual website translation with language paths, menus and builder elements.
  * Requires at least: 6.4
  * Requires PHP: 7.4
- * Version: 0.7.12
+ * Version: 0.7.13
  * Author: Kultur3 GmbH
  * Plugin URI: https://pandacosmo.com/
  * License: GPL-3.0-only
@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'PANDATRANSLATE_FILE', __FILE__ );
 define( 'PANDATRANSLATE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PANDATRANSLATE_URL', plugin_dir_url( __FILE__ ) );
-define( 'PANDATRANSLATE_VERSION', '0.7.12' );
+define( 'PANDATRANSLATE_VERSION', '0.7.13' );
 
 // Resolve feature classes only when their callbacks are invoked.
 spl_autoload_register( static function ( $class ) {
@@ -50,6 +50,7 @@ spl_autoload_register( static function ( $class ) {
 		'PandaTranslate_Source_Language' => 'class-pandatranslate-source-language.php',
 		'PandaTranslate_Static_Inventory' => 'class-pandatranslate-static-inventory.php',
 		'PandaTranslate_Strings' => 'class-pandatranslate-strings.php',
+		'PandaTranslate_Template_Protector' => 'class-pandatranslate-template-protector.php',
 		'PandaTranslate_Text_Admin' => 'class-pandatranslate-text-admin.php',
 		'PandaTranslate_Theme_Colors' => 'class-pandatranslate-theme-colors.php',
 		'PandaTranslate_Translation_Jobs' => 'class-pandatranslate-translation-jobs.php',
