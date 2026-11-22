@@ -25,6 +25,9 @@ final class PandaTranslate_Plugin {
 		add_action( 'wp_footer', array( $this, 'floating_switcher' ) );
 		add_action( 'admin_bar_menu', array( $this, 'admin_bar_menu' ), 90 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( 'admin_menu', array( $this, 'order_admin_submenus' ), PHP_INT_MAX );
+		add_filter( 'custom_menu_order', '__return_true' );
+		add_filter( 'menu_order', array( $this, 'order_admin_menu' ), PHP_INT_MAX );
 		add_filter( 'wp_php_error_message', array( $this, 'editor_error_message' ), 10, 2 );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_assets' ), 99 );
@@ -265,6 +268,41 @@ final class PandaTranslate_Plugin {
         foreach ( array( 'pandatranslate' => __( 'Dashboard', 'pandatranslate' ), 'pandatranslate-translation' => __( 'Translation', 'pandatranslate' ), 'pandatranslate-glossary' => __( 'Glossary', 'pandatranslate' ), 'pandatranslate-settings' => __( 'Settings', 'pandatranslate' ) ) as $slug => $label ) add_submenu_page( 'pandatranslate', $label, $label, 'manage_options', $slug, array( $this, 'settings_page' ) );
     }
 
+	public function order_admin_submenus() {
+		global $submenu;
+		$items = $submenu['pandatranslate'] ?? array();
+		if ( ! $items ) return;
+
+		$order = array( 'pandatranslate', 'pandatranslate-translation', 'pandatranslate-glossary', 'pandatranslate-url-bases', 'pandatranslate-texts', '', 'pandatranslate-settings' );
+		$groups = array_fill_keys( $order, array() );
+		foreach ( $items as $item ) {
+			$slug = isset( $groups[ $item[2] ] ) ? $item[2] : '';
+			$groups[ $slug ][] = $item;
+		}
+		$submenu['pandatranslate'] = array_merge( ...array_values( $groups ) );
+	}
+
+	public function order_admin_menu( $menu ) {
+		$family = array_intersect( array( 'panda-seasons-dashboard', 'pandatranslate', 'pandamercury' ), $menu );
+		$anchor = 'rank-math';
+		if ( ! in_array( $anchor, $menu, true ) ) {
+			$anchors = array_intersect( array( 'separator-woocommerce', 'woocommerce', 'separator2' ), $menu );
+			$anchor = reset( $anchors );
+		}
+		if ( $family && $anchor ) {
+			$menu = array_values( array_diff( $menu, $family ) );
+			$position = array_search( $anchor, $menu, true ) + ( 'rank-math' === $anchor ? 1 : 0 );
+			array_splice( $menu, $position, 0, $family );
+		}
+
+		if ( in_array( 'woocommerce', $menu, true ) && in_array( 'pandawoo', $menu, true ) ) {
+			$menu = array_values( array_diff( $menu, array( 'pandawoo' ) ) );
+			$woo_items = array_intersect( $menu, array( 'woocommerce', 'edit.php?post_type=product', 'wc-reports', 'woocommerce-analytics', 'wc-admin&path=/analytics/overview', 'woocommerce-marketing', 'woocommerce-marketplace' ) );
+			array_splice( $menu, array_key_last( $woo_items ) + 1, 0, array( 'pandawoo' ) );
+		}
+		return $menu;
+	}
+
 	public function admin_assets( $hook ) {
 		if ( 'nav-menus.php' === $hook ) { wp_enqueue_style( 'pandatranslate-family-actions', PANDATRANSLATE_URL . 'assets/contactpanda-actions.css', array(), PANDATRANSLATE_VERSION ); return; }
 		if ( false === strpos( $hook, 'pandatranslate' ) ) return;
@@ -337,6 +375,7 @@ final class PandaTranslate_Plugin {
             <?php if ( class_exists( 'PandaTranslate_Edition' ) ) PandaTranslate_Edition::promotion(); ?>
 
 			<div class="pandatranslate-grid">
+				<?php if ( 'general' === $tab ) $this->render_dashboard_overview(); ?>
 				<?php if ( in_array( $tab, array( 'preferences', 'woocommerce', 'google' ), true ) ) : ?><div class="pandatranslate-card"><?php else : ?><form method="post" action="<?php echo esc_url( 'migration' === $tab ? admin_url( 'admin-post.php' ) : 'options.php' ); ?>" class="pandatranslate-card"><?php endif; ?>
 					<?php if ( 'migration' === $tab ) : ?><input type="hidden" name="action" value="pandatranslate_import_translatepress"><?php wp_nonce_field( 'pandatranslate_import_translatepress' ); ?><?php elseif ( ! in_array( $tab, array( 'preferences', 'woocommerce', 'google' ), true ) ) : settings_fields( 'pandatranslate' ); endif; ?>
 					<?php if ( 'google' !== $tab ) : ?><input type="hidden" name="<?php echo esc_attr( self::OPTION ); ?>[_section]" value="<?php echo esc_attr( $tab ); ?>"><?php endif; ?>
@@ -522,6 +561,28 @@ final class PandaTranslate_Plugin {
 			array( 'label' => __( 'SEO integration', 'pandatranslate' ), 'value' => $seo ? implode( ', ', $seo ) : __( 'WordPress metadata', 'pandatranslate' ), 'status' => 'ok', 'message' => '' ),
 			array( 'label' => __( 'Plugin version', 'pandatranslate' ), 'value' => PANDATRANSLATE_VERSION, 'status' => 'neutral', 'message' => '' ),
 		);
+	}
+
+	private function render_dashboard_overview() {
+		$types = array_replace( array( 'page' => null, 'post' => null, 'product' => null ), get_post_types( array( 'public' => true ), 'objects' ) );
+		unset( $types['attachment'] );
+		$enabled_apis = wp_list_filter( PandaTranslate_Providers::all(), array( 'enabled' => true ) );
+		?>
+		<section class="pandatranslate-card pandatranslate-dashboard-overview" aria-labelledby="pandatranslate-overview-title">
+			<h2 id="pandatranslate-overview-title"><?php esc_html_e( 'Website overview', 'pandatranslate' ); ?></h2>
+			<h3><?php esc_html_e( 'Published content', 'pandatranslate' ); ?></h3>
+			<dl class="pandatranslate-dashboard-metrics">
+				<?php foreach ( array_filter( $types ) as $type ) : ?>
+					<div><dt><?php echo esc_html( $type->labels->name ); ?></dt><dd><?php echo esc_html( number_format_i18n( (int) ( wp_count_posts( $type->name )->publish ?? 0 ) ) ); ?></dd></div>
+				<?php endforeach; ?>
+			</dl>
+			<h3><?php esc_html_e( 'Translation', 'pandatranslate' ); ?></h3>
+			<dl class="pandatranslate-dashboard-metrics">
+				<div><dt><?php esc_html_e( 'Recorded source characters', 'pandatranslate' ); ?></dt><dd><?php echo esc_html( number_format_i18n( $this->repository->source_character_total() ) ); ?></dd></div>
+				<div><dt><?php esc_html_e( 'Enabled translation APIs', 'pandatranslate' ); ?></dt><dd><?php echo esc_html( number_format_i18n( count( $enabled_apis ) ) ); ?></dd></div>
+			</dl>
+		</section>
+		<?php
 	}
 
 	private function render_language_settings() {

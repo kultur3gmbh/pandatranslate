@@ -27,3 +27,12 @@
 @media(max-width:782px){.pandatranslate-site-action-grid{grid-template-columns:1fr}.pandatranslate-site-actions{padding:16px}.pandatranslate-settings-actions{justify-content:stretch}}
 
 .pandatranslate-text-admin [hidden]{display:none!important}
+.pandatranslate-dashboard-overview .pandatranslate-dashboard-metrics {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+	gap: 12px;
+	margin: 0 0 16px;
+}
+.pandatranslate-dashboard-overview .pandatranslate-dashboard-metrics:last-child { margin-bottom: 0; }
+.pandatranslate-dashboard-metrics > div { padding: 12px; border: 1px solid #dcdcde; border-radius: 6px; background: #f6f7f7; overflow-wrap: anywhere; }
+.pandatranslate-dashboard-metrics dd { margin: 4px 0 0; font-size: 1.35em; font-weight: 600; }

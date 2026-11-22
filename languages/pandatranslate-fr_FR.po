@@ -2054,3 +2054,15 @@ msgid "%s character"
 msgid_plural "%s characters"
 msgstr[0] "%s caractère"
 msgstr[1] "%s caractères"
+
+msgid "Website overview"
+msgstr "Vue d’ensemble du site"
+
+msgid "Published content"
+msgstr "Contenus publiés"
+
+msgid "Recorded source characters"
+msgstr "Caractères source recensés"
+
+msgid "Enabled translation APIs"
+msgstr "API de traduction activées"

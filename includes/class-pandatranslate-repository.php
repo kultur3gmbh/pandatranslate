@@ -147,6 +147,12 @@ final class PandaTranslate_Repository {
 		return $row;
 	}
 
+	public function source_character_total() {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read the current plugin-owned source inventory without counting a copy for each target language.
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE(SUM(characters), 0) FROM (SELECT MAX(character_count) AS characters FROM %i WHERE source_kind <> 'technical' GROUP BY CASE WHEN source_kind IN ('gettext','stored-template-text','stored-template-html') THEN unit_key ELSE source_hash END) AS sources", self::table() ) );
+	}
+
 	public function language_stats() {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned translation tables require wpdb. Reads must reflect the current edit revision; writes use the atomic compare-and-swap or wpdb value binding, without a stale persistent object cache.

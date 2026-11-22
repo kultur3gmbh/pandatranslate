@@ -2177,3 +2177,15 @@ msgid "%s character"
 msgid_plural "%s characters"
 msgstr[0] "%s Zeichen"
 msgstr[1] "%s Zeichen"
+
+msgid "Website overview"
+msgstr "Website-Übersicht"
+
+msgid "Published content"
+msgstr "Veröffentlichte Inhalte"
+
+msgid "Recorded source characters"
+msgstr "Erfasste Zeichen im Ausgangstext"
+
+msgid "Enabled translation APIs"
+msgstr "Aktivierte Übersetzungs-APIs"
