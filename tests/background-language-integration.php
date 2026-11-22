@@ -21,6 +21,14 @@ try{
  $wpdb->query("DELETE FROM $table");delete_option(PandaTranslate_Site_Progress::OPTION);
  $keys=array();for($i=0;$i<11;$i++){$text='Synthetic background unit '.$i;$key=hash('sha256',$text);$keys[]=$key;$repo->save(array('key'=>$key,'source_hash'=>hash('sha256',$text),'source_html'=>$text),'fr','','untranslated');}
  $first=$repo->find($keys[0],'fr');$repo->save_revision($first,'Manual remains','published');
+ $overview = new ReflectionMethod( 'PandaTranslate_Plugin', 'render_translation_progress' );
+ $overview->setAccessible( true );
+ ob_start();
+ $overview->invoke( PandaTranslate_Plugin::boot() );
+ $overview_html = ob_get_clean();
+ preg_match( '/<button[^>]*data-language-translate="es"[^>]*data-mode="missing"[^>]*>[^<]*<\/button>/', $overview_html, $spanish_action );
+ pt_background_expect( ! empty( $spanish_action ) && false === strpos( $spanish_action[0], ' disabled' ), 'A newly enabled Spanish target offers automatic translation before its first scan' );
+
  $job=PandaTranslate_Site_Progress::start_languages(array('fr','es'),'background-fixture','missing','background-request-1');pt_background_expect(!is_wp_error($job),'Three configured languages accept two selected background targets');$jobs[]=$job;
  pt_background_expect(PT_Background_Fixture_API::$calls===0,'Enqueue does not perform a paid/provider operation');
  pt_background_expect(wp_next_scheduled('pandatranslate_process_language_batch',array($job['id'],'es'))!==false,'Continuation is durably registered with WordPress');
