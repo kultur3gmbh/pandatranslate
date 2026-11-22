@@ -23,4 +23,5 @@ assert( PandaTranslate_Strings::same_placeholders( '100%%. Use %s.', '100 %%. Ex
 assert( PandaTranslate_Strings::same_placeholders( '0 to 100 percent', '0 à 100 %' ) );
 $source_format = 'Ranges up to 100 percent. Use %s.';
 assert( 'Ranges up to 100 percent. Use the plugin.' === sprintf( PandaTranslate_Strings::gettext( 'Jusqu’à 100 %. Extension : %s.', $source_format, 'theme' ), 'the plugin' ) );
+assert( '2 extensions à mettre à jour' === sprintf( PandaTranslate_Strings::plural( '%d extensions à mettre à jour', '%d Plugin Update', '%d Plugin Updates', 2, 'default' ), 2 ) );
 echo "Static strings: domain/context lookup, published-only dictionary, printf types/order retained, no visitor collection or external calls, admin untouched except explicit mail locale: ok\n";

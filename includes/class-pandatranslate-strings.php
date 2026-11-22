@@ -78,9 +78,10 @@ final class PandaTranslate_Strings {
 	public static function gettext_context( $translated, $original, $context, $domain ) { return self::lookup( $translated, $original, $domain, $context ); }
 	public static function plural( $translated, $single, $plural, $number, $domain ) {
 		// Native locale plural selection is retained; dictionary lookup is based on the resolved template.
-		return self::lookup( $translated, $single . '|' . $plural, $domain, 'plural:' . $translated );
+		$format_source = 1 === (int) $number ? $single : $plural;
+		return self::lookup( $translated, $single . '|' . $plural, $domain, 'plural:' . $translated, $format_source );
 	}
-	private static function lookup( $translated, $original, $domain, $context ) {
+	private static function lookup( $translated, $original, $domain, $context, $format_source = null ) {
 		if ( self::$busy || ( is_admin() && ! self::$email_language ) || in_array( $domain, array( 'pandatranslate', 'pandatranslate-multilingual' ), true ) || ! trim( $translated ) || strlen( $translated ) > 4000 ) return $translated;
 		// Language/settings filters may themselves translate labels. Guard the entire resolution.
 		self::$busy = true;
@@ -89,7 +90,8 @@ final class PandaTranslate_Strings {
 		$language = self::$email_language ? ( PandaTranslate_Edition::allows_language( self::$email_language ) ? self::$email_language : '' ) : self::frontend_language();
 		if ( ! $language ) return $translated;
 		// Native language packs can contain the same malformed sprintf strings.
-		if ( false !== strpos( $original, '%' ) && ! self::valid_format_translation( $original, $translated ) ) $translated = $original;
+		$format_source = $format_source ?? $original;
+		if ( false !== strpos( $format_source, '%' ) && ! self::valid_format_translation( $format_source, $translated ) ) $translated = $format_source;
 		$key = hash( 'sha256', 'gettext|' . $domain . '|' . $context . '|' . $original ); $cache_key = $key . '|' . $language;
 		if ( array_key_exists( $cache_key, self::$cache ) ) return self::$cache[$cache_key] ?? $translated;
 			$repo = new PandaTranslate_Repository();
