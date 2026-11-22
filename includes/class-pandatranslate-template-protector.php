@@ -6,6 +6,9 @@ final class PandaTranslate_Template_Protector {
 	public static function prepare_row( array $row ) {
 		$source = (string) ( $row['source_html'] ?? '' ); $kind = $row['source_kind'] ?? '';
 		if ( 'stored-template-text' === $kind ) return self::protect( $source, false );
+		// Core/plugin gettext templates can contain positional attribute placeholders (for example %2$s).
+		// They must survive until the caller performs sprintf, before any HTML sanitization is possible.
+		if ( 'gettext' === $kind && preg_match( '~</?[a-z][a-z0-9:-]*(?=[\s/>])~i', $source ) ) return self::protect( $source, true );
 		if ( 'stored-template-html' === $kind || preg_match( '~<(?:div|p|table|thead|tbody|tfoot|tr|td|th|ul|ol|li|h[1-6]|img|svg|section|figure|form|input|label|script|style)\b~i', $source ) ) return self::protect( $source, true );
 		return PandaTranslate_Inline_Protector::protect( $source );
 	}
