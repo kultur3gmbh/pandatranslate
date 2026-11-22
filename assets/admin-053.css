@@ -36,3 +36,7 @@
 .pandatranslate-dashboard-overview .pandatranslate-dashboard-metrics:last-child { margin-bottom: 0; }
 .pandatranslate-dashboard-metrics > div { padding: 12px; border: 1px solid #dcdcde; border-radius: 6px; background: #f6f7f7; overflow-wrap: anywhere; }
 .pandatranslate-dashboard-metrics dd { margin: 4px 0 0; font-size: 1.35em; font-weight: 600; }
+.pandatranslate-dashboard-apis { margin: 4px 0 0; font-size: 13px; font-weight: 400; }
+.pandatranslate-dashboard-apis li { margin: 0; }
+.pandatranslate-languages { min-width: calc(850px + 10rem); }
+.pandatranslate-formality-column { width: 10rem; }

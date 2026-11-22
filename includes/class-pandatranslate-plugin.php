@@ -375,7 +375,7 @@ final class PandaTranslate_Plugin {
             <?php if ( class_exists( 'PandaTranslate_Edition' ) ) PandaTranslate_Edition::promotion(); ?>
 
 			<div class="pandatranslate-grid">
-				<?php if ( 'general' === $tab ) $this->render_dashboard_overview(); ?>
+				<?php if ( 'general' === $tab ) $this->render_dashboard_overview( $s ); ?>
 				<?php if ( in_array( $tab, array( 'preferences', 'woocommerce', 'google' ), true ) ) : ?><div class="pandatranslate-card"><?php else : ?><form method="post" action="<?php echo esc_url( 'migration' === $tab ? admin_url( 'admin-post.php' ) : 'options.php' ); ?>" class="pandatranslate-card"><?php endif; ?>
 					<?php if ( 'migration' === $tab ) : ?><input type="hidden" name="action" value="pandatranslate_import_translatepress"><?php wp_nonce_field( 'pandatranslate_import_translatepress' ); ?><?php elseif ( ! in_array( $tab, array( 'preferences', 'woocommerce', 'google' ), true ) ) : settings_fields( 'pandatranslate' ); endif; ?>
 					<?php if ( 'google' !== $tab ) : ?><input type="hidden" name="<?php echo esc_attr( self::OPTION ); ?>[_section]" value="<?php echo esc_attr( $tab ); ?>"><?php endif; ?>
@@ -563,10 +563,13 @@ final class PandaTranslate_Plugin {
 		);
 	}
 
-	private function render_dashboard_overview() {
+	private function render_dashboard_overview( $settings ) {
 		$types = array_replace( array( 'page' => null, 'post' => null, 'product' => null ), get_post_types( array( 'public' => true ), 'objects' ) );
 		unset( $types['attachment'] );
-		$enabled_apis = wp_list_filter( PandaTranslate_Providers::all(), array( 'enabled' => true ) );
+		$enabled_apis = wp_list_pluck( wp_list_filter( PandaTranslate_Providers::all(), array( 'enabled' => true ) ), 'label' );
+		if ( isset( $enabled_apis['deepl'] ) ) {
+			$enabled_apis['deepl'] = 'pro' === $settings['deepl_endpoint'] ? 'DeepL API Pro (v2)' : 'DeepL API Free (v2)';
+		}
 		?>
 		<section class="pandatranslate-card pandatranslate-dashboard-overview" aria-labelledby="pandatranslate-overview-title">
 			<h2 id="pandatranslate-overview-title"><?php esc_html_e( 'Website overview', 'pandatranslate' ); ?></h2>
@@ -579,7 +582,17 @@ final class PandaTranslate_Plugin {
 			<h3><?php esc_html_e( 'Translation', 'pandatranslate' ); ?></h3>
 			<dl class="pandatranslate-dashboard-metrics">
 				<div><dt><?php esc_html_e( 'Recorded source characters', 'pandatranslate' ); ?></dt><dd><?php echo esc_html( number_format_i18n( $this->repository->source_character_total() ) ); ?></dd></div>
-				<div><dt><?php esc_html_e( 'Enabled translation APIs', 'pandatranslate' ); ?></dt><dd><?php echo esc_html( number_format_i18n( count( $enabled_apis ) ) ); ?></dd></div>
+				<div>
+					<dt><?php esc_html_e( 'Enabled translation APIs', 'pandatranslate' ); ?></dt>
+					<dd>
+						<span><?php echo esc_html( number_format_i18n( count( $enabled_apis ) ) ); ?></span>
+						<?php if ( $enabled_apis ) : ?>
+							<ul class="pandatranslate-dashboard-apis">
+								<?php foreach ( $enabled_apis as $label ) : ?><li><?php echo esc_html( $label ); ?></li><?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
+					</dd>
+				</div>
 			</dl>
 		</section>
 		<?php
@@ -595,7 +608,7 @@ final class PandaTranslate_Plugin {
         $wp_source = class_exists( 'PandaTranslate_Source_Language' ) ? PandaTranslate_Source_Language::wordpress_code( $rows ) : $rows[0]['code'];
         if ( class_exists( 'PandaTranslate_Source_Language' ) && PandaTranslate_Source_Language::mismatch( $rows ) ) echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'The stored translation source differs from the WordPress website language. Changing it affects language assignments and URLs. Existing translations are retained and are not reversed automatically.', 'pandatranslate' ) . '</p><label><input type="checkbox" name="' . esc_attr( self::OPTION ) . '[adopt_wordpress_source]" value="1"> ' . esc_html__( 'Confirm adoption of the WordPress website language as the translation source.', 'pandatranslate' ) . '</label></div>';
 
-		echo '<div class="pandatranslate-languages-scroll"><table class="pandatranslate-languages"><colgroup><col style="width:42px"><col style="width:60px"><col style="width:96px"><col><col style="width:150px"><col style="width:110px"><col style="width:84px"><col style="width:98px"><col style="width:62px"><col style="width:58px"></colgroup><thead><tr>';
+		echo '<div class="pandatranslate-languages-scroll"><table class="pandatranslate-languages"><colgroup><col style="width:42px"><col style="width:60px"><col style="width:96px"><col><col style="width:150px"><col class="pandatranslate-formality-column"><col style="width:84px"><col style="width:98px"><col style="width:62px"><col style="width:58px"></colgroup><thead><tr>';
 		foreach ( array( '', __( 'Flag', 'pandatranslate' ), __( 'Schema', 'pandatranslate' ), __( 'Language', 'pandatranslate' ), __( 'Translation status', 'pandatranslate' ), __( 'Address style', 'pandatranslate' ), __( 'URL code', 'pandatranslate' ), __( 'Flag actions', 'pandatranslate' ), __( 'Active', 'pandatranslate' ), '' ) as $heading_index => $heading ) echo '<th scope="col">' . ( '' === $heading ? '<span class="screen-reader-text">' . esc_html( 0 === $heading_index ? __( 'Default language', 'pandatranslate' ) : __( 'Delete', 'pandatranslate' ) ) . '</span>' : esc_html( $heading ) ) . '</th>';
 		echo '</tr></thead><tbody data-language-rows data-language-limit="' . ( $limited ? '2' : '0' ) . '">';
 		foreach ( $rows as $index => $row ) $this->render_language_row( $index, $row, $catalog, 0 === $index, $stats[ $row['code'] ] ?? array() );

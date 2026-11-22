@@ -24,7 +24,7 @@ pt_dashboard_expect( $submenus === array_column( $submenu['pandatranslate'], 2 )
 
 $repository = new PandaTranslate_Repository();
 $before = $repository->source_character_total();
-$settings = array_replace( PandaTranslate_Plugin::get_settings(), array( 'google_v2_enabled' => 1, 'google_v3_enabled' => 0, 'deepl_enabled' => 1 ) );
+$settings = array_replace( PandaTranslate_Plugin::get_settings(), array( 'google_v2_enabled' => 1, 'google_v3_enabled' => 0, 'deepl_enabled' => 1, 'deepl_endpoint' => 'pro' ) );
 $override = static function () use ( $settings ) { return $settings; };
 add_filter( 'pre_option_' . PandaTranslate_Plugin::OPTION, $override, 999 );
 add_filter( 'pandatranslate_providers', '__return_empty_array', 999 );
@@ -54,7 +54,11 @@ try {
 	$metrics = $xpath->query( './/dd', $overview );
 	pt_dashboard_expect( strpos( $html, 'pandatranslate-overview-title' ) < strpos( $html, 'data-language-rows' ), 'Website overview precedes language settings' );
 	pt_dashboard_expect( number_format_i18n( $product_count + 1 ) === $metrics->item( 2 )->textContent, 'Dashboard counts published products and excludes drafts' );
-	pt_dashboard_expect( number_format_i18n( $total ) === $metrics->item( $metrics->length - 2 )->textContent && '2' === $metrics->item( $metrics->length - 1 )->textContent, 'Dashboard shows the recorded character total and the enabled APIs' );
+	$apis = $metrics->item( $metrics->length - 1 );
+	pt_dashboard_expect( number_format_i18n( $total ) === $metrics->item( $metrics->length - 2 )->textContent && '2' === $xpath->evaluate( 'string(./span)', $apis ), 'Dashboard shows the recorded character total and the enabled API count' );
+	$api_labels = array();
+	foreach ( $xpath->query( './ul/li', $apis ) as $entry ) $api_labels[] = $entry->textContent;
+	pt_dashboard_expect( array( 'Google Translate v2', 'DeepL API Pro (v2)' ) === $api_labels, 'Dashboard lists only enabled APIs with their edition and plan' );
 } finally {
 	$wpdb->query( 'ROLLBACK' );
 	remove_filter( 'pre_option_' . PandaTranslate_Plugin::OPTION, $override, 999 );
