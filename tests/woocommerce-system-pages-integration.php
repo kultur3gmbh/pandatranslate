@@ -5,6 +5,17 @@ $root = getenv( 'CONTACTPANDA_TEST_WP_ROOT' );
 if ( ! $root || ! is_file( $root . '/.panda-test-fixture' ) ) throw new RuntimeException( 'Disposable fixture required' );
 require $root . '/wp-load.php';
 function system_check($yes,$label){if(!$yes)throw new RuntimeException($label);echo 'PASS '.$label."\n";}
+// Minimal Event Tickets contract. No attendees, orders, or network requests are needed.
+class Tribe__Tickets__Attendee_Registration__Main {
+ public $on_page = false;
+ public function get_url() { return home_url( '/attendee-registration/' ); }
+ public function is_on_page() { return $this->on_page; }
+}
+function tribe( $service ) {
+ static $registration;
+ if ( 'tickets.attendee_registration' !== $service ) throw new LogicException( $service );
+ return $registration ?? ( $registration = new Tribe__Tickets__Attendee_Registration__Main() );
+}
 $keys=array(PandaTranslate_Plugin::OPTION,'rewrite_rules','pandatranslate_path_rules');$before=array();foreach($keys as $key)$before[$key]=get_option($key);
 $slugs=array('cart'=>'warenkorb','checkout'=>'kasse','myaccount'=>'konto');$meta=array();$ids=array();$flushes=0;
 foreach($slugs as $type=>$slug){$ids[$type]=wc_get_page_id($type);$meta[$ids[$type]]=get_post_meta($ids[$type],'_pandatranslate_slug_de',true);}
@@ -104,6 +115,30 @@ try{
   }
   system_check($beforeUnits===(int)$wpdb->get_var('SELECT COUNT(*) FROM '.PandaTranslate_Repository::table()),'Transaction rendering creates no captured units');
   system_check((PandaTranslate_Strings::block_labels('de')['woocommerce-repair-fixture']['Cart']??'')==='Warenkorb','Published block catalog available without reading cart values');
+  $registration = tribe( 'tickets.attendee_registration' );
+  $provider_query = '?tickets_provider=tribe_wooticket&step=details';
+  $redirect = $registration->get_url() . $provider_query;
+  $localized = home_url( '/de/attendee-registration/' ) . $provider_query;
+  system_check( apply_filters( 'wp_redirect', $redirect ) === $localized, 'Event Tickets redirect keeps the language and all parameters' );
+  system_check( apply_filters( 'wp_redirect', $localized ) === $localized, 'An already localized registration URL is stable' );
+  $external = 'https://example.org/attendee-registration/' . $provider_query;
+  system_check( apply_filters( 'wp_redirect', $external ) === $external, 'External registration URLs are untouched' );
+  $registration->on_page = true;
+  system_check( ! apply_filters( 'pandatranslate_capture_allowed', true ), 'Attendee registration is excluded from translation capture' );
+  $registration->on_page = false;
+
+  $account_url = PandaTranslate_Routing::system_url( get_permalink( $ids['myaccount'] ), 'de' );
+  $account_title = get_post_field( 'post_title', $ids['myaccount'] );
+  $avada_links = '<li class="avada-menu-login-box"><a href="' . esc_url( $account_url ) . '"><span class="menu-text">' . esc_html( $account_title ) . '</span></a></li>';
+  $avada_links .= '<li class="avada-menu-login-box"><a href="' . esc_url( $account_url ) . '"><span class="menu-text">Custom label</span></a></li>';
+  $avada_links .= '<li class="avada-menu-login-box"><a href="https://example.org/de/konto/"><span class="menu-text">' . esc_html( $account_title ) . '</span></a></li>';
+  $avada = '<html><body><nav><ul>' . $avada_links . '</ul></nav></body></html>';
+  $woo_label = static function ( $translation, $text, $context, $domain ) { return array( 'My account', 'Page title', 'woocommerce' ) === array( $text, $context, $domain ) ? 'Mein Konto' : $translation; };
+  add_filter( 'gettext_with_context', $woo_label, 99, 4 );
+  try {
+   $translated = PandaTranslate_Frontend::transform( $avada, 'de' );
+   system_check( 1 === substr_count( $translated, '>Mein Konto<' ) && false !== strpos( $translated, '>Custom label<' ) && false !== strpos( $translated, 'https://example.org/de/konto/' ), 'Avada localizes only the original label of the configured WooCommerce account link' );
+  } finally { remove_filter( 'gettext_with_context', $woo_label, 99 ); }
  }finally{
   WC()->cart->set_cart_contents( $original_cart );
   $GLOBALS['wp_query']=$oldQuery;foreach($fixtureKeys as $key)$wpdb->delete(PandaTranslate_Repository::table(),array('unit_key'=>$key));

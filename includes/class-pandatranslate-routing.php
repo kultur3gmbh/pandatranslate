@@ -10,6 +10,29 @@ final class PandaTranslate_Routing {
 		add_action( 'wp_loaded', array( __CLASS__, 'refresh_rules' ), 30 );
 		add_action( 'parse_request', array( __CLASS__, 'resolve_translated_slug' ), 20 );
 		add_filter( 'redirect_canonical', array( __CLASS__, 'canonical_redirect' ) );
+		add_filter( 'wp_redirect', array( __CLASS__, 'ticket_registration_redirect' ), 20 );
+		add_filter( 'woocommerce_get_checkout_url', array( __CLASS__, 'ticket_registration_redirect' ), 99 );
+		add_filter( 'pandatranslate_capture_allowed', array( __CLASS__, 'ticket_registration_capture' ) );
+	}
+	private static function ticket_registration() {
+		return function_exists( 'tribe' ) && class_exists( 'Tribe__Tickets__Attendee_Registration__Main' ) ? tribe( 'tickets.attendee_registration' ) : null;
+	}
+	public static function ticket_registration_redirect( $url ) {
+		if ( ! is_string( $url ) || ! class_exists( 'PandaTranslate_Frontend' ) ) return $url;
+		$language = PandaTranslate_Frontend::current_language();
+		if ( ! $language ) return $url;
+		$registration = self::ticket_registration();
+		if ( ! is_callable( array( $registration, 'get_url' ) ) ) return $url;
+		$path = (string) wp_parse_url( $url, PHP_URL_PATH );
+		$registration_path = (string) wp_parse_url( $registration->get_url(), PHP_URL_PATH );
+		if ( '' === trim( $registration_path, '/' ) || untrailingslashit( $path ) !== untrailingslashit( $registration_path ) ) return $url;
+		return PandaTranslate_Frontend::localize_url( $url, $language, true );
+	}
+	public static function ticket_registration_capture( $allowed ) {
+		if ( ! $allowed ) return false;
+		$registration = self::ticket_registration();
+		// Attendee forms can contain personal information, like checkout forms.
+		return ! is_callable( array( $registration, 'is_on_page' ) ) || ! $registration->is_on_page();
 	}
 	public static function query_vars( $vars ) { $vars[] = 'pt_lang'; return array_values( array_unique( $vars ) ); }
 	public static function rules( $rules ) {

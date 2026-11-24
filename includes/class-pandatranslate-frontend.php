@@ -181,7 +181,27 @@ final class PandaTranslate_Frontend {
 		$root = $doc->documentElement; $locale = self::locale( $row ); $root->setAttribute( 'lang', $locale ); $root->setAttribute( 'dir', self::direction( $locale ) ); if ( $root->hasAttribute( 'xml:lang' ) ) $root->setAttribute( 'xml:lang', $locale );
 		$base = ''; foreach ( $doc->getElementsByTagName( 'base' ) as $element ) if ( $element->hasAttribute( 'href' ) ) { $base = $element->getAttribute( 'href' ); break; }
 		self::transform_element( $root, $language, $base, false );
+		if ( $row && $language !== PandaTranslate_Plugin::get_settings()['source_language'] && false !== strpos( $html, 'avada-menu-login-box' ) ) self::avada_account_label( $doc, $language );
 		return PandaTranslate_HTML::restore_raw( PandaTranslate_HTML::remove_encoding_marker( $doc->saveHTML() ), $raw );
+	}
+	/** Avada can keep the source account page title as a custom menu label. */
+	private static function avada_account_label( DOMDocument $doc, $language ) {
+		if ( ! function_exists( 'wc_get_page_id' ) ) return;
+		$account_id = wc_get_page_id( 'myaccount' );
+		if ( $account_id <= 0 ) return;
+		$title = get_post_field( 'post_title', $account_id );
+		$url = get_permalink( $account_id );
+		if ( '' === $title || ! $url ) return;
+		$urls = array_map( 'untrailingslashit', array( $url, PandaTranslate_Routing::system_url( $url, $language ) ?: $url ) );
+		$xpath = new DOMXPath( $doc );
+		$labels = $xpath->query( '//nav[not(ancestor::main or ancestor::form)]//li[contains(concat(" ", normalize-space(@class), " "), " avada-menu-login-box ")]/a/span[contains(concat(" ", normalize-space(@class), " "), " menu-text ")]' );
+		foreach ( $labels as $label ) {
+			if ( trim( $label->textContent ) !== $title || ! in_array( untrailingslashit( $label->parentNode->getAttribute( 'href' ) ), $urls, true ) || PandaTranslate_HTML::translation_excluded( $label ) ) continue;
+			// phpcs:ignore WordPress.WP.I18n.TextDomainMismatch -- Use WooCommerce's existing translations for its own default page title.
+			$translated = _x( 'My account', 'Page title', 'woocommerce' );
+			if ( 'My account' === $translated && 0 !== strpos( self::locale( self::row( $language ) ), 'en' ) ) continue;
+			$label->textContent = $translated;
+		}
 	}
 	private static function transform_element( DOMElement $node, $language, $base, $in_switcher ) {
 		if ( self::excluded_element( $node ) ) return;
