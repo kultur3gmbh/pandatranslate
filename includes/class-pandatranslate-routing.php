@@ -29,11 +29,12 @@ final class PandaTranslate_Routing {
 	}
 	public static function refresh_rules() {
 		$languages = array_map( function ( $row ) { return array( 'code' => $row['code'], 'slug' => $row['slug'], 'active' => ! empty( $row['active'] ) ); }, PandaTranslate_Plugin::language_rows() );
-		$signature = md5( wp_json_encode( array( 'paths-v3-system-pages', $languages, PandaTranslate_Plugin::get_settings()['source_language'], PandaTranslate_Plugin::get_settings()['url_mode'], self::system_pages(), self::endpoints(), get_option( 'permalink_structure' ), get_option( 'show_on_front' ), get_option( 'page_on_front' ), get_option( 'pandatranslate_url_bases' ), defined( 'PANDATRANSLATE_VERSION' ) ? PANDATRANSLATE_VERSION : '', defined( 'PANDATRANSLATE_MULTILINGUAL_VERSION' ) ? PANDATRANSLATE_MULTILINGUAL_VERSION : '', defined( 'WC_VERSION' ) ? WC_VERSION : '' ) ) );
-		if ( get_option( 'pandatranslate_path_rules' ) === $signature && ! array_diff_assoc( self::system_rules(), (array) get_option( 'rewrite_rules', array() ) ) ) return;
+		$system_rules = self::system_rules();
+		$signature = md5( wp_json_encode( array( 'paths-v4-system-pages', $languages, PandaTranslate_Plugin::get_settings()['source_language'], PandaTranslate_Plugin::get_settings()['url_mode'], $system_rules, get_option( 'permalink_structure' ), get_option( 'show_on_front' ), get_option( 'page_on_front' ), get_option( 'pandatranslate_url_bases' ), defined( 'PANDATRANSLATE_VERSION' ) ? PANDATRANSLATE_VERSION : '', defined( 'PANDATRANSLATE_MULTILINGUAL_VERSION' ) ? PANDATRANSLATE_MULTILINGUAL_VERSION : '', defined( 'WC_VERSION' ) ? WC_VERSION : '' ) ) );
+		if ( get_option( 'pandatranslate_path_rules' ) === $signature && ! array_diff_assoc( $system_rules, (array) get_option( 'rewrite_rules', array() ) ) ) return;
 		flush_rewrite_rules( false );
 		// A deferred or blocked flush must not mark stale routes as current.
-		if ( array_diff_assoc( self::system_rules(), (array) get_option( 'rewrite_rules', array() ) ) ) return;
+		if ( array_diff_assoc( $system_rules, (array) get_option( 'rewrite_rules', array() ) ) ) return;
 		update_option( 'pandatranslate_path_rules', $signature, false );
 	}
 	/** Published WooCommerce pages and their static translated slugs; no customer/session data. */
@@ -151,7 +152,10 @@ final class PandaTranslate_Routing {
 		return $path;
 	}
 	public static function resolve_translated_slug( $wp ) {
-		$language = $wp->query_vars['pt_lang'] ?? ''; if ( ! $language ) return;
+		$language = $wp->query_vars['pt_lang'] ?? '';
+		// A cache or another rewrite generator can omit or shadow a persisted rule. Recover only an exact, configured WooCommerce route.
+		if ( false !== strpos( $wp->request, '/' ) && self::resolve_system_request( $wp, $language ) ) return;
+		if ( ! $language ) return;
 		// Explicit system routes already resolve the original page and preserve Woo endpoint variables.
 		if ( ! empty( $wp->query_vars['page_id'] ) && isset( self::system_pages()[(int) $wp->query_vars['page_id']] ) ) return;
 		$path = self::original_path( home_url( '/' . $wp->request ) );
@@ -178,6 +182,23 @@ final class PandaTranslate_Routing {
 			$wp->query_vars[ 'page' === $post->post_type ? 'page_id' : 'p' ] = $post->ID;
 			return;
 		}
+	}
+
+	private static function resolve_system_request( $wp, $language ) {
+		$prefix = explode( '/', $wp->request, 2 )[0];
+		$source = PandaTranslate_Plugin::get_settings()['source_language'];
+		foreach ( PandaTranslate_Plugin::language_rows() as $row ) {
+			if ( empty( $row['active'] ) || $source === $row['code'] || $row['slug'] !== $prefix || ( $language && $language !== $row['code'] ) ) continue;
+			foreach ( self::system_rules() as $pattern => $query ) {
+				if ( ! preg_match( '#' . $pattern . '#', $wp->request, $matches ) && ! preg_match( '#' . $pattern . '#', urldecode( $wp->request ), $matches ) ) continue;
+				parse_str( WP_MatchesMapRegex::apply( substr( $query, strlen( 'index.php?' ) ), $matches ), $route );
+				foreach ( array( 'error', 'name', 'pagename', 'p', 'post_type', 'attachment', 'attachment_id' ) as $key ) unset( $wp->query_vars[$key] );
+				$wp->query_vars = $route + $wp->query_vars;
+				return true;
+			}
+			break;
+		}
+		return false;
 	}
 	public static function canonical_redirect( $redirect ) { return get_query_var( 'pt_lang' ) ? false : $redirect; }
 }

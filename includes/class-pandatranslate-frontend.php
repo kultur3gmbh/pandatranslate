@@ -132,13 +132,9 @@ final class PandaTranslate_Frontend {
 		$public_title = '';
 		if ( function_exists( 'wc_get_page_id' ) && is_singular() && in_array( (int) get_queried_object_id(), array( (int) wc_get_page_id( 'cart' ), (int) wc_get_page_id( 'checkout' ), (int) wc_get_page_id( 'myaccount' ) ), true ) ) $public_title = ' | //*[contains(concat(" ", normalize-space(@class), " "), " wp-block-post-title ")]';
 		foreach ( $xpath->query( '//header[not(ancestor::main or ancestor::form or ancestor::header)] | //footer[not(ancestor::main or ancestor::form or ancestor::footer)] | //nav[not(ancestor::main or ancestor::form or ancestor::header or ancestor::footer)]' . $public_title ) as $root ) {
-			foreach ( $xpath->query( './/text()', $root ) as $node ) {
-				$parent = $node->parentNode; if ( self::excluded( $parent ) || PandaTranslate_HTML::translation_excluded( $parent ) ) continue;
-				$private = false;
-				for ( $p = $parent; $p instanceof DOMElement; $p = $p->parentNode ) if ( in_array( $p->tagName, array( 'form', 'script', 'style', 'input', 'textarea', 'select' ), true ) || preg_match( '/(?:^|\s)(?:woocommerce-cart|woocommerce-checkout|woocommerce-MyAccount-content|wc-block-cart|wc-block-checkout)(?:\s|$)/', $p->getAttribute( 'class' ) ) ) { $private = true; break; }
-				if ( $private ) continue;
-				$text = trim( $node->nodeValue );
-				if ( '' !== $text ) $nodes[] = $node;
+			foreach ( $xpath->query( './/text() | ./@aria-label | .//@aria-label', $root ) as $node ) {
+				$parent = $node instanceof DOMAttr ? $node->ownerElement : $node->parentNode;
+				if ( ! self::private_chrome_node( $parent ) && '' !== trim( $node->nodeValue ) ) $nodes[] = $node;
 			}
 		}
 		// Imported public dictionaries can lack page-context records. Query only the whitelisted chrome text,
@@ -150,10 +146,23 @@ final class PandaTranslate_Frontend {
 		}
 		foreach ( $nodes as $node ) {
 			$text = trim( $node->nodeValue ); $value = $dictionary[$text] ?? ( $memory ? $memory->lookup( $text ) : null );
-			if ( null !== $value && $value === wp_strip_all_tags( $value ) ) { $node->nodeValue = str_replace( $text, $value, $node->nodeValue ); $changed = true; }
+			if ( null !== $value && $value === wp_strip_all_tags( $value ) ) {
+				if ( $node instanceof DOMAttr ) $node->ownerElement->setAttribute( $node->name, html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+				else $node->nodeValue = str_replace( $text, html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' ), $node->nodeValue );
+				$changed = true;
+			}
 		}
 		if ( ! $changed ) return $html;
 		return PandaTranslate_HTML::restore_raw( PandaTranslate_HTML::remove_encoding_marker( $doc->saveHTML() ), $raw );
+	}
+
+	private static function private_chrome_node( $node ) {
+		if ( self::excluded( $node ) || PandaTranslate_HTML::translation_excluded( $node ) ) return true;
+		// WooCommerce marks the whole body as a cart or checkout. Only nested transaction regions are private here.
+		for ( $parent = $node; $parent instanceof DOMElement && 'body' !== $parent->tagName; $parent = $parent->parentNode ) {
+			if ( in_array( $parent->tagName, array( 'form', 'script', 'style', 'input', 'textarea', 'select' ), true ) || preg_match( '/(?:^|\s)(?:woocommerce-cart|woocommerce-checkout|woocommerce-MyAccount-content|wc-block-cart|wc-block-checkout|wc-block-mini-cart__drawer|widget_shopping_cart_content)(?:\s|$)/', $parent->getAttribute( 'class' ) ) ) return true;
+		}
+		return false;
 	}
 
 	/** Decode visible symbol entities without turning escaped markup or attribute syntax into HTML. */
