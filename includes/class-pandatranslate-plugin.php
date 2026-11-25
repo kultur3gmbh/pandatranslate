@@ -1151,7 +1151,15 @@ final class PandaTranslate_Plugin {
 	private function provider_usage() { $total = array( 'characters' => 0, 'words' => 0 ); foreach ( (array) get_option( self::PROVIDER_LOG_OPTION, array() ) as $entry ) if ( 'success' === ( $entry['result'] ?? '' ) ) { $total['characters'] += absint( $entry['characters'] ?? 0 ); $total['words'] += absint( $entry['words'] ?? 0 ); } return $total; }
 	private static function provider_language( $language ) { $parts = explode( '-', strtolower( (string) $language ) ); return $parts[0]; }
 
-	public function queue_new_content( $post_id, $post, $update ) { $s = $this->settings(); $api_id = PandaTranslate_Providers::default_id(); if ( empty( $s['auto_enabled'] ) || ! $api_id || 'publish' !== $post->post_status || wp_is_post_revision( $post_id ) || ! in_array( $post->post_type, (array) $s['auto_post_types'], true ) ) return; if ( ! wp_next_scheduled( 'pandatranslate_process_post', array( $post_id, $api_id ) ) ) wp_schedule_single_event( time() + 10, 'pandatranslate_process_post', array( $post_id, $api_id ) ); }
+	public function queue_new_content( $post_id, $post, $update ) {
+		$settings = $this->settings();
+		// Both backend editors and frontend builders that save a WordPress post arrive here.
+		if ( empty( $settings['auto_enabled'] ) || 'publish' !== $post->post_status || '' !== $post->post_password || wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) || ! in_array( $post->post_type, (array) $settings['auto_post_types'], true ) ) return;
+		$api_id = PandaTranslate_Providers::default_id();
+		if ( ! $api_id ) return;
+		$args = array( $post_id, $api_id );
+		if ( ! wp_next_scheduled( 'pandatranslate_process_post', $args ) ) wp_schedule_single_event( time() + 10, 'pandatranslate_process_post', $args );
+	}
 	public function queue_site() {
 		if ( ! current_user_can( 'manage_options' ) ) wp_die( esc_html__( 'Permission required to start this translation run.', 'pandatranslate' ) );
 		check_admin_referer( 'pandatranslate_translate_site', 'pandatranslate_site_nonce' );
