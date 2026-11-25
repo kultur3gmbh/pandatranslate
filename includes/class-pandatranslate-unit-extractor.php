@@ -22,6 +22,7 @@ final class PandaTranslate_Unit_Extractor {
 		$toolbar = $document->getElementById( 'wpadminbar' );
 		foreach ( iterator_to_array( $xpath->query( $this->selector ) ) as $node ) {
 			if ( $this->has_block_child( $node ) || $this->is_excluded( $node ) ) continue;
+			if ( in_array( $node->nodeName, array( 'li', 'a' ), true ) && $xpath->query( './a/descendant-or-self::*[@data-pandatranslate-menu-label] | ./span[@data-pandatranslate-menu-label]', $node )->length ) continue;
 			$is_input = 'input' === strtolower( $node->nodeName );
 			$is_label_text = 'span' === strtolower( $node->nodeName );
 			$source   = $is_input ? $node->getAttribute( 'value' ) : $this->inner_html( $node );

@@ -75,6 +75,10 @@ final class PandaTranslate_Translation_Jobs {
 		}
 		$repository = new PandaTranslate_Repository();
 		if ( 'prepare' === $phase ) {
+			if ( ! $cursor && class_exists( 'PandaTranslate_Menu_Labels' ) ) {
+				$menus = PandaTranslate_Menu_Labels::collect( $language );
+				if ( is_wp_error( $menus ) ) return $menus;
+			}
 			$seeded = $repository->seed_language( $language, $cursor ); if ( is_wp_error( $seeded ) ) return $seeded;
 			$result['phase'] = $seeded['done'] ? 'translate' : 'prepare'; $result['cursor'] = $seeded['done'] ? 0 : $seeded['cursor'];
 			$result['prepared'] += $seeded['processed'] ?? 0;

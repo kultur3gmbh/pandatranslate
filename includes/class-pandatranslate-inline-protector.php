@@ -24,6 +24,45 @@ final class PandaTranslate_Inline_Protector {
 		return array( 'text' => $protected, 'tokens' => $tokens );
 	}
 
+	/** Map existing inline markup back to the original tokens before exposing editable text runs. */
+	public static function editor_view( $source_html, $translated_html ) {
+		$source = self::protect( $source_html );
+		$current = '' !== $translated_html ? self::protect( $translated_html ) : $source;
+		$available = $source['tokens'];
+		$mapping = array();
+		foreach ( $current['tokens'] as $token => $value ) {
+			$match = array_search( $value, $available, true );
+			if ( false === $match ) break;
+			$mapping[ $token ] = $match;
+			unset( $available[ $match ] );
+		}
+		$text = strtr( $current['text'], $mapping );
+		if ( $available || count( $mapping ) !== count( $current['tokens'] ) || is_wp_error( self::validate( $text, $source['tokens'] ) ) ) {
+			// An older import can have a different inline layout. Keep the original
+			// structure and show the available translation in its first text run.
+			$plain = wp_strip_all_tags( $translated_html );
+			foreach ( $source['tokens'] as $value ) {
+				if ( '<' !== substr( $value, 0, 1 ) ) $plain = str_replace( $value, '', $plain );
+			}
+			$parts = preg_split( '/(\[\[PT:\d+:(?:OPEN|CLOSE|VOID)\]\])/', $source['text'], -1, PREG_SPLIT_DELIM_CAPTURE );
+			$inserted = false;
+			foreach ( $parts as $index => $part ) {
+				if ( $index % 2 || '' === trim( $part ) ) continue;
+				$parts[ $index ] = $inserted ? '' : trim( $plain );
+				$inserted = true;
+			}
+			$text = implode( '', $parts );
+		}
+		$visible_source = preg_replace( '~<br\s*/?>~i', "\n", $source_html );
+		return array(
+			'source' => html_entity_decode( wp_strip_all_tags( $visible_source ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+			'text' => wp_strip_all_tags( $text ),
+			'preview_tokens' => array_map( static function ( $token ) {
+				return wp_kses( $token, self::allowed_html() );
+			}, $source['tokens'] ),
+		);
+	}
+
 	public static function restore( $translated, array $tokens ) {
 		$validation = self::validate( $translated, $tokens );
 		if ( is_wp_error( $validation ) ) return $validation;

@@ -36,3 +36,13 @@ $empty = PandaTranslate_Inline_Protector::protect('Legal sentence.<span class="e
 assert(count($empty['tokens'])===1 && strpos($empty['text'], ':VOID]]')!==false);
 assert(PandaTranslate_Inline_Protector::restore($empty['text'],$empty['tokens'])==='Legal sentence.<span class="empty"></span>');
 echo "Empty inline formatting is an atomic marker: ok\n";
+
+
+$button = '<span class="icon"></span><strong>Das Haus</strong>';
+$view = PandaTranslate_Inline_Protector::editor_view( $button, '<span class="icon"></span><strong>La casa</strong>' );
+assert( 'Das Haus' === $view['source'] );
+assert( preg_replace( PandaTranslate_Inline_Protector::TOKEN_PATTERN, '', $view['text'] ) === 'La casa' );
+assert( '<span class="icon"></span><strong>La maison</strong>' === PandaTranslate_Inline_Protector::restore( str_replace( 'La casa', 'La maison', $view['text'] ), PandaTranslate_Inline_Protector::protect( $button )['tokens'] ) );
+$older = PandaTranslate_Inline_Protector::editor_view( $button, '<abbr title="French">La maison</abbr>' );
+assert( 'La maison' === preg_replace( PandaTranslate_Inline_Protector::TOKEN_PATTERN, '', $older['text'] ) );
+echo "Editor text is readable and links, empty icons and inline formatting survive round trips: ok\n";

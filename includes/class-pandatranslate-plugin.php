@@ -917,6 +917,13 @@ final class PandaTranslate_Plugin {
 		wp_enqueue_script( 'pandatranslate-editor', PANDATRANSLATE_URL . 'assets/editor.js', array( 'contactpanda-admin-ui', 'pandatranslate-editor-request' ), PANDATRANSLATE_VERSION, true );
 		wp_enqueue_script( 'pandatranslate-media-editor', PANDATRANSLATE_URL . 'assets/media-editor.js', array( 'pandatranslate-editor', 'contactpanda-admin-ui' ), PANDATRANSLATE_VERSION, true );
 		wp_localize_script( 'pandatranslate-media-editor', 'PandaTranslateMedia', array( 'url' => rest_url( 'pandatranslate/v1/media' ), 'labels' => array( 'title' => __( 'Image translation', 'pandatranslate' ), 'source' => __( 'Original image', 'pandatranslate' ), 'alt' => __( 'Alternative text', 'pandatranslate' ), 'titleText' => __( 'Image title', 'pandatranslate' ), 'caption' => __( 'Caption', 'pandatranslate' ), 'save' => __( 'Save image translation', 'pandatranslate' ), 'remove' => __( 'Remove image mapping', 'pandatranslate' ), 'saved' => __( 'Saved.', 'pandatranslate' ), 'failed' => __( 'The image mapping could not be saved.', 'pandatranslate' ) ) ) );
+		$languages = array();
+		foreach ( self::language_rows() as $row ) {
+			if ( ! PandaTranslate_Edition::allows_language( $row['code'] ) ) continue;
+			$native = PandaTranslate_Features::language_name( $row['code'] );
+			$display = PandaTranslate_Features::language_name( $row['code'], false, get_user_locale() );
+			$languages[ $row['code'] ] = 0 === strcasecmp( $native, $display ) ? $native : $native . ' (' . $display . ')';
+		}
 		wp_localize_script( 'pandatranslate-editor', 'PandaTranslateEditor', array(
 			'dynamicUrl' => rest_url( 'pandatranslate/v1/dynamic' ), 'postId' => get_queried_object_id(), 'captureAllowed' => apply_filters( 'pandatranslate_capture_allowed', true ),
 			'restUrl' => esc_url_raw( rest_url( 'pandatranslate/v1/unit' ) ),
@@ -928,13 +935,14 @@ final class PandaTranslate_Plugin {
 			'defaultApi' => PandaTranslate_Providers::default_id(),
 			'nonce' => wp_create_nonce( 'wp_rest' ),
 			'language' => $this->target_language() ?: $s['default_target_language'],
+			'languages' => $languages,
 			'statuses' => array( 'untranslated', 'automatic', 'reviewed', 'published' ),
 			'i18n' => array(
 				'requestNetworkError' => __( 'The connection was interrupted. Reload the editor and check the saved translation before retrying.', 'pandatranslate' ),
 				'requestSessionError' => __( 'The login session could not be renewed. Sign in and reload the editor.', 'pandatranslate' ),
 				'requestOriginError' => __( 'The editor and API addresses use different domains. Check the WordPress website addresses.', 'pandatranslate' ),
 				'requestResponseError' => __( 'The website returned an unexpected API response. Check the connection and server logs.', 'pandatranslate' ),
-				'saving' => __( 'Saving…', 'pandatranslate' ), 'saved' => __( 'Saved.', 'pandatranslate' ), 'translating' => __( 'Translating…', 'pandatranslate' ), 'close' => __( 'Close', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => 'Panda Translate', 'previewNotice' => __( 'This preview includes drafts. Only published translations appear on the public page.', 'pandatranslate' ), 'publicPage' => __( 'View public page', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => /* translators: %s: selected translation provider label. */
+				'saving' => __( 'Saving…', 'pandatranslate' ), 'saved' => __( 'Saved.', 'pandatranslate' ), 'translating' => __( 'Translating…', 'pandatranslate' ), 'close' => __( 'Close', 'pandatranslate' ), 'status' => __( 'Status', 'pandatranslate' ), 'statusLabels' => array( 'untranslated' => __( 'Not translated', 'pandatranslate' ), 'automatic' => __( 'Automatically translated', 'pandatranslate' ), 'reviewed' => __( 'Reviewed', 'pandatranslate' ), 'published' => __( 'Published', 'pandatranslate' ) ), 'title' => 'Panda Translate', 'previewNotice' => __( 'This preview includes drafts. Only published translations appear on the public page.', 'pandatranslate' ), 'publicPage' => __( 'View public page', 'pandatranslate' ), 'source' => __( 'Source', 'pandatranslate' ), 'translation' => __( 'Translation', 'pandatranslate' ), 'save' => __( 'Save draft', 'pandatranslate' ), 'publish' => __( 'Publish', 'pandatranslate' ), 'automatic' => /* translators: %s: selected translation provider label. */
 		__( 'Translate with %s', 'pandatranslate' ), 'automaticPage' => /* translators: %s: selected translation provider label. */
 		__( 'Translate entire page with %s', 'pandatranslate' ), 'apiLabel' => __( 'Translation API', 'pandatranslate' ), 'noApi' => __( 'No translation API configured', 'pandatranslate' ), 'select' => __( 'Select visible content to translate it.', 'pandatranslate' ), 'progressTitle' => __( 'Translating current page', 'pandatranslate' ), 'progressDone' => __( 'translated', 'pandatranslate' ), 'progressFailed' => __( 'failed', 'pandatranslate' ), 'cancelLabel' => __( 'Cancel translation', 'pandatranslate' ), 'cancelled' => __( 'Translation cancelled. Saved translations are retained.', 'pandatranslate' ), 'cancelling' => __( 'Stopping after the current request…', 'pandatranslate' ), 'repeatedErrors' => __( 'Stopped after repeated errors.', 'pandatranslate' ) ),
 		) );
@@ -958,7 +966,28 @@ final class PandaTranslate_Plugin {
 		$key = sanitize_text_field( $request['key'] ); $language = sanitize_key( $request['language'] );
 		$row = $this->repository->find( $key, $language );
 		if ( $row ) $row['revision'] = PandaTranslate_Repository::revision( $row );
+		if ( ! empty( $request['editor_view'] ) && PandaTranslate_Edition::allows_language( $language ) ) {
+			$reference = $row ?: $this->editor_reference( $request );
+			if ( $reference ) {
+				$row = $row ?: array( 'status' => 'untranslated', 'translated_html' => '', 'source_html' => $reference['source_html'], 'source_hash' => $reference['source_hash'] );
+				$row['editor'] = PandaTranslate_Inline_Protector::editor_view( $reference['source_html'], $row['translated_html'] );
+			}
+		}
 		return rest_ensure_response( $row ?: array( 'status' => 'untranslated', 'translated_html' => '' ) );
+	}
+
+	private function editor_reference( WP_REST_Request $request ) {
+		$language = sanitize_key( $request['reference_language'] ?? '' );
+		if ( ! PandaTranslate_Edition::allows_language( $language ) ) return null;
+		return $this->repository->find( sanitize_text_field( $request['key'] ), $language, sanitize_text_field( $request['source_hash'] ?? '' ) );
+	}
+
+	private function create_editor_row( array $source, $language ) {
+		$unit = array( 'key' => $source['unit_key'], 'source_hash' => $source['source_hash'], 'source_html' => $source['source_html'], 'source_kind' => $source['source_kind'], 'source_domain' => $source['source_domain'] );
+		$saved = $this->repository->save( $unit, $language, '', 'untranslated', '', true );
+		if ( is_wp_error( $saved ) ) return $saved;
+		if ( ! $saved ) return new WP_Error( 'pandatranslate_conflict', __( 'The translation changed. Reload before saving.', 'pandatranslate' ), array( 'status' => 409 ) );
+		return $this->repository->find( $unit['key'], $language, $unit['source_hash'] );
 	}
 
 	public function save_unit( WP_REST_Request $request ) {
@@ -969,21 +998,37 @@ final class PandaTranslate_Plugin {
 		if ( 'published' === $status && ! current_user_can( 'publish_posts' ) && ! current_user_can( 'manage_options' ) ) return new WP_Error( 'pandatranslate_publish_denied', __( 'Publishing permission is required.', 'pandatranslate' ), array( 'status' => 403 ) );
 		if ( ! preg_match( '/^[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3}$/', $language ) ) return new WP_Error( 'pandatranslate_language', __( 'Invalid target language.', 'pandatranslate' ), array( 'status' => 400 ) );
 		$known = $this->repository->find( $unit['key'], $language );
-		if ( ! $known || ! hash_equals( $known['source_hash'], $unit['source_hash'] ) ) return new WP_Error( 'pandatranslate_source_changed', __( 'The source content changed. Reload the preview before saving.', 'pandatranslate' ), array( 'status' => 409 ) );
-		$unit['source_html'] = $known['source_html'];
-		if ( ! hash_equals( PandaTranslate_Repository::revision( $known ), (string) $request['revision'] ) ) return new WP_Error( 'pandatranslate_conflict', __( 'The translation changed. Reload before saving.', 'pandatranslate' ), array( 'status' => 409 ) );
+		$source = $known ?: ( '' === (string) $request['revision'] ? $this->editor_reference( $request ) : null );
+		if ( ! $source || ! hash_equals( $source['source_hash'], $unit['source_hash'] ) ) return new WP_Error( 'pandatranslate_source_changed', __( 'The source content changed. Reload the preview before saving.', 'pandatranslate' ), array( 'status' => 409 ) );
+		$unit['source_html'] = $source['source_html'];
+		if ( $known && ! hash_equals( PandaTranslate_Repository::revision( $known ), (string) $request['revision'] ) ) return new WP_Error( 'pandatranslate_conflict', __( 'The translation changed. Reload before saving.', 'pandatranslate' ), array( 'status' => 409 ) );
 		$protected = PandaTranslate_Inline_Protector::protect( $unit['source_html'] );
-		$restored = PandaTranslate_Inline_Protector::restore( (string) $request['translated_text'], $protected['tokens'] );
+		$restored = $known && ! empty( $request['preserve_translation'] ) && '' !== $known['translated_html'] ? $known['translated_html'] : PandaTranslate_Inline_Protector::restore( (string) $request['translated_text'], $protected['tokens'] );
 		if ( is_wp_error( $restored ) ) return $restored;
+		if ( ! $known ) {
+			$known = $this->create_editor_row( $source, $language );
+			if ( is_wp_error( $known ) ) return $known;
+		}
 		$result = $this->repository->save_revision( $known, $restored, $status );
-		return is_wp_error( $result ) ? $result : rest_ensure_response( array( 'saved' => true, 'translated_html' => $restored, 'status' => $status, 'revision' => PandaTranslate_Repository::revision( $result ) ) );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( array( 'saved' => true, 'translated_html' => $restored, 'status' => $status, 'revision' => PandaTranslate_Repository::revision( $result ), 'editor' => PandaTranslate_Inline_Protector::editor_view( $unit['source_html'], $restored ) ) );
 	}
 
 	public function auto_translate_unit( WP_REST_Request $request ) {
 		if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'manage_options' ) ) return new WP_Error( 'pandatranslate_api_denied', __( 'Translation API permission is required.', 'pandatranslate' ), array( 'status' => 403 ) );
 		if ( true !== rest_sanitize_boolean( $request['confirm'] ) ) return new WP_Error( 'pandatranslate_confirmation', __( 'Confirm the paid Google request.', 'pandatranslate' ), array( 'status' => 400 ) );
 		$can_publish = current_user_can( 'publish_posts' ) || current_user_can( 'manage_options' );
-		$result = self::auto_translate_known( sanitize_text_field( $request['key'] ), sanitize_key( $request['language'] ), sanitize_key( $request['api'] ?? '' ), ! $can_publish );
+		$key = sanitize_text_field( $request['key'] );
+		$language = sanitize_key( $request['language'] );
+		$row = $this->repository->find( $key, $language );
+		if ( ! $row && PandaTranslate_Edition::allows_language( $language ) ) {
+			$reference = $this->editor_reference( $request );
+			if ( $reference ) {
+				$row = $this->create_editor_row( $reference, $language );
+				if ( is_wp_error( $row ) ) return $row;
+			}
+		}
+		$result = self::auto_translate_known( $key, $language, sanitize_key( $request['api'] ?? '' ), ! $can_publish );
+		if ( $row && ! is_wp_error( $result ) ) $result['editor'] = PandaTranslate_Inline_Protector::editor_view( $row['source_html'], $result['translated_html'] );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
@@ -1026,6 +1071,7 @@ final class PandaTranslate_Plugin {
 		$repository = new PandaTranslate_Repository();
 		$row = $repository->find( $key, $language );
 		if ( ! $row ) return new WP_Error( 'pandatranslate_unit_missing', __( 'Open the page in the visual editor before translating this unit.', 'pandatranslate' ) );
+		if ( 'menu' === ( $row['source_kind'] ?? '' ) && ! PandaTranslate_Menu_Labels::is_current( $row, $language ) ) return array( 'skipped' => true );
 		$s = self::get_settings();
 		if ( $draft_only ) {
 			if ( 'published' === $row['status'] ) return new WP_Error( 'pandatranslate_publish_denied', __( 'Publishing permission is required.', 'pandatranslate' ), array( 'status' => 403 ) );
@@ -1064,6 +1110,7 @@ final class PandaTranslate_Plugin {
 		foreach ( $keys as $key ) {
 			$row = $rows[$key] ?? null;
 			if ( ! $row ) { $out[$key] = new WP_Error( 'pandatranslate_unit_missing', __( 'Open the page in the visual editor before translating this unit.', 'pandatranslate' ) ); continue; }
+			if ( 'menu' === ( $row['source_kind'] ?? '' ) && ! PandaTranslate_Menu_Labels::is_current( $row, $language ) ) { $out[$key] = array( 'skipped' => true ); continue; }
 			if ( 'missing' === $mode && 'untranslated' !== $row['status'] && '' !== trim( $row['translated_html'] ) ) { $out[$key] = array( 'skipped' => true ); continue; }
 			$protected = PandaTranslate_Template_Protector::prepare_row( $row ); $glossary = PandaTranslate_Features::protect_glossary( $protected['text'], $language );
 			$source = 'gettext' === ( $row['source_kind'] ?? '' ) ? '' : self::provider_language( $s['source_language'] );

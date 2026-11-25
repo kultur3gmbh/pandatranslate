@@ -2,140 +2,450 @@
 	'use strict';
 	var config = window.PandaTranslateEditor;
 	if (!config || !window.PandaTranslateRequest) return;
-	var request = window.PandaTranslateRequest.create(config), automaticBusy = false;
-
-	var selected = null, selectedRevision = '', selectionGeneration = 0;
-	document.addEventListener('pandatranslate:media-selected',function(){if(selected)selected.classList.remove('pandatranslate-selected');selected=null;selectedRevision='';selectionGeneration++;});
+	var request = window.PandaTranslateRequest.create(config),
+		i18n = config.i18n;
+	var selected = null,
+		generation = 0,
+		automaticBusy = false;
+	var languages = new Map();
+	var tokenPattern = /(\[\[PT:\d+:(?:OPEN|CLOSE|VOID)\]\])/;
 	var shell = document.createElement('aside');
 	shell.className = 'pandatranslate-panel is-open';
 	shell.setAttribute('translate', 'no');
-	shell.innerHTML = '<header><h2></h2><button type="button" class="pandatranslate-close contactpanda-list-action" aria-label="Close"><span class="dashicons dashicons-no-alt"></span></button></header>' +
-		'<div class="pandatranslate-empty"></div><button type="button" class="contactpanda-large-action pandatranslate-button pandatranslate-page-button" data-automatic-page><span class="dashicons dashicons-translation"></span><span></span></button><form hidden><label><span data-label="source"></span><textarea data-source readonly></textarea></label><label><span data-label="translation"></span><textarea data-translation></textarea></label><label><span>Status</span><select data-status><option value="untranslated">Not translated</option><option value="automatic">Automatically translated</option><option value="reviewed">Reviewed</option><option value="published">Published</option></select></label><div class="pandatranslate-actions"><button type="button" class="contactpanda-large-action pandatranslate-button" data-automatic><span class="dashicons dashicons-translation"></span><span></span></button><button type="submit" class="contactpanda-large-action pandatranslate-button" data-contactpanda-action="save" data-contactpanda-action-mode="labelled"><span class="dashicons dashicons-saved"></span><span></span></button><button type="button" class="contactpanda-large-action is-primary pandatranslate-button" data-publish data-contactpanda-action="publish" data-contactpanda-action-mode="labelled"><span class="dashicons dashicons-megaphone"></span><span></span></button></div><p data-message role="status"></p></form>';
+	shell.innerHTML =
+		'<header><h2></h2><button type="button" class="pandatranslate-close contactpanda-list-action"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>' +
+		'<p data-preview></p><label class="pandatranslate-editor-api"><span></span><select></select></label>' +
+		'<button type="button" class="contactpanda-large-action pandatranslate-button pandatranslate-page-button" data-automatic-page><span class="dashicons dashicons-translation" aria-hidden="true"></span><span></span></button>' +
+		'<section class="pandatranslate-page-progress" hidden><strong data-progress-title></strong><span data-progress-count></span><span class="pandatranslate-progress-track"><i data-progress-bar></i></span><small data-progress-detail></small></section>' +
+		'<p class="pandatranslate-empty" role="status"></p><form hidden><label><span data-source-label></span><textarea data-source readonly rows="2"></textarea></label><div data-languages></div></form>';
 	document.body.appendChild(shell);
-	shell.querySelector('h2').textContent = config.i18n.title;
-	var preview = document.createElement('p');
-	preview.textContent = config.i18n.previewNotice + ' ';
+
+	function setOpen(open) {
+		shell.classList.toggle('is-open', open);
+		document.body.classList.toggle('pandatranslate-editor-open', open);
+		shell.inert = !open;
+	}
+	setOpen(true);
+	shell.querySelector('h2').textContent = i18n.title;
+	var close = shell.querySelector('.pandatranslate-close');
+	close.setAttribute('aria-label', i18n.close);
+	close.addEventListener('click', function () {
+		setOpen(false);
+	});
+	var preview = shell.querySelector('[data-preview]');
+	preview.textContent = i18n.previewNotice + ' ';
 	if (config.publicUrl) {
-		var publicLink = document.createElement('a');
-		publicLink.href = config.publicUrl;
-		publicLink.target = '_blank';
-		publicLink.rel = 'noopener';
-		publicLink.textContent = config.i18n.publicPage;
-		preview.appendChild(publicLink);
+		var link = document.createElement('a');
+		link.href = config.publicUrl;
+		link.target = '_blank';
+		link.rel = 'noopener';
+		link.textContent = i18n.publicPage;
+		preview.appendChild(link);
 	}
-	shell.querySelector('header').after(preview);
-	shell.querySelector('.pandatranslate-close').setAttribute('aria-label', config.i18n.close || 'Close');
-	shell.querySelectorAll('[data-status] option').forEach(function(option){option.textContent=(config.i18n.statusLabels||{})[option.value]||option.textContent;});
-	shell.querySelector('.pandatranslate-empty').textContent = config.i18n.select;
-	shell.querySelector('[data-label="source"]').textContent = config.i18n.source;
-	shell.querySelector('[data-label="translation"]').textContent = config.i18n.translation;
-	shell.querySelector('[type="submit"] span:last-child').textContent = config.i18n.save;
-	shell.querySelector('[data-publish] span:last-child').textContent = config.i18n.publish;
-	shell.querySelector('[data-automatic] span:last-child').textContent = config.i18n.automatic;
-	shell.querySelector('[data-automatic-page] span:last-child').textContent = config.i18n.automaticPage || 'Translate entire page';
-	var pageProgress=document.createElement('section');pageProgress.className='pandatranslate-page-progress';pageProgress.hidden=true;pageProgress.innerHTML='<strong data-progress-title></strong><span data-progress-count></span><span class="pandatranslate-progress-track"><i data-progress-bar></i></span><small data-progress-detail></small>';shell.querySelector('[data-automatic-page]').insertAdjacentElement('afterend',pageProgress);
-
+	var empty = shell.querySelector('.pandatranslate-empty');
+	empty.textContent = i18n.select;
 	var form = shell.querySelector('form');
-	var apiLabel=document.createElement('label'),apiTitle=document.createElement('span'),apiSelect=document.createElement('select'),apiChoices=config.apis||{};
-	apiLabel.className='pandatranslate-editor-api';apiTitle.textContent=config.i18n.apiLabel;apiSelect.setAttribute('aria-label',config.i18n.apiLabel);
-	Object.keys(apiChoices).forEach(function(id){var option=document.createElement('option');option.value=id;option.textContent=apiChoices[id];option.selected=id===config.defaultApi;apiSelect.appendChild(option);});
-	if(!apiSelect.options.length){var unavailable=document.createElement('option');unavailable.value='';unavailable.textContent=config.i18n.noApi;apiSelect.appendChild(unavailable);}
-	apiLabel.append(apiTitle,apiSelect);shell.querySelector('[data-automatic-page]').before(apiLabel);
-	function updateApiLabels(){var name=apiChoices[apiSelect.value]||config.i18n.noApi;shell.querySelector('[data-automatic-page] span:last-child').textContent=config.i18n.automaticPage.replace('%s',name);shell.querySelector('[data-automatic] span:last-child').textContent=config.i18n.automatic.replace('%s',name);shell.querySelector('[data-automatic-page]').disabled=!apiSelect.value;shell.querySelector('[data-automatic]').disabled=!apiSelect.value;apiSelect.disabled=Object.keys(apiChoices).length<2;}
-	apiSelect.addEventListener('change',updateApiLabels);updateApiLabels();
-	var source = shell.querySelector('[data-source]');
-	var translation = shell.querySelector('[data-translation]');
-	var status = shell.querySelector('[data-status]');
-	var message = shell.querySelector('[data-message]');
-	if (config.canPublish === false) { shell.querySelector('[data-publish]').hidden = true; status.querySelector('option[value=published]').disabled = true; }
+	form.addEventListener('submit', function (event) {
+		event.preventDefault();
+	});
+	var source = form.querySelector('[data-source]');
+	form.querySelector('[data-source-label]').textContent = i18n.source;
+	var languageList = form.querySelector('[data-languages]');
+	var pageButton = shell.querySelector('[data-automatic-page]');
+	var pageProgress = shell.querySelector('.pandatranslate-page-progress');
+	var apiLabel = shell.querySelector('.pandatranslate-editor-api');
+	var apiSelect = apiLabel.querySelector('select'),
+		apiChoices = config.apis || {};
+	apiLabel.firstElementChild.textContent = i18n.apiLabel;
+	Object.keys(apiChoices).forEach(function (api) {
+		apiSelect.add(new Option(apiChoices[api], api, false, api === config.defaultApi));
+	});
+	if (!apiSelect.options.length) apiSelect.add(new Option(i18n.noApi, ''));
+	apiSelect.addEventListener('change', updateApiLabels);
 
-	function protect(html) {
-		var index = 0, tokens = {};
-		var text = html.replace(/<\/?(?:a|abbr|b|br|code|em|i|mark|small|span|strong|sub|sup|u)\b[^>]*>|(?<![0-9])%(?:\d+\$)?[-+0#]*(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxX%]|\{[a-z_][a-z0-9_]*\}/gi, function (tag) {
-			var type = (tag[0] === '%' || tag[0] === '{' || /^<br\b/i.test(tag)) ? 'VOID' : (/^<\//.test(tag) ? 'CLOSE' : 'OPEN');
-			var token = '[[PT:' + index++ + ':' + type + ']]'; tokens[token] = tag; return token;
+	function updateControls(panel) {
+		panel.save.disabled = panel.publish.disabled = !panel.ready || panel.busy;
+		panel.automatic.disabled = !panel.ready || panel.busy || automaticBusy || !apiSelect.value;
+		panel.automatic.lastElementChild.textContent = i18n.automatic.replace(
+			'%s',
+			apiChoices[apiSelect.value] || i18n.noApi,
+		);
+	}
+	function updateApiLabels() {
+		pageButton.lastElementChild.textContent = i18n.automaticPage.replace(
+			'%s',
+			apiChoices[apiSelect.value] || i18n.noApi,
+		);
+		pageButton.disabled = !apiSelect.value || automaticBusy;
+		apiSelect.disabled = automaticBusy || Object.keys(apiChoices).length < 2;
+		languages.forEach(updateControls);
+	}
+	updateApiLabels();
+
+	function decode(text) {
+		var field = document.createElement('textarea');
+		field.innerHTML = text.replace(/</g, '&lt;');
+		return field.value;
+	}
+	function encode(text) {
+		return text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/\[\[PT:/g, '&#91;[PT:');
+	}
+	function updateLanguage(panel, data) {
+		if (!panel || !data.editor) return;
+		panel.revision = data.revision || '';
+		panel.status.value =
+			data.status === 'published' && config.canPublish === false
+				? 'reviewed'
+				: data.status || 'untranslated';
+		source.value = data.editor.source;
+		panel.fields.replaceChildren();
+		panel.tokens = data.editor.preview_tokens || {};
+		var parts = data.editor.text.split(tokenPattern);
+		panel.parts = parts.map(function (part, index) {
+			if (index % 2) {
+				var token = panel.tokens[part] || '';
+				if (/^Panda Translate(?: Multilingual)?$/i.test(token)) {
+					var brand = document.createElement('span');
+					brand.textContent = token;
+					panel.fields.append(brand);
+				}
+				return part;
+			}
+			if (!part.trim()) return part;
+			var input = document.createElement('textarea');
+			input.rows = part.length > 85 ? 3 : 1;
+			input.value = decode(part);
+			input.setAttribute('aria-label', i18n.translation + ' · ' + panel.name);
+			input.addEventListener('input', function () {
+				if (selected && panel.language === config.language) {
+					var html = serialize(panel).replace(
+						/\[\[PT:\d+:(?:OPEN|CLOSE|VOID)\]\]/g,
+						function (token) {
+							return panel.tokens[token] || '';
+						},
+					);
+					updatePreview(selected, html);
+				}
+			});
+			panel.fields.append(input);
+			return { input: input, initial: input.value, raw: part };
 		});
-		return { text: text, tokens: tokens };
+		panel.ready = true;
+		updateControls(panel);
 	}
-
-	function restore(text, tokens) {
-		Object.keys(tokens).forEach(function (token) { text = text.split(token).join(tokens[token]); });
-		return text;
+	function address(node, language) {
+		return {
+			key: node.dataset.pandatranslateUnit,
+			source_hash: node.dataset.pandatranslateSourceHash,
+			language: language,
+			reference_language: config.language,
+		};
 	}
-
+	function panelIsCurrent(panel, node, version) {
+		return selected === node && generation === version && languages.get(panel.language) === panel;
+	}
+	function loadLanguage(panel) {
+		if (panel.ready || panel.busy || !selected) return;
+		panel.busy = true;
+		updateControls(panel);
+		var node = selected,
+			version = generation;
+		var args = Object.assign(address(node, panel.language), { editor_view: 1 });
+		request(window.PandaTranslateRequest.query(config.restUrl, args))
+			.then(function (data) {
+				if (!panelIsCurrent(panel, node, version)) return;
+				if (!data.editor || data.source_hash !== node.dataset.pandatranslateSourceHash) {
+					panel.message.textContent = i18n.requestResponseError;
+					return;
+				}
+				updateLanguage(panel, data);
+			})
+			.catch(function (error) {
+				if (panelIsCurrent(panel, node, version)) panel.message.textContent = error.message;
+			})
+			.finally(function () {
+				panel.busy = false;
+				if (panelIsCurrent(panel, node, version)) updateControls(panel);
+			});
+	}
+	function serialize(panel) {
+		return panel.parts
+			.map(function (part) {
+				return typeof part === 'string'
+					? part
+					: part.initial === part.input.value
+						? part.raw
+						: encode(part.input.value);
+			})
+			.join('');
+	}
+	function submit(panel, nextStatus, automatic) {
+		if (!selected || !panel.ready || panel.busy || (automatic && automaticBusy)) return;
+		panel.busy = true;
+		if (automatic) automaticBusy = true;
+		updateApiLabels();
+		var node = selected,
+			version = generation,
+			args = address(node, panel.language);
+		if (automatic) {
+			args.api = apiSelect.value;
+			args.confirm = true;
+		} else {
+			args.revision = panel.revision;
+			args.status = nextStatus || panel.status.value;
+			args.translated_text = serialize(panel);
+			args.preserve_translation = panel.parts.every(function (part) {
+				return typeof part === 'string' || part.initial === part.input.value;
+			});
+		}
+		panel.message.textContent = automatic ? i18n.translating : i18n.saving;
+		request(automatic ? config.autoUrl : config.restUrl, args)
+			.then(function (data) {
+				if (!panelIsCurrent(panel, node, version)) return;
+				if (panel.language === config.language && typeof data.translated_html === 'string')
+					updatePreview(node, data.translated_html);
+				updateLanguage(panel, data);
+				panel.message.textContent = i18n.saved;
+			})
+			.catch(function (error) {
+				if (panelIsCurrent(panel, node, version)) panel.message.textContent = error.message;
+			})
+			.finally(function () {
+				panel.busy = false;
+				if (automatic) automaticBusy = false;
+				updateApiLabels();
+			});
+	}
+	function updatePreview(node, html) {
+		if (node.matches('input[type=submit]')) node.value = decode(html);
+		else node.innerHTML = html;
+	}
+	function makeLanguage(code, name) {
+		var details = document.createElement('details');
+		details.className = 'pandatranslate-editor-language';
+		details.innerHTML =
+			'<summary></summary><fieldset data-translation-group><legend></legend><div data-translation></div></fieldset><label><span></span><select data-status></select></label>' +
+			'<div class="pandatranslate-actions"><button type="button" class="contactpanda-large-action" data-automatic><span class="dashicons dashicons-translation" aria-hidden="true"></span><span></span></button>' +
+			'<button type="button" class="contactpanda-large-action" data-save data-contactpanda-action="save" data-contactpanda-action-mode="labelled"><span class="dashicons dashicons-saved" aria-hidden="true"></span><span></span></button>' +
+			'<button type="button" class="contactpanda-large-action is-primary" data-publish data-contactpanda-action="publish" data-contactpanda-action-mode="labelled"><span class="dashicons dashicons-megaphone" aria-hidden="true"></span><span></span></button></div><p data-message role="status"></p>';
+		var panel = {
+			language: code,
+			name: name,
+			details: details,
+			ready: false,
+			busy: false,
+			status: details.querySelector('[data-status]'),
+			fields: details.querySelector('[data-translation]'),
+			message: details.querySelector('[data-message]'),
+			save: details.querySelector('[data-save]'),
+			publish: details.querySelector('[data-publish]'),
+			automatic: details.querySelector('[data-automatic]'),
+		};
+		details.querySelector('summary').textContent = name;
+		details.querySelector('legend').textContent = i18n.translation;
+		details.querySelector('label span').textContent = i18n.status;
+		Object.keys(i18n.statusLabels).forEach(function (key) {
+			var option = new Option(i18n.statusLabels[key], key);
+			option.disabled = key === 'published' && config.canPublish === false;
+			panel.status.add(option);
+		});
+		panel.save.lastElementChild.textContent = i18n.save;
+		panel.publish.lastElementChild.textContent = i18n.publish;
+		panel.publish.hidden = config.canPublish === false;
+		panel.save.addEventListener('click', function () {
+			submit(panel);
+		});
+		panel.publish.addEventListener('click', function () {
+			submit(panel, 'published');
+		});
+		panel.automatic.addEventListener('click', function () {
+			submit(panel, '', true);
+		});
+		details.addEventListener('toggle', function () {
+			if (details.open) loadLanguage(panel);
+		});
+		updateControls(panel);
+		languageList.append(details);
+		languages.set(code, panel);
+	}
 	function openUnit(node) {
 		if (selected) selected.classList.remove('pandatranslate-selected');
-		selected = node; selectedRevision = ''; var selectionVersion = ++selectionGeneration; selected.classList.add('pandatranslate-selected'); shell.classList.add('is-open');
-		var original = node.dataset.pandatranslateOriginal || node.innerHTML;
-		node.dataset.pandatranslateOriginal = original;
-		var prepared = protect(original);
-		source.value = prepared.text; translation.value = prepared.text; status.value = 'untranslated'; message.textContent = '';
-		form.hidden = false; shell.querySelector('.pandatranslate-empty').hidden = true;
-		request(window.PandaTranslateRequest.query(config.restUrl, {key: node.dataset.pandatranslateUnit, language: config.language})).then(function (row) {
-				if (selected !== node || selectionVersion !== selectionGeneration) return;
-				selectedRevision = row.revision || '';
-				if (row.source_html) {
-					node.dataset.pandatranslateOriginal = row.source_html;
-					prepared = protect(row.source_html); source.value = prepared.text;
-				}
-				if (row.translated_html) translation.value = protect(row.translated_html).text;
-				status.value = row.status === 'published' && config.canPublish === false ? 'reviewed' : (row.status || 'untranslated');
-			}).catch(function(error){if(selected===node && selectionVersion===selectionGeneration)message.textContent=error.message;});
-		translation.oninput = function () { if (selected !== node || selectionVersion !== selectionGeneration) return; selected.innerHTML = restore(translation.value, prepared.tokens); };
+		selected = node;
+		generation++;
+		node.classList.add('pandatranslate-selected');
+		setOpen(true);
+		form.hidden = false;
+		empty.hidden = true;
+		source.value = '';
+		languageList.replaceChildren();
+		languages.clear();
+		var options = config.languages || {};
+		Object.keys(options).forEach(function (code) {
+			makeLanguage(code, options[code]);
+		});
+		var current = languages.get(config.language) || languages.values().next().value;
+		if (current) current.details.open = true;
 	}
-
-	document.addEventListener('click', function (event) {
-		if (event.target.closest('img[data-pandatranslate-media],.media-modal,.media-modal-backdrop')) return;
-		var unit = event.target.closest('[data-pandatranslate-unit]');
-		if (!unit) {
-			var candidate = event.target.closest('p,h1,h2,h3,h4,h5,h6,li,td,th,button,a[role=button]');
-			if (!config.captureAllowed || !config.postId || !candidate || candidate.closest('#wpadminbar,.pandatranslate-panel,.pandatranslate-switcher,form,[translate=no],[data-no-translation],.notranslate,.trp-no-translation') || candidate.querySelector('p,li,td,th,div,img,input,textarea,select') || !candidate.textContent.trim()) return;
-			event.preventDefault(); event.stopPropagation();
-			request(config.dynamicUrl, {post_id:config.postId,language:config.language,source_html:candidate.innerHTML}).then(function(data){candidate.dataset.pandatranslateUnit=data.key;candidate.dataset.pandatranslateSourceHash=data.source_hash;candidate.dataset.pandatranslateOriginal=data.source_html;openUnit(candidate);}).catch(function(e){message.textContent=e.message;}); return;
-		}
-		if (shell.contains(unit)) return;
-		event.preventDefault(); event.stopPropagation(); openUnit(unit);
-	}, true);
-
-	function save(nextStatus) {
-		if (!selected || !selectedRevision) return;
-		var savedNode = selected, savedVersion = selectionGeneration;
-		message.textContent = config.i18n.saving;
-		var body = {revision: selectedRevision, key: selected.dataset.pandatranslateUnit, source_hash: selected.dataset.pandatranslateSourceHash, source_html: selected.dataset.pandatranslateOriginal, translated_text: translation.value, language: config.language, status: nextStatus || status.value};
-		request(config.restUrl, body)
-			.then(function (data) { if (selected !== savedNode || savedVersion !== selectionGeneration) return; selectedRevision = data.revision || ''; status.value = data.status; selected.innerHTML = data.translated_html; message.textContent = config.i18n.saved; })
-			.catch(function (error) { message.textContent = error.message || 'Could not save.'; });
-	}
-
-	form.addEventListener('submit', function (event) { event.preventDefault(); save(); });
-	shell.querySelector('[data-publish]').addEventListener('click', function () { save('published'); });
-
-	shell.querySelector('[data-automatic]').addEventListener('click', function () {
-		if (!selected || !apiSelect.value || automaticBusy) return;
-		automaticBusy = true;
-		var automaticButton = shell.querySelector('[data-automatic]');
-		automaticButton.disabled = true; shell.querySelector('[data-automatic-page]').disabled = true; apiSelect.disabled = true;
-		var autoNode = selected, autoVersion = selectionGeneration;
-		message.textContent = config.i18n.translating;
-		request(config.autoUrl, {key: selected.dataset.pandatranslateUnit, language: config.language, api: apiSelect.value, confirm: true})
-			.then(function (data) { if (selected !== autoNode || autoVersion !== selectionGeneration) return; selectedRevision = data.revision || ''; selected.innerHTML = data.translated_html; translation.value = protect(data.translated_html).text; status.value = data.status; message.textContent = config.i18n.saved; })
-			.catch(function (error) { if (selected === autoNode && autoVersion === selectionGeneration) message.textContent = error.message; })
-			.finally(function () { automaticBusy = false; updateApiLabels(); });
+	document.addEventListener('pandatranslate:media-selected', function () {
+		if (selected) selected.classList.remove('pandatranslate-selected');
+		selected = null;
+		generation++;
+		setOpen(true);
 	});
-	shell.querySelector('[data-automatic-page]').addEventListener('click',function(){
-        if(!apiSelect.value||automaticBusy)return;automaticBusy=true;shell.querySelector('[data-automatic]').disabled=true;
-        var api=apiSelect.value,units=Array.from(document.querySelectorAll('[data-pandatranslate-unit]')).filter(function(node){return !node.closest('#wpadminbar,.pandatranslate-panel,.fusion-builder-ui,.elementor-editor-active');}),index=0,done=0,failed=0,button=this,total=units.length,stopping=false,streak=0,lastCode='',lastError='';
-        var cancel=document.createElement('button');cancel.type='button';cancel.className='contactpanda-large-action';cancel.dataset.contactpandaAction='cancel';cancel.dataset.contactpandaActionMode='labelled';cancel.textContent=config.i18n.cancelLabel;
-        pageProgress.appendChild(cancel);if(window.ContactPandaAdminUI)window.ContactPandaAdminUI.enhance(pageProgress);
-        cancel.addEventListener('click',function(){stopping=true;cancel.disabled=true;pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.cancelling;});
-        button.disabled=true;apiSelect.disabled=true;pageProgress.hidden=false;pageProgress.classList.remove('has-errors','is-complete');pageProgress.querySelector('[data-progress-title]').textContent=config.i18n.progressTitle+' · '+apiChoices[api];
-        function render(){var processed=done+failed,percent=total?Math.round(processed/total*100):100;pageProgress.querySelector('[data-progress-count]').textContent=processed+' / '+total+' ('+percent+'%)';pageProgress.querySelector('[data-progress-bar]').style.width=percent+'%';pageProgress.querySelector('[data-progress-detail]').textContent=done+' '+config.i18n.progressDone+' · '+failed+' '+config.i18n.progressFailed+(lastError?' · '+lastError:'');}
-        function next(){render();if(stopping||streak>=3||index>=total){automaticBusy=false;updateApiLabels();cancel.remove();pageProgress.classList.add(failed?'has-errors':'is-complete');if(stopping)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.cancelled;if(streak>=3)pageProgress.querySelector('[data-progress-detail]').textContent=config.i18n.repeatedErrors+' '+lastError;return;}
-            var node=units[index++];request(config.autoUrl,{key:node.dataset.pandatranslateUnit,language:config.language,api:api,confirm:true}).then(function(data){node.innerHTML=data.translated_html;if(selected===node){selectedRevision=data.revision||'';translation.value=protect(data.translated_html).text;status.value=data.status;}done++;streak=0;}).catch(function(error){failed++;var code=error.code||'request';streak=code===lastCode?streak+1:1;lastCode=code;lastError=error.message||code;}).finally(next);
-        }next();
-    });
+	document.addEventListener(
+		'click',
+		function (event) {
+			if (
+				shell.contains(event.target) ||
+				event.target.closest('img[data-pandatranslate-media],.media-modal,.media-modal-backdrop')
+			)
+				return;
+			var unit = event.target.closest('[data-pandatranslate-unit]');
+			if (unit) {
+				event.preventDefault();
+				event.stopPropagation();
+				openUnit(unit);
+				return;
+			}
+			var candidate = event.target.closest('p,h1,h2,h3,h4,h5,h6,li,td,th,button,a[role=button]');
+			if (
+				!config.captureAllowed ||
+				!config.postId ||
+				!candidate ||
+				candidate.closest(
+					'#wpadminbar,.pandatranslate-switcher,form,[translate=no],[data-no-translation],.notranslate,.trp-no-translation',
+				) ||
+				candidate.querySelector('p,li,td,th,div,img,input,textarea,select') ||
+				!candidate.textContent.trim()
+			)
+				return;
+			event.preventDefault();
+			event.stopPropagation();
+			var version = ++generation;
+			request(config.dynamicUrl, {
+				post_id: config.postId,
+				language: config.language,
+				source_html: candidate.innerHTML,
+			})
+				.then(function (data) {
+					if (version !== generation) return;
+					candidate.dataset.pandatranslateUnit = data.key;
+					candidate.dataset.pandatranslateSourceHash = data.source_hash;
+					openUnit(candidate);
+				})
+				.catch(function (error) {
+					if (version !== generation) return;
+					empty.hidden = false;
+					empty.textContent = error.message;
+				});
+		},
+		true,
+	);
+	shell.querySelector('[data-automatic-page]').addEventListener('click', function () {
+		if (!apiSelect.value || automaticBusy) return;
+		automaticBusy = true;
+		updateApiLabels();
+		var api = apiSelect.value,
+			nodes = new Map();
+		document.querySelectorAll('[data-pandatranslate-unit]').forEach(function (node) {
+			if (
+				node.closest(
+					'#wpadminbar,.pandatranslate-panel,.fusion-builder-ui,.elementor-editor-active',
+				)
+			)
+				return;
+			var key = node.dataset.pandatranslateUnit;
+			if (!nodes.has(key)) nodes.set(key, []);
+			nodes.get(key).push(node);
+		});
+		var units = Array.from(nodes.keys()),
+			index = 0,
+			done = 0,
+			failed = 0,
+			button = this,
+			total = units.length,
+			stopping = false,
+			streak = 0,
+			lastCode = '',
+			lastError = '';
+		var cancel = document.createElement('button');
+		cancel.type = 'button';
+		cancel.className = 'contactpanda-large-action';
+		cancel.dataset.contactpandaAction = 'cancel';
+		cancel.dataset.contactpandaActionMode = 'labelled';
+		cancel.textContent = config.i18n.cancelLabel;
+		pageProgress.appendChild(cancel);
+		if (window.ContactPandaAdminUI) window.ContactPandaAdminUI.enhance(pageProgress);
+		cancel.addEventListener('click', function () {
+			stopping = true;
+			cancel.disabled = true;
+			pageProgress.querySelector('[data-progress-detail]').textContent = config.i18n.cancelling;
+		});
+		button.disabled = true;
+		apiSelect.disabled = true;
+		pageProgress.hidden = false;
+		pageProgress.classList.remove('has-errors', 'is-complete');
+		pageProgress.querySelector('[data-progress-title]').textContent =
+			config.i18n.progressTitle + ' · ' + apiChoices[api];
+		function render() {
+			var processed = done + failed,
+				percent = total ? Math.round((processed / total) * 100) : 100;
+			pageProgress.querySelector('[data-progress-count]').textContent =
+				processed + ' / ' + total + ' (' + percent + '%)';
+			pageProgress.querySelector('[data-progress-bar]').style.width = percent + '%';
+			pageProgress.querySelector('[data-progress-detail]').textContent =
+				done +
+				' ' +
+				config.i18n.progressDone +
+				' · ' +
+				failed +
+				' ' +
+				config.i18n.progressFailed +
+				(lastError ? ' · ' + lastError : '');
+		}
+		function next() {
+			render();
+			if (stopping || streak >= 3 || index >= total) {
+				automaticBusy = false;
+				updateApiLabels();
+				cancel.remove();
+				pageProgress.classList.add(failed ? 'has-errors' : 'is-complete');
+				if (stopping)
+					pageProgress.querySelector('[data-progress-detail]').textContent = config.i18n.cancelled;
+				if (streak >= 3)
+					pageProgress.querySelector('[data-progress-detail]').textContent =
+						config.i18n.repeatedErrors + ' ' + lastError;
+				return;
+			}
+			var key = units[index++];
+			request(config.autoUrl, { key: key, language: config.language, api: api, confirm: true })
+				.then(function (data) {
+					if (typeof data.translated_html === 'string')
+						nodes.get(key).forEach(function (node) {
+							updatePreview(node, data.translated_html);
+						});
+					if (selected && selected.dataset.pandatranslateUnit === key)
+						updateLanguage(languages.get(config.language), data);
+					done++;
+					streak = 0;
+				})
+				.catch(function (error) {
+					failed++;
+					var code = error.code || 'request';
+					streak = code === lastCode ? streak + 1 : 1;
+					lastCode = code;
+					lastError = error.message || code;
+				})
+				.finally(next);
+		}
+		next();
+	});
 
-	shell.querySelector('.pandatranslate-close').addEventListener('click', function () { shell.classList.remove('is-open'); });
-
-	new MutationObserver(function () { document.dispatchEvent(new CustomEvent('pandatranslate:content-changed')); }).observe(document.body, {childList: true, subtree: true});
-}());
+	new MutationObserver(function () {
+		document.dispatchEvent(new CustomEvent('pandatranslate:content-changed'));
+	}).observe(document.body, { childList: true, subtree: true });
+})();

@@ -4,7 +4,7 @@
  * Description: Visual website translation with language paths, menus and builder elements.
  * Requires at least: 6.4
  * Requires PHP: 7.4
- * Version: 0.8.5
+ * Version: 0.8.6
  * Author: Kultur3 GmbH
  * Plugin URI: https://pandacosmo.com/
  * License: GPL-3.0-only
@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'PANDATRANSLATE_FILE', __FILE__ );
 define( 'PANDATRANSLATE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PANDATRANSLATE_URL', plugin_dir_url( __FILE__ ) );
-define( 'PANDATRANSLATE_VERSION', '0.8.5' );
+define( 'PANDATRANSLATE_VERSION', '0.8.6' );
 
 // Resolve feature classes only when their callbacks are invoked.
 spl_autoload_register( static function ( $class ) {
@@ -38,6 +38,7 @@ spl_autoload_register( static function ( $class ) {
 		'PandaTranslate_Inline_Protector' => 'class-pandatranslate-inline-protector.php',
 		'PandaTranslate_Language_Content' => 'class-pandatranslate-language-content.php',
 		'PandaTranslate_MCP' => 'class-pandatranslate-mcp.php',
+		'PandaTranslate_Menu_Labels' => 'class-pandatranslate-menu-labels.php',
 		'PandaTranslate_Media' => 'class-pandatranslate-media.php',
 		'PandaTranslate_Migration_Sources' => 'class-pandatranslate-migration-sources.php',
 		'PandaTranslate_Migration' => 'class-pandatranslate-migration.php',
@@ -80,6 +81,7 @@ add_action( 'plugins_loaded', array( 'PandaTranslate_Edition', 'register_updater
 add_action( 'plugins_loaded', array( 'PandaTranslate_Routing', 'boot' ) );
 add_action( 'plugins_loaded', array( 'PandaTranslate_Frontend', 'boot' ) );
 PandaTranslate_Language_Content::boot();
+PandaTranslate_Menu_Labels::boot();
 
 PandaTranslate_Edition::boot();
 add_action( 'init', function () { if ( ! defined( 'CONTACTPANDA_VERSION' ) ) load_textdomain( 'contactpanda', PANDATRANSLATE_DIR . 'languages/contactpanda-' . determine_locale() . '.mo' ); }, 2 );
