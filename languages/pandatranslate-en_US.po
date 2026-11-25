@@ -2049,3 +2049,7 @@ msgstr "Recorded source characters"
 
 msgid "Enabled translation APIs"
 msgstr "Enabled translation APIs"
+
+msgctxt "Page title"
+msgid "My account"
+msgstr "My account"

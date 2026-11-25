@@ -2189,3 +2189,7 @@ msgstr "Erfasste Zeichen im Ausgangstext"
 
 msgid "Enabled translation APIs"
 msgstr "Aktivierte Übersetzungs-APIs"
+
+msgctxt "Page title"
+msgid "My account"
+msgstr "Mein Konto"

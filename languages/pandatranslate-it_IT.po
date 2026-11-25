@@ -2067,3 +2067,7 @@ msgstr "Caratteri di origine rilevati"
 
 msgid "Enabled translation APIs"
 msgstr "API di traduzione attivate"
+
+msgctxt "Page title"
+msgid "My account"
+msgstr "Il mio account"
