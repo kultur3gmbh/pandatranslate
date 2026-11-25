@@ -16,9 +16,10 @@ function wp_verify_nonce( $value, $action ) { return 'synthetic-editor-nonce' ==
 function apply_filters( $hook, $value ) { return $value; }
 final class Page_Repository {
 	public $bulk_reads = 0; public $single_reads = 0; public $row = null; public $writes = array(); public $corrected = false;
+	public $keyed_rows = array();
 	public function published_imports( $language, $hashes ) { $rows = array( array( 'source_html'=>'Hallo Welt', 'translated_html'=>'Hello world' ) ); if ( $this->corrected ) $rows[] = array( 'source_html'=>'Hallo Welt', 'translated_html'=>'Corrected dictionary', 'provider'=>'manual-dictionary' ); return $rows; }
 	public function find( $key, $language, $hash = null ) { $this->single_reads++; return $this->row; }
-	public function find_many( $keys, $language ) { $this->bulk_reads++; $rows=array(); if($this->row) foreach($keys as $key) $rows[$key]=array_merge($this->row,array('source_hash'=>hash('sha256','Hallo Welt'))); return $rows; }
+	public function find_many( $keys, $language ) { $this->bulk_reads++; $rows=array_intersect_key($this->keyed_rows,array_flip($keys)); if($this->row) foreach($keys as $key) $rows[$key]=array_merge($this->row,array('source_hash'=>hash('sha256','Hallo Welt'))); return $rows; }
 	public function save( ...$args ) { $this->writes[] = $args; return true; }
 }
 $repository = new Page_Repository();
@@ -72,3 +73,26 @@ echo "Unicode script/style/JSON and CSP-relevant script bytes preserved on sourc
 
 check(true, $repository->bulk_reads > 0);
 check(true, $repository->single_reads > 0);
+
+$repository->row = null;
+$calendar = '<html><body><div id="wrapper"><main><h4>Festessen</h4></main></div></body></html>';
+$with_toolbar = str_replace('<body>', '<body><div id="wpadminbar"><p>Edit</p></div>', $calendar);
+$extract = function ( $markup ) {
+	$units = array();
+	( new PandaTranslate_Unit_Extractor() )->transform( $markup, function ( $unit ) use ( &$units ) { $units[] = $unit; }, 'calendar', true );
+	return $units[0];
+};
+$visitor = $extract( $calendar );
+$editor = $extract( $with_toolbar );
+check( $visitor, $editor );
+check( hash( 'sha256', 'calendar|html[1]/body[1]/div[2]/main[1]/h4[1]|Festessen' ), $visitor['toolbar_key'] );
+preg_match( '/data-pandatranslate-unit="([a-f0-9]{64})"/', $plugin->transform_page( $calendar ), $calendar_key );
+preg_match( '/data-pandatranslate-unit="([a-f0-9]{64})"/', $plugin->transform_page( str_replace( '<body>', '<body><div id="synthetic-toolbar"></div>', $calendar ) ), $legacy_key );
+$repository->keyed_rows[$legacy_key[1]] = array( 'source_hash' => hash( 'sha256', 'Festessen' ), 'status' => 'published', 'translated_html' => 'Festins' );
+check( true, strpos( $plugin->transform_page( $calendar ), '>Festins<' ) !== false );
+$repository->keyed_rows[$legacy_key[1]]['status'] = 'reviewed';
+check( false, strpos( $plugin->transform_page( $calendar ), '>Festins<' ) !== false );
+$repository->keyed_rows[$legacy_key[1]]['status'] = 'published';
+$repository->keyed_rows[$calendar_key[1]] = array( 'source_hash' => hash( 'sha256', 'Festessen' ), 'status' => 'published', 'translated_html' => 'Banquets' );
+check( true, strpos( $plugin->transform_page( $calendar ), '>Banquets<' ) !== false );
+echo "Editor toolbar changes neither public unit keys nor access to already published translations\n";

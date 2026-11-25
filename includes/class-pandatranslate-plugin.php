@@ -858,15 +858,30 @@ final class PandaTranslate_Plugin {
 		$context = (string) get_queried_object_id() . '|' . (string) $request_path;
 		$memory = new PandaTranslate_Translation_Memory( $html, $language, $this->repository );
 		$public_rows = null;
+		$public_keys = array();
 		if ( $language && ! $editing && ! $this->scan_mode && method_exists( $this->repository, 'find_many' ) ) {
-			$keys = array();
-			$this->extractor->transform( $html, function ( $unit ) use ( &$keys ) { $keys[] = $unit['key']; return null; }, $context, true );
-			$public_rows = $this->repository->find_many( $keys, $language );
+			$toolbar_keys = array();
+			$this->extractor->transform( $html, function ( $unit ) use ( &$public_keys, &$toolbar_keys ) {
+				$public_keys[$unit['key']] = true;
+				if ( isset( $unit['toolbar_key'] ) ) $toolbar_keys[$unit['toolbar_key']] = true;
+				return null;
+			}, $context, true );
+			$public_rows = $this->repository->find_many( array_keys( $public_keys + $toolbar_keys ), $language );
 		}
-		$result = $this->extractor->transform( $html, function ( $unit ) use ( $language, $editing, $memory, $public_rows ) {
+		$result = $this->extractor->transform( $html, function ( $unit ) use ( $language, $editing, $memory, $public_rows, $public_keys ) {
 			if ( ( $editing || $this->scan_mode ) && method_exists( $this->repository, 'record_context' ) ) $this->repository->record_context( $unit['key'], get_queried_object_id() );
 			$row = null !== $public_rows ? ( $public_rows[$unit['key']] ?? null ) : ( $language ? $this->repository->find( $unit['key'], $language, $unit['source_hash'] ) : null );
 			if ( null !== $public_rows && $row && $row['source_hash'] !== $unit['source_hash'] ) $row = null;
+			if ( $language && ( ! $row || ( 'untranslated' === $row['status'] && '' === $row['translated_html'] ) ) && isset( $unit['toolbar_key'] ) && ! isset( $public_keys[$unit['toolbar_key']] ) ) {
+				$legacy = null !== $public_rows ? ( $public_rows[$unit['toolbar_key']] ?? null ) : $this->repository->find( $unit['toolbar_key'], $language, $unit['source_hash'] );
+				if ( $legacy && $legacy['source_hash'] === $unit['source_hash'] ) {
+					if ( $editing || $this->scan_mode ) {
+						if ( ! $row ) $this->repository->save( $unit, $language, $legacy['translated_html'], $legacy['status'], $legacy['provider'] ?? '', true );
+						elseif ( 'untranslated' !== $legacy['status'] ) $this->repository->save_automatic_revision( $row, $legacy['translated_html'], $legacy['status'], $legacy['provider'] ?? '' );
+						$row = $this->repository->find( $unit['key'], $language, $unit['source_hash'] );
+					} elseif ( 'published' === $legacy['status'] ) $row = $legacy;
+				}
+			}
 			// A corrected dictionary entry supersedes stale imported copies, never page-specific manual text.
 			if ( $row && 'translatepress-import' === ( $row['provider'] ?? '' ) ) { $corrected = $memory->manual_lookup( $unit['source_html'] ); if ( null !== $corrected ) return $corrected; }
 			$imported = ! $row || ( 'untranslated' === $row['status'] && '' === $row['translated_html'] ) ? $memory->lookup( $unit['source_html'] ) : null;

@@ -19,13 +19,15 @@ final class PandaTranslate_Unit_Extractor {
 		if ( ! $loaded ) return $html;
 
 		$xpath = new DOMXPath( $document );
+		$toolbar = $document->getElementById( 'wpadminbar' );
 		foreach ( iterator_to_array( $xpath->query( $this->selector ) ) as $node ) {
 			if ( $this->has_block_child( $node ) || $this->is_excluded( $node ) ) continue;
 			$is_input = 'input' === strtolower( $node->nodeName );
 			$is_label_text = 'span' === strtolower( $node->nodeName );
 			$source   = $is_input ? $node->getAttribute( 'value' ) : $this->inner_html( $node );
 			if ( '' === trim( wp_strip_all_tags( $source ) ) ) continue;
-			$key = hash( 'sha256', $context . '|' . $this->node_path( $node ) . '|' . $source );
+			$path = $this->node_path( $node );
+			$key = hash( 'sha256', $context . '|' . $path . '|' . $source );
 			$unit = array(
 				'key'         => $key,
 				'source_html' => $source,
@@ -33,6 +35,14 @@ final class PandaTranslate_Unit_Extractor {
 				'kind'        => strtolower( $node->nodeName ),
 				'context'     => $context,
 			);
+			// Older editors counted the WordPress toolbar as the first body div.
+			// Retain that key for an exact source match within this page.
+			if ( preg_match( '#^(html\[1\]/body\[1\]/div\[)(\d+)(\](?:/|$))#', $path ) ) {
+				$legacy_path = $toolbar ? $this->node_path( $node, true ) : preg_replace_callback( '#^(html\[1\]/body\[1\]/div\[)(\d+)(\](?:/|$))#', static function ( $match ) {
+					return $match[1] . ( (int) $match[2] + 1 ) . $match[3];
+				}, $path );
+				if ( $legacy_path !== $path ) $unit['toolbar_key'] = hash( 'sha256', $context . '|' . $legacy_path . '|' . $source );
+			}
 			$replacement = call_user_func( $resolver, $unit );
 			if ( $collect_only ) continue;
 			$node->setAttribute( 'data-pandatranslate-unit', $key );
@@ -94,11 +104,15 @@ final class PandaTranslate_Unit_Extractor {
 		return false;
 	}
 
-	private function node_path( DOMNode $node ) {
+	private function node_path( DOMNode $node, $include_toolbar = false ) {
 		$parts = array();
 		while ( $node && XML_ELEMENT_NODE === $node->nodeType ) {
 			$position = 1;
-			for ( $sibling = $node->previousSibling; $sibling; $sibling = $sibling->previousSibling ) if ( $sibling->nodeName === $node->nodeName ) ++$position;
+			for ( $sibling = $node->previousSibling; $sibling; $sibling = $sibling->previousSibling ) {
+				if ( $sibling->nodeName !== $node->nodeName ) continue;
+				if ( ! $include_toolbar && $sibling instanceof DOMElement && 'wpadminbar' === $sibling->getAttribute( 'id' ) ) continue;
+				++$position;
+			}
 			$parts[] = strtolower( $node->nodeName ) . '[' . $position . ']';
 			$node = $node->parentNode;
 		}
